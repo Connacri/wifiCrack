@@ -88,6 +88,54 @@ class SupabaseService {
 
   void _logError(String context, String error) => debugPrint("⚠️ Supabase [$context]: $error");
 
+  // --- USER MANAGEMENT ---
+
+  Future<void> registerUser({
+    required String deviceId, 
+    required String model, 
+    String? pseudo
+  }) async {
+    try {
+      await _client.from('users').upsert({
+        'device_id': deviceId,
+        'model': model,
+        'pseudo': pseudo ?? deviceId.substring(0, 8),
+        'last_seen': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'device_id');
+    } catch (e) {
+      debugPrint("❌ registerUser Error: $e");
+    }
+  }
+
+  Future<bool> isPseudoAvailable(String pseudo) async {
+    try {
+      final res = await _client
+          .from('users')
+          .select('pseudo')
+          .eq('pseudo', pseudo)
+          .maybeSingle();
+      return res == null;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> updatePseudo(String deviceId, String newPseudo) async {
+    try {
+      await _client.from('users').update({'pseudo': newPseudo}).eq('device_id', deviceId);
+    } catch (e) {
+      debugPrint("❌ updatePseudo Error: $e");
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchUniqueUsers() async {
+    // Utilise maintenant la table 'users' dédiée pour une liste propre
+    return await _client
+        .from('users')
+        .select()
+        .order('last_seen', ascending: false);
+  }
+
   // --- ADMIN METHODS ---
 
   Future<Map<String, int>> fetchStats() async {
@@ -106,10 +154,6 @@ class SupabaseService {
       debugPrint("Stats Error: $e");
       return {'wifi': 0, 'activity': 0, 'contacts': 0, 'messages': 0};
     }
-  }
-
-  Future<List<Map<String, dynamic>>> fetchUniqueUsers() async {
-    return await _client.from('user_activity').select().order('timestamp', ascending: false);
   }
 
   Future<List<Map<String, dynamic>>> fetchAllUserActivities() async {

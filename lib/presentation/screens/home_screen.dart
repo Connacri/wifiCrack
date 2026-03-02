@@ -220,6 +220,14 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () => _showAboutDialog(context),
           ),
           ListTile(
+            leading: const Icon(Icons.account_circle_outlined, color: Colors.green),
+            title: const Text('Mon Profil Sigma'),
+            onTap: () {
+              Navigator.pop(context);
+              _showProfileDialog(context);
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.bolt, color: Colors.orange),
             title: const Text('Sigma Messenger'),
             onTap: () {
@@ -432,6 +440,77 @@ class _HomeScreenState extends State<HomeScreen> {
           "Architecture: Clean Architecture + Provider + SharedPreferences.",
         ),
       ],
+    );
+  }
+
+  void _showProfileDialog(BuildContext context) {
+    final userDataService = context.read<UserDataService>();
+    final TextEditingController pseudoController = 
+        TextEditingController(text: userDataService.getPseudo());
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Mon Profil Sigma'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Device ID: ${userDataService.deviceId}", 
+                   style: const TextStyle(fontSize: 10, color: Colors.grey)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: pseudoController,
+                decoration: const InputDecoration(
+                  labelText: 'Votre Pseudo',
+                  border: OutlineInputBorder(),
+                  hintText: 'Entrez un pseudo unique',
+                ),
+              ),
+              if (isSaving)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8.0),
+                  child: LinearProgressIndicator(),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: isSaving ? null : () async {
+                if (pseudoController.text.trim().isEmpty) return;
+                
+                setState(() => isSaving = true);
+                final success = await userDataService.updatePseudo(
+                  pseudoController.text.trim()
+                );
+                setState(() => isSaving = false);
+
+                if (success) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Pseudo mis à jour !")),
+                    );
+                  }
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Ce pseudo est déjà pris.")),
+                    );
+                  }
+                }
+              },
+              child: const Text('Sauvegarder'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

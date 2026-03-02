@@ -49,12 +49,16 @@ class _MessengerScreenState extends State<MessengerScreen> {
             separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final user = users[index];
-              final String userId = "User_${user['id']}";
+              final String deviceId = user['device_id'];
+              final String pseudo = user['pseudo'] ?? deviceId.substring(0, 8);
+              final String model = user['model'] ?? "Inconnu";
               
               return _UserChatTile(
-                userId: userId,
+                userId: deviceId,
+                displayTitle: pseudo,
+                subtitle: model,
                 messenger: _messenger,
-                onTap: () => _openChat(userId),
+                onTap: () => _openChat(deviceId, pseudo),
               );
             },
           );
@@ -63,11 +67,11 @@ class _MessengerScreenState extends State<MessengerScreen> {
     );
   }
 
-  void _openChat(String userId) {
+  void _openChat(String deviceId, String pseudo) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DetailedChatScreen(userId: userId),
+        builder: (context) => DetailedChatScreen(userId: deviceId, pseudo: pseudo),
       ),
     );
   }
@@ -75,11 +79,15 @@ class _MessengerScreenState extends State<MessengerScreen> {
 
 class _UserChatTile extends StatelessWidget {
   final String userId;
+  final String displayTitle;
+  final String subtitle;
   final FirebaseMessengerService messenger;
   final VoidCallback onTap;
 
   const _UserChatTile({
     required this.userId, 
+    required this.displayTitle,
+    required this.subtitle,
     required this.messenger, 
     required this.onTap
   });
@@ -97,8 +105,8 @@ class _UserChatTile extends StatelessWidget {
             backgroundColor: Colors.orange,
             child: Icon(Icons.person, color: Colors.white),
           ),
-          title: Text(userId, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: const Text("Appuyez pour discuter..."),
+          title: Text(displayTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
           trailing: unreadCount > 0
               ? Container(
                   padding: const EdgeInsets.all(8),
@@ -115,7 +123,8 @@ class _UserChatTile extends StatelessWidget {
 /// Écran de chat détaillé pour un utilisateur spécifique
 class DetailedChatScreen extends StatefulWidget {
   final String userId;
-  const DetailedChatScreen({super.key, required this.userId});
+  final String pseudo;
+  const DetailedChatScreen({super.key, required this.userId, required this.pseudo});
 
   @override
   State<DetailedChatScreen> createState() => _DetailedChatScreenState();
@@ -142,7 +151,13 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.userId),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.pseudo),
+            Text(widget.userId, style: const TextStyle(fontSize: 10, color: Colors.black54)),
+          ],
+        ),
         backgroundColor: Colors.orange[100],
       ),
       body: Column(

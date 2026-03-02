@@ -103,6 +103,14 @@ class LocalStorageDataSource {
     await _prefs.setString(_deviceIdKey, id);
   }
 
+  String? getPseudo() {
+    return _prefs.getString('sigma_user_pseudo');
+  }
+
+  Future<void> savePseudo(String pseudo) async {
+    await _prefs.setString('sigma_user_pseudo', pseudo);
+  }
+
   Future<void> _persist() async {
     try {
       final jsonList = _cache

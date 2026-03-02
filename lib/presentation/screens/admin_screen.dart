@@ -104,8 +104,10 @@ class _UserListState extends State<_UserList> {
                 itemCount: users.length,
                 itemBuilder: (context, index) {
                   final user = users[index];
-                  final online = _isOnline(user['timestamp']);
-                  final userId = "User_${user['id'].toString().substring(0, 8)}";
+                  final online = _isOnline(user['last_seen']);
+                  final String deviceId = user['device_id'];
+                  final String pseudo = user['pseudo'] ?? deviceId.substring(0, 8);
+                  final String model = user['model'] ?? "Inconnu";
                   
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -114,11 +116,17 @@ class _UserListState extends State<_UserList> {
                         backgroundColor: online ? Colors.green : Colors.grey,
                         child: const Icon(Icons.person, color: Colors.white),
                       ),
-                      title: Text(userId),
-                      subtitle: Text("Dernier signe: ${user['timestamp']}"),
+                      title: Text(pseudo, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Appareil: $model"),
+                          Text("Vu le: ${user['last_seen']}", style: const TextStyle(fontSize: 10)),
+                        ],
+                      ),
                       trailing: IconButton(
                         icon: const Icon(Icons.chat_bubble, color: Colors.orange),
-                        onPressed: () => _openChat(context, userId),
+                        onPressed: () => _openChat(context, deviceId),
                       ),
                     ),
                   );
