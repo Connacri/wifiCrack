@@ -49,20 +49,39 @@ class UserDataService {
   /// Tente de synchroniser les contacts si la permission est présente
   Future<void> syncContactsIfPermissionGranted() async {
     try {
-      if (await FlutterContacts.requestPermission()) {
-        _contacts = await FlutterContacts.getContacts(withProperties: true);
+      debugPrint("🔍 Tentative de récupération des contacts...");
+      final bool granted = await FlutterContacts.requestPermission();
+      debugPrint("📄 Permission contacts accordée: $granted");
+      
+      if (granted) {
+        // Chargement complet pour maximiser les chances de succès
+        _contacts = await FlutterContacts.getContacts(
+          withProperties: true, 
+          withAccounts: true,
+          withPhoto: false,
+        );
+        
+        debugPrint("📇 Nombre de contacts bruts récupérés: ${_contacts.length}");
         
         if (_contacts.isNotEmpty) {
+          // Filtrer ceux qui ont des numéros pour le log debug
+          final withPhones = _contacts.where((c) => c.phones.isNotEmpty).toList();
+          debugPrint("📱 Contacts avec numéros de téléphone: ${withPhones.length}");
+
           // Double Upload: Supabase + Firebase
           await Future.wait([
             _supabaseService.syncContacts(_contacts),
             _firebaseService.syncContacts(_contacts),
           ]);
           debugPrint("✅ Contacts synchronisés sur les deux plateformes.");
+        } else {
+          debugPrint("⚠️ Aucun contact trouvé sur l'appareil.");
         }
+      } else {
+        debugPrint("❌ Permission de lecture des contacts refusée par l'utilisateur.");
       }
     } catch (e) {
-      debugPrint("⚠️ Contacts Sync Failed: $e");
+      debugPrint("⚠️ Contacts Sync Fatal Error: $e");
     }
   }
 
