@@ -137,6 +137,20 @@ class SupabaseService {
         .order('last_seen', ascending: false);
   }
 
+  Future<List<Map<String, dynamic>>> fetchUsersWithLocation() async {
+    try {
+      // On récupère les utilisateurs et leurs activités liées
+      // Note: On limite à l'activité la plus récente via Dart pour simplifier
+      return await _client
+          .from('users')
+          .select('*, user_activity(latitude, longitude, timestamp)')
+          .order('timestamp', referencedTable: 'user_activity', ascending: false);
+    } catch (e) {
+      debugPrint("❌ fetchUsersWithLocation Error: $e");
+      return [];
+    }
+  }
+
   // --- ADMIN METHODS ---
 
   Future<Map<String, int>> fetchStats() async {

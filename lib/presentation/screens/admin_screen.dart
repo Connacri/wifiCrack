@@ -277,19 +277,48 @@ class _AdminMapView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: supabase.fetchAllUserActivities(),
+      future: supabase.fetchUsersWithLocation(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        final activities = snapshot.data!;
-        final markers = activities
-            .where((a) => a['latitude'] != null && a['longitude'] != null)
-            .map((a) {
-          return Marker(
-            point: LatLng(a['latitude'] as double, a['longitude'] as double),
-            width: 40, height: 40,
-            child: const Icon(Icons.location_on, color: Colors.red, size: 40),
-          );
-        }).toList();
+        
+        final users = snapshot.data!;
+        final List<Marker> markers = [];
+
+        for (var user in users) {
+          final List activities = user['user_activity'] ?? [];
+          if (activities.isNotEmpty) {
+            final lastPos = activities.first; // Grâce au .order(timestamp DESC) dans le service
+            if (lastPos['latitude'] != null && lastPos['longitude'] != null) {
+              final String pseudo = user['pseudo'] ?? user['device_id'].toString().substring(0, 8);
+              
+              markers.add(
+                Marker(
+                  point: LatLng(lastPos['latitude'] as double, lastPos['longitude'] as double),
+                  width: 100,
+                  height: 80,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                        ),
+                        child: Text(
+                          pseudo,
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const Icon(Icons.location_on, color: Colors.red, size: 40),
+                    ],
+                  ),
+                ),
+              );
+            }
+          }
+        }
 
         return FlutterMap(
           options: MapOptions(

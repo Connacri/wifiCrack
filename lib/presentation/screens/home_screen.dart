@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/sources/ad_service.dart';
+import '../../data/sources/user_data_service.dart';
 import '../../domain/entities/wifi_network.dart';
 import '../../presentation/providers/wifi_provider.dart';
 import '../../presentation/screens/admin_screen.dart';
@@ -28,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!mounted) return;
         context.read<WiFiProvider>().startScan();
       });
-      
+
       // Initialiser le cycle de vie des pubs
       AdService().startListeningToLifecycle();
       // Forcer le chargement et l'affichage immédiat au démarrage à froid
@@ -150,7 +151,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: Icon(
                     obscurePassword ? Icons.visibility : Icons.visibility_off,
                   ),
-                  onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                  onPressed: () =>
+                      setState(() => obscurePassword = !obscurePassword),
                 ),
               ),
             ),
@@ -165,7 +167,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AdminScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const AdminScreen(),
+                      ),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -220,7 +224,10 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () => _showAboutDialog(context),
           ),
           ListTile(
-            leading: const Icon(Icons.account_circle_outlined, color: Colors.green),
+            leading: const Icon(
+              Icons.account_circle_outlined,
+              color: Colors.green,
+            ),
             title: const Text('Mon Profil Sigma'),
             onTap: () {
               Navigator.pop(context);
@@ -235,7 +242,9 @@ class _HomeScreenState extends State<HomeScreen> {
               AdService().showRewardedInterstitialAd(() {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const MessengerScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const MessengerScreen(),
+                  ),
                 );
               });
             },
@@ -248,7 +257,9 @@ class _HomeScreenState extends State<HomeScreen> {
               AdService().showRewardedInterstitialAd(() {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const UserChatScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const UserChatScreen(),
+                  ),
                 );
               });
             },
@@ -445,8 +456,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showProfileDialog(BuildContext context) {
     final userDataService = context.read<UserDataService>();
-    final TextEditingController pseudoController = 
-        TextEditingController(text: userDataService.getPseudo());
+    final TextEditingController pseudoController = TextEditingController(
+      text: userDataService.getPseudo(),
+    );
     bool isSaving = false;
 
     showDialog(
@@ -458,8 +470,10 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Device ID: ${userDataService.deviceId}", 
-                   style: const TextStyle(fontSize: 10, color: Colors.grey)),
+              Text(
+                "Device ID: ${userDataService.deviceId}",
+                style: const TextStyle(fontSize: 10, color: Colors.grey),
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: pseudoController,
@@ -482,30 +496,36 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Text('Annuler'),
             ),
             FilledButton(
-              onPressed: isSaving ? null : () async {
-                if (pseudoController.text.trim().isEmpty) return;
-                
-                setState(() => isSaving = true);
-                final success = await userDataService.updatePseudo(
-                  pseudoController.text.trim()
-                );
-                setState(() => isSaving = false);
+              onPressed: isSaving
+                  ? null
+                  : () async {
+                      if (pseudoController.text.trim().isEmpty) return;
 
-                if (success) {
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Pseudo mis à jour !")),
-                    );
-                  }
-                } else {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Ce pseudo est déjà pris.")),
-                    );
-                  }
-                }
-              },
+                      setState(() => isSaving = true);
+                      final success = await userDataService.updatePseudo(
+                        pseudoController.text.trim(),
+                      );
+                      setState(() => isSaving = false);
+
+                      if (success) {
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Pseudo mis à jour !"),
+                            ),
+                          );
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Ce pseudo est déjà pris."),
+                            ),
+                          );
+                        }
+                      }
+                    },
               child: const Text('Sauvegarder'),
             ),
           ],
