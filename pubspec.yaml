@@ -1,0 +1,66 @@
+name: comwificrack
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  wifi_scan: ^0.4.1+2
+  permission_handler: ^12.0.1
+  wifi_iot: ^0.3.19+2
+  shared_preferences: ^2.5.4
+  geolocator: ^14.0.2
+  flutter_contacts: ^1.1.9+2
+  supabase_flutter: ^2.12.0
+  google_mobile_ads: ^7.0.0
+  firebase_core: ^4.4.0
+  cloud_firestore: ^6.1.2
+  provider: ^6.1.5+1
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  intl: ^0.20.2
+  material_color_utilities: any
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.11.1
+  flutter_launcher_icons: ^0.14.4
+  flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.7
+
+# Configuration de l'icône de l'application
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon.png" # Si vous n'avez pas encore icon.png, utilisez splash.png ici aussi
+  min_sdk_android: 21
+  windows:
+    generate: true
+    image_path: "assets/splash.png"
+    icon_size: 256
+
+# Configuration de l'écran de démarrage (Splash) en plein écran
+flutter_native_splash:
+  background_image: "assets/splash.png"
+  android_12:
+    image: "assets/splash.png"
+    color: "#ffffff"
+  fullscreen: true
+  ios_content_mode: scaleAspectFill
+  android_gravity: fill
+  web_image_mode: cover
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/splash.png

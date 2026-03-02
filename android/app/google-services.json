@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "537627321444",
+    "project_id": "wificrack-9be37",
+    "storage_bucket": "wificrack-9be37.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:537627321444:android:2e6701d54426bb84dfab71",
+        "android_client_info": {
+          "package_name": "com.wificrack.dz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "537627321444-1oeddjpqetaqu9rvdhe76m8mg1a839f0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAc_LYXgvetiFesQOakvrL2s3dPTfQkd6Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "537627321444-1oeddjpqetaqu9rvdhe76m8mg1a839f0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "537627321444-gsdi1hi4nsns76jep5g34j949f80i4e4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wificrack.dz.comwificrack"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:537627321444:android:ed17dc8b4443e057dfab71",
+        "android_client_info": {
+          "package_name": "com.wificrack.dz.comwificrack"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "537627321444-1oeddjpqetaqu9rvdhe76m8mg1a839f0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAc_LYXgvetiFesQOakvrL2s3dPTfQkd6Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "537627321444-1oeddjpqetaqu9rvdhe76m8mg1a839f0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "537627321444-gsdi1hi4nsns76jep5g34j949f80i4e4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wificrack.dz.comwificrack"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
