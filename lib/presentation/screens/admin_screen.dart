@@ -19,7 +19,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -34,7 +34,6 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
             Tab(icon: Icon(Icons.dashboard), text: 'Stats'),
             Tab(icon: Icon(Icons.people), text: 'Users'),
             Tab(icon: Icon(Icons.map), text: 'Carte'),
-            Tab(icon: Icon(Icons.wifi), text: 'WiFi'),
             Tab(icon: Icon(Icons.location_on), text: 'Activité'),
             Tab(icon: Icon(Icons.contacts), text: 'Contacts'),
           ],
@@ -46,7 +45,6 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
           _DashboardSummary(supabase: _supabase),
           _UserList(supabase: _supabase),
           _AdminMapView(supabase: _supabase),
-          _DataList(fetcher: _supabase.fetchWiFiNetworks, type: 'wifi'),
           _DataList(fetcher: _supabase.fetchUserActivity, type: 'activity'),
           _DataList(fetcher: _supabase.fetchContacts, type: 'contacts', showSearch: true),
         ],
@@ -260,9 +258,15 @@ class _AdminMapView extends StatelessWidget {
         }).toList();
 
         return FlutterMap(
-          options: MapOptions(initialCenter: markers.isNotEmpty ? markers.first.point : const LatLng(36.75, 3.05), initialZoom: 6),
+          options: MapOptions(
+            initialCenter: markers.isNotEmpty ? markers.first.point : const LatLng(36.75, 3.05), 
+            initialZoom: 6
+          ),
           children: [
-            TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.wificrack.dz',
+            ),
             MarkerLayer(markers: markers),
           ],
         );

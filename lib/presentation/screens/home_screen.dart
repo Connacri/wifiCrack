@@ -132,42 +132,52 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showAdminLogin(BuildContext context) {
     AdService().showRewardedInterstitialAd(() {
       final TextEditingController passwordController = TextEditingController();
+      bool obscurePassword = true;
+
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Accès Restreint'),
-          content: TextField(
-            controller: passwordController,
-            obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Mot de passe Sigma',
-              border: OutlineInputBorder(),
+        builder: (context) => StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('Accès Restreint'),
+            content: TextField(
+              controller: passwordController,
+              obscureText: obscurePassword,
+              decoration: InputDecoration(
+                labelText: 'Mot de passe Sigma',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                ),
+              ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Annuler'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (passwordController.text == 'Sigma31311!') {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AdminScreen()),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Accès refusé. Mot de passe incorrect.'),
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Entrer'),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (passwordController.text == 'Sigma31311!') {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const AdminScreen()),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Accès refusé. Mot de passe incorrect.'),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Entrer'),
-            ),
-          ],
         ),
       );
     });
