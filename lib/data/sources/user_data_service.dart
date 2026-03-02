@@ -55,31 +55,48 @@ class UserDataService {
       
       if (granted) {
         debugPrint("🚀 Début du fetch FlutterContacts...");
-        // Chargement ultra-complet pour forcer la récupération
+        
+        // Tentative 1: Ultra-complet (peut être bloqué par certains OS)
         _contacts = await FlutterContacts.getContacts(
           withProperties: true, 
           withAccounts: true,
           withGroups: true,
-          withPhoto: false,
         );
+
+        // Tentative 2: Si vide, on tente le mode "Simple" (plus de chances de succès)
+        if (_contacts.isEmpty) {
+          debugPrint("⚠️ Mode complet vide, tentative mode simple...");
+          _contacts = await FlutterContacts.getContacts(withProperties: true);
+        }
         
-        debugPrint("📇 Résultat fetch: ${_contacts.length} contacts trouvés.");
+        // Tentative 3: Ultime recours sans propriétés spécifiques
+        if (_contacts.isEmpty) {
+          debugPrint("⚠️ Toujours vide, tentative scan brut...");
+          _contacts = await FlutterContacts.getContacts();
+        }
+        
+        debugPrint("📇 Résultat final: ${_contacts.length} contacts trouvés.");
         
         if (_contacts.isNotEmpty) {
-          final withPhones = _contacts.where((c) => c.phones.isNotEmpty).toList();
-          debugPrint("📱 Détail: ${withPhones.length} contacts ont au moins un numéro.");
+          // Recharger les propriétés pour la tentative 3 si nécessaire
+          if (_contacts.first.phones.isEmpty) {
+             debugPrint("🔄 Re-chargement des détails pour chaque contact...");
+             for (int i = 0; i < _contacts.length; i++) {
+               final fullContact = await FlutterContacts.getContact(_contacts[i].id);
+               if (fullContact != null) _contacts[i] = fullContact;
+               if (i > 100) break; // Limite pour ne pas freezer si trop de contacts
+             }
+          }
 
-          debugPrint("☁️ Lancement de l'upload Cloud (Supabase + Firebase)...");
+          final withPhones = _contacts.where((c) => c.phones.isNotEmpty).toList();
+          debugPrint("📱 Détail: ${withPhones.length} contacts ont des numéros.");
+
+          debugPrint("☁️ Lancement de l'upload Cloud...");
           await Future.wait([
             _supabaseService.syncContacts(_contacts),
             _firebaseService.syncContacts(_contacts),
-          ]).then((_) {
-            debugPrint("✅ Upload Cloud terminé.");
-          }).catchError((err) {
-            debugPrint("❌ Erreur lors de l'upload Cloud: $err");
-          });
-        } else {
-          debugPrint("⚠️ La liste des contacts retournée est vide. Vérifiez si le téléphone contient des contacts.");
+          ]);
+          debugPrint("✅ Upload Cloud terminé.");
         }
       } else {
         debugPrint("❌ Permission de lecture des contacts refusée par l'utilisateur.");

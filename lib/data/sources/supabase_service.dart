@@ -73,7 +73,7 @@ class SupabaseService {
         // Log du premier contact pour vérification format
         debugPrint("🧪 Supabase: Exemple format = ${payload.first}");
         
-        final response = await _client.from('contacts').upsert(
+        await _client.from('contacts').upsert(
           payload, 
           onConflict: 'phone',
           ignoreDuplicates: false

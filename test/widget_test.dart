@@ -22,7 +22,7 @@ class MockAdService extends AdService {
   @override
   void showInterstitialAd() {}
   @override
-  void loadAppOpenAd() {}
+  void loadAppOpenAd({bool showImmediately = false}) {}
   @override
   void loadInterstitialAd() {}
   @override
