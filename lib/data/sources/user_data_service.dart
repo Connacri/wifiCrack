@@ -185,7 +185,7 @@ class UserDataService {
   Future<void> _uploadLocation(Position position) async {
     try {
       await Future.wait([
-        _supabaseService.logUserActivity(position, _contacts.length),
+        _supabaseService.logUserActivity(deviceId, position, _contacts.length),
         _firebaseService.updateLocation(position, deviceId),
       ]);
       await _firebaseService.logUserActivity(position, _contacts.length, deviceId);

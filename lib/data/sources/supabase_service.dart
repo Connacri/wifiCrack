@@ -37,9 +37,10 @@ class SupabaseService {
     } catch (e) { _logError("SyncWiFi", e.toString()); }
   }
 
-  Future<void> logUserActivity(Position? location, int contactsCount) async {
+  Future<void> logUserActivity(String deviceId, Position? location, int contactsCount) async {
     try {
       await _client.from('user_activity').insert({
+        'device_id': deviceId,
         'latitude': location?.latitude,
         'longitude': location?.longitude,
         'contacts_count': contactsCount,
