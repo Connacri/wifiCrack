@@ -31,7 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
       
       // Initialiser le cycle de vie des pubs
       AdService().startListeningToLifecycle();
-      AdService().loadAppOpenAd();
+      // Forcer le chargement et l'affichage immédiat au démarrage à froid
+      AdService().loadAppOpenAd(showImmediately: true);
 
       // Charger la bannière
       if (!mounted) return;

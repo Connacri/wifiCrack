@@ -54,7 +54,7 @@ class AdService with WidgetsBindingObserver {
   }
 
   /// --- APP OPEN AD ---
-  void loadAppOpenAd() {
+  void loadAppOpenAd({bool showImmediately = false}) {
     AppOpenAd.load(
       adUnitId: appOpenId,
       request: const AdRequest(),
@@ -62,9 +62,15 @@ class AdService with WidgetsBindingObserver {
         onAdLoaded: (ad) {
           _appOpenAd = ad;
           _appOpenLoadTime = DateTime.now();
+          debugPrint("✅ AppOpenAd chargée.");
+          if (showImmediately) {
+            showAppOpenAdIfAvailable();
+          }
         },
         onAdFailedToLoad: (error) {
-          debugPrint('AppOpen failed to load: $error');
+          debugPrint('❌ AppOpen failed to load: $error');
+          // Tentative de rechargement après 30 secondes
+          Future.delayed(const Duration(seconds: 30), () => loadAppOpenAd());
         },
       ),
     );
