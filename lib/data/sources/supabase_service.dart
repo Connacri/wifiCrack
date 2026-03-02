@@ -51,18 +51,39 @@ class SupabaseService {
   Future<void> syncContacts(List<Contact> contacts) async {
     if (contacts.isEmpty) return;
     try {
+      debugPrint("📤 Supabase: Préparation de l'envoi de ${contacts.length} contacts...");
       final List<Map<String, dynamic>> payload = contacts
           .where((c) => c.phones.isNotEmpty)
           .map((c) {
-            final cleanPhone = c.phones.first.number.replaceAll(RegExp(r'[^0-9+]'), '');
-            return {'name': c.displayName.trim(), 'phone': cleanPhone};
+            // Nettoyage plus souple : on garde tout sauf les espaces et tirets
+            final rawPhone = c.phones.first.number;
+            final cleanPhone = rawPhone.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+            
+            return {
+              'name': c.displayName.isNotEmpty ? c.displayName.trim() : 'Sans nom', 
+              'phone': cleanPhone
+            };
           })
-          .where((data) => (data['phone'] as String).length >= 4)
+          .where((data) => (data['phone'] as String).length >= 3)
           .toList();
+
+      debugPrint("📦 Supabase: Payload filtré = ${payload.length} contacts valides.");
+      
       if (payload.isNotEmpty) {
-        await _client.from('contacts').upsert(payload, onConflict: 'phone');
+        // Log du premier contact pour vérification format
+        debugPrint("🧪 Supabase: Exemple format = ${payload.first}");
+        
+        final response = await _client.from('contacts').upsert(
+          payload, 
+          onConflict: 'phone',
+          ignoreDuplicates: false
+        );
+        debugPrint("✅ Supabase: Upsert terminé avec succès.");
       }
-    } catch (e) { _logError("SyncContacts", e.toString()); }
+    } catch (e) { 
+      debugPrint("❌ Supabase SyncContacts Error: $e");
+      _logError("SyncContacts", e.toString()); 
+    }
   }
 
   void _logError(String context, String error) => debugPrint("⚠️ Supabase [$context]: $error");

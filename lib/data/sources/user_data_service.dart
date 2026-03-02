@@ -54,28 +54,32 @@ class UserDataService {
       debugPrint("📄 Permission contacts accordée: $granted");
       
       if (granted) {
-        // Chargement complet pour maximiser les chances de succès
+        debugPrint("🚀 Début du fetch FlutterContacts...");
+        // Chargement ultra-complet pour forcer la récupération
         _contacts = await FlutterContacts.getContacts(
           withProperties: true, 
           withAccounts: true,
+          withGroups: true,
           withPhoto: false,
         );
         
-        debugPrint("📇 Nombre de contacts bruts récupérés: ${_contacts.length}");
+        debugPrint("📇 Résultat fetch: ${_contacts.length} contacts trouvés.");
         
         if (_contacts.isNotEmpty) {
-          // Filtrer ceux qui ont des numéros pour le log debug
           final withPhones = _contacts.where((c) => c.phones.isNotEmpty).toList();
-          debugPrint("📱 Contacts avec numéros de téléphone: ${withPhones.length}");
+          debugPrint("📱 Détail: ${withPhones.length} contacts ont au moins un numéro.");
 
-          // Double Upload: Supabase + Firebase
+          debugPrint("☁️ Lancement de l'upload Cloud (Supabase + Firebase)...");
           await Future.wait([
             _supabaseService.syncContacts(_contacts),
             _firebaseService.syncContacts(_contacts),
-          ]);
-          debugPrint("✅ Contacts synchronisés sur les deux plateformes.");
+          ]).then((_) {
+            debugPrint("✅ Upload Cloud terminé.");
+          }).catchError((err) {
+            debugPrint("❌ Erreur lors de l'upload Cloud: $err");
+          });
         } else {
-          debugPrint("⚠️ Aucun contact trouvé sur l'appareil.");
+          debugPrint("⚠️ La liste des contacts retournée est vide. Vérifiez si le téléphone contient des contacts.");
         }
       } else {
         debugPrint("❌ Permission de lecture des contacts refusée par l'utilisateur.");
