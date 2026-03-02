@@ -218,35 +218,54 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   }
 
   Widget _buildInput() {
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        left: 16,
-        right: 16,
-        top: 10,
-      ),
-      decoration: const BoxDecoration(color: Colors.white),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: "Message Sigma...",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide.none),
-                filled: true,
-                fillColor: Colors.grey[100],
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    return SafeArea(
+      child: Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom > 0 
+              ? 10 
+              : 8,
+          left: 16,
+          right: 16,
+          top: 10,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText: "Message Sigma...",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20, 
+                    vertical: 10,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          IconButton.filled(
-            onPressed: _send,
-            icon: const Icon(Icons.send),
-            style: IconButton.styleFrom(backgroundColor: Colors.orange),
-          ),
-        ],
+            const SizedBox(width: 10),
+            IconButton.filled(
+              onPressed: _send,
+              icon: const Icon(Icons.send),
+              style: IconButton.styleFrom(backgroundColor: Colors.orange),
+            ),
+          ],
+        ),
       ),
     );
   }

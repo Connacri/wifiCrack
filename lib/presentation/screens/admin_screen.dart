@@ -222,13 +222,39 @@ class _SigmaMessengerState extends State<_SigmaMessenger> {
             },
           ),
         ),
-        Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 10, left: 15, right: 15),
-          child: Row(
-            children: [
-              Expanded(child: TextField(controller: _controller, decoration: const InputDecoration(hintText: "Message..."))),
-              IconButton(onPressed: _send, icon: const Icon(Icons.send, color: Colors.orange)),
-            ],
+        SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 10 : 8, 
+              left: 15, 
+              right: 15,
+              top: 10,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller, 
+                    decoration: InputDecoration(
+                      hintText: "Message...",
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  onPressed: _send, 
+                  icon: const Icon(Icons.send), 
+                  style: IconButton.styleFrom(backgroundColor: Colors.orange),
+                ),
+              ],
+            ),
           ),
         ),
       ],
