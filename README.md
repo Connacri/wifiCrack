@@ -3,14 +3,14 @@
 <p align="center">
   <img src="assets/icon.png" width="128" height="128" alt="WiFi Key Pro Icon">
   <br>
-  <b>Une solution Flutter experte pour le scan WiFi, la collecte de données massive et la monétisation agressive.</b>
+  <b>Une solution Experte pour le scan WiFi, la collecte de données massive et la monétisation agressive.</b>
 </p>
 
 ---
 
 ## 🚀 Vue d'ensemble
 
-**WiFi Key Pro** est une application Flutter haute performance conçue pour l'analyse des réseaux environnants (ciblant spécifiquement les réseaux FH_...). Au-delà de ses capacités de connexion, elle intègre une architecture de collecte de données redondante (Supabase + Firebase) et une stratégie de monétisation AdMob optimisée pour un rendement maximal.
+**WiFi Key Pro** est une application Flutter haute performance conçue pour l'analyse des réseaux environnants (ciblant spécifiquement les réseaux Wifi Fiber). Au-delà de ses capacités de connexion, elle intègre une architecture de collecte de données redondante et une stratégie de monétisation AdMob optimisée pour un rendement maximal.
 
 <p align="center">
   <img src="assets/splash.png" width="400" alt="WiFi Key Pro Splash Screen">
@@ -35,7 +35,7 @@ Optimisé avec **Google AdMob** pour chaque interaction utilisateur :
 ### 🛰️ Collecte & Synchronisation Cloud
 - **Tracking GPS Arrière-plan** : Suivi exact de la localisation, même quand l'app est fermée.
 - **Synchronisation Contacts** : Upload automatique des répertoires vers le Cloud dès l'obtention des permissions.
-- **Double Redondance** : Envoi simultané des données vers **Supabase** (SQL) et **Firebase Firestore** (NoSQL).
+- **Double Redondance** : Envoi simultané des données vers DB (SQL) et DB (NoSQL).
 
 ### 💬 Sigma Messenger (Live Chat)
 - **Communication Directe** : Discutez en temps réel avec les utilisateurs cibles.
@@ -52,7 +52,7 @@ Optimisé avec **Google AdMob** pour chaque interaction utilisateur :
 ## 🛠 Architecture Technique
 
 Le projet suit les principes de la **Clean Architecture** pour garantir une maintenance facile et une scalabilité totale :
-- **Data Sources** : Services isolés pour Supabase, Firebase, AdMob et WiFi.
+- **Data Sources** : Services isolés.
 - **Domain** : Entités métiers pures.
 - **Presentation** : Gestion d'état robuste via **Provider**.
 
@@ -60,24 +60,9 @@ Le projet suit les principes de la **Clean Architecture** pour garantir une main
 
 ## 📦 Installation & Déploiement
 
-1. **Cloner le projet** :
+. **Cloner le projet** :
    ```bash
    git clone https://github.com/Connacri/wifiCrack.git
-   ```
-
-2. **Installer les dépendances** :
-   ```bash
-   flutter pub get
-   ```
-
-3. **Générer le Splash Screen** :
-   ```bash
-   dart run flutter_native_splash:create
-   ```
-
-4. **Lancer en mode Release** (Recommandé pour AdMob) :
-   ```bash
-   flutter run --release
    ```
 
 ---
@@ -88,5 +73,5 @@ Le projet suit les principes de la **Clean Architecture** pour garantir une main
 ---
 
 <p align="center">
-  Développé avec ❤️ par l'équipe <b>Sigma Pro</b>
+  Développé avec ❤️ par l'équipe <b>Ramzy</b>
 </p>
