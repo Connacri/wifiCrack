@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../data/sources/supabase_service.dart';
-import '../../data/sources/firebase_messenger_service.dart';
+import 'package:latlong2/latlong.dart' hide Path; 
+import 'package:provider/provider.dart';
 
+import '../../data/sources/supabase_service.dart';
+import '../../data/sources/user_data_service.dart';
+import 'messenger_screen.dart';
+
+/// AdminScreen : Gestionnaire central de la flotte Sigma.
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
 
@@ -15,26 +18,43 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final SupabaseService _supabase = SupabaseService();
+  late Future<List<Map<String, dynamic>>> _usersFuture;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+    _usersFuture = _supabase.fetchUniqueUsers();
+  }
+
+  void _refreshData() {
+    setState(() {
+      _usersFuture = _supabase.fetchUniqueUsers();
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sigma Dashboard'),
+        title: const Text('Sigma Dashboard Pro', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshData),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Stats'),
-            Tab(icon: Icon(Icons.people), text: 'Users'),
+            Tab(icon: Icon(Icons.people), text: 'Cibles'),
             Tab(icon: Icon(Icons.map), text: 'Carte'),
-            Tab(icon: Icon(Icons.location_on), text: 'Activité'),
+            Tab(icon: Icon(Icons.location_history), text: 'Traces'),
             Tab(icon: Icon(Icons.contacts), text: 'Contacts'),
           ],
         ),
@@ -43,229 +63,12 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
         controller: _tabController,
         children: [
           _DashboardSummary(supabase: _supabase),
-          _UserList(supabase: _supabase),
+          _UserList(usersFuture: _usersFuture),
           _AdminMapView(supabase: _supabase),
           _DataList(fetcher: _supabase.fetchUserActivity, type: 'activity'),
           _DataList(fetcher: _supabase.fetchContacts, type: 'contacts', showSearch: true),
         ],
       ),
-    );
-  }
-}
-
-class _UserList extends StatefulWidget {
-  final SupabaseService supabase;
-  const _UserList({required this.supabase});
-
-  @override
-  State<_UserList> createState() => _UserListState();
-}
-
-class _UserListState extends State<_UserList> {
-  final FirebaseMessengerService _firebaseMessenger = FirebaseMessengerService();
-  bool _onlyOnline = false;
-
-  bool _isOnline(String timestamp) {
-    try {
-      final lastSeen = DateTime.parse(timestamp);
-      return DateTime.now().difference(lastSeen).inMinutes < 5;
-    } catch (e) { return false; }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(value: false, label: Text('Tous'), icon: Icon(Icons.group)),
-              ButtonSegment(value: true, label: Text('En ligne'), icon: Icon(Icons.bolt, color: Colors.green)),
-            ],
-            selected: {_onlyOnline},
-            onSelectionChanged: (val) => setState(() => _onlyOnline = val.first),
-          ),
-        ),
-        Expanded(
-          child: FutureBuilder<List<Map<String, dynamic>>>(
-            future: widget.supabase.fetchUniqueUsers(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-              
-              var users = snapshot.data!;
-              if (_onlyOnline) {
-                users = users.where((u) => _isOnline(u['timestamp'])).toList();
-              }
-
-              if (users.isEmpty) return const Center(child: Text("Aucun utilisateur trouvé."));
-
-              return ListView.builder(
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  final user = users[index];
-                  final online = _isOnline(user['last_seen']);
-                  final String deviceId = user['device_id'];
-                  final String pseudo = user['pseudo'] ?? deviceId.substring(0, 8);
-                  final String model = user['model'] ?? "Inconnu";
-                  
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: online ? Colors.green : Colors.grey,
-                        child: const Icon(Icons.person, color: Colors.white),
-                      ),
-                      title: Text(pseudo, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Appareil: $model"),
-                          Text("Vu le: ${user['last_seen']}", style: const TextStyle(fontSize: 10)),
-                        ],
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.chat_bubble, color: Colors.orange),
-                        onPressed: () => _openChat(context, deviceId),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _openChat(BuildContext context, String userId) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.75,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: _SigmaMessenger(messenger: _firebaseMessenger, userId: userId),
-      ),
-    );
-  }
-}
-
-class _SigmaMessenger extends StatefulWidget {
-  final FirebaseMessengerService messenger;
-  final String userId;
-  const _SigmaMessenger({required this.messenger, required this.userId});
-
-  @override
-  State<_SigmaMessenger> createState() => _SigmaMessengerState();
-}
-
-class _SigmaMessengerState extends State<_SigmaMessenger> {
-  final TextEditingController _controller = TextEditingController();
-
-  void _send() {
-    if (_controller.text.trim().isEmpty) return;
-    widget.messenger.sendMessage(widget.userId, _controller.text.trim());
-    _controller.clear();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Colors.orange,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.bolt, color: Colors.white),
-              const SizedBox(width: 10),
-              Text("Messenger: ${widget.userId}", 
-                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              )
-            ],
-          ),
-        ),
-        Expanded(
-          child: StreamBuilder<QuerySnapshot>(
-            stream: widget.messenger.getMessagesStream(widget.userId),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return const Center(child: Text("Aucun message."));
-              }
-              final docs = snapshot.data!.docs;
-              return ListView.builder(
-                padding: const EdgeInsets.all(15),
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  final msg = docs[index].data() as Map<String, dynamic>;
-                  final bool isAdmin = msg['is_admin'] ?? false;
-                  return Align(
-                    alignment: isAdmin ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 5),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isAdmin ? Colors.orange[100] : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Text(msg['content'] ?? ""),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        SafeArea(
-          child: Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 10 : 8, 
-              left: 15, 
-              right: 15,
-              top: 10,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller, 
-                    decoration: InputDecoration(
-                      hintText: "Message...",
-                      filled: true,
-                      fillColor: Colors.grey[100],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  onPressed: _send, 
-                  icon: const Icon(Icons.send), 
-                  style: IconButton.styleFrom(backgroundColor: Colors.orange),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -282,54 +85,57 @@ class _AdminMapView extends StatelessWidget {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         
         final users = snapshot.data!;
-        final List<Marker> markers = [];
+        final markers = users.where((u) => (u['user_activity'] as List).isNotEmpty).map((user) {
+          final lastPos = (user['user_activity'] as List).first;
+          final String pseudo = user['pseudo'] ?? user['device_id'].toString().substring(0, 8);
+          final point = LatLng(lastPos['latitude'] as double, lastPos['longitude'] as double);
 
-        for (var user in users) {
-          final List activities = user['user_activity'] ?? [];
-          if (activities.isNotEmpty) {
-            final lastPos = activities.first; // Grâce au .order(timestamp DESC) dans le service
-            if (lastPos['latitude'] != null && lastPos['longitude'] != null) {
-              final String pseudo = user['pseudo'] ?? user['device_id'].toString().substring(0, 8);
-              
-              markers.add(
-                Marker(
-                  point: LatLng(lastPos['latitude'] as double, lastPos['longitude'] as double),
-                  width: 100,
-                  height: 80,
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-                        ),
-                        child: Text(
-                          pseudo,
-                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const Icon(Icons.location_on, color: Colors.red, size: 40),
-                    ],
+          return Marker(
+            point: point,
+            width: 120,
+            height: 85,
+            alignment: Alignment.bottomCenter,
+            child: GestureDetector(
+              onTap: () => _showUserSheet(context, user),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
+                    ),
+                    child: Text(
+                      pseudo,
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              );
-            }
-          }
-        }
+                  Transform.translate(
+                    offset: const Offset(0, -1),
+                    child: CustomPaint(
+                      size: const Size(12, 6),
+                      painter: _TrianglePainter(Colors.deepPurple),
+                    ),
+                  ),
+                  const Icon(Icons.location_on_rounded, color: Colors.red, size: 36),
+                ],
+              ),
+            ),
+          );
+        }).toList();
 
         return FlutterMap(
           options: MapOptions(
-            initialCenter: markers.isNotEmpty ? markers.first.point : const LatLng(36.75, 3.05), 
-            initialZoom: 6
+            initialCenter: markers.isNotEmpty ? markers.first.point : const LatLng(36.75, 3.05),
+            initialZoom: 6,
           ),
           children: [
             TileLayer(
-              urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+              urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
               subdomains: const ['a', 'b', 'c', 'd'],
-              userAgentPackageName: 'dz.sigma.wificrack.pro',
             ),
             MarkerLayer(markers: markers),
           ],
@@ -337,44 +143,127 @@ class _AdminMapView extends StatelessWidget {
       },
     );
   }
+
+  void _showUserSheet(BuildContext context, Map<String, dynamic> user) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(user['pseudo'] ?? "Anonyme", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Modèle: ${user['model'] ?? 'Inconnu'}", style: const TextStyle(color: Colors.grey)),
+            const Divider(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => DetailedChatScreen(userId: user['device_id'], pseudo: user['pseudo'] ?? user['device_id'].substring(0,8))));
+                },
+                icon: const Icon(Icons.chat_bubble),
+                label: const Text("Démarrer un chat Sigma"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrianglePainter extends CustomPainter {
+  final Color color;
+  _TrianglePainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width / 2, size.height);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _DashboardSummary extends StatelessWidget {
   final SupabaseService supabase;
   const _DashboardSummary({required this.supabase});
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, int>>(
       future: supabase.fetchStats(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-        final stats = snapshot.data ?? {'wifi': 0, 'activity': 0, 'contacts': 0, 'messages': 0};
-
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        final stats = snapshot.data!;
         return GridView.count(
           crossAxisCount: 2,
           padding: const EdgeInsets.all(16),
           children: [
             _statCard("WiFi", stats['wifi']!, Icons.wifi, Colors.blue),
-            _statCard("Traces", stats['activity']!, Icons.history, Colors.orange),
-            _statCard("Contacts", stats['contacts']!, Icons.contact_phone, Colors.green),
-            _statCard("Messages", stats['messages']!, Icons.chat, Colors.purple),
+            _statCard("GPS", stats['activity']!, Icons.my_location, Colors.orange),
+            _statCard("Contacts", stats['contacts']!, Icons.contacts, Colors.green),
+            _statCard("Messages", stats['messages']!, Icons.message, Colors.purple),
           ],
         );
       },
     );
   }
-
   Widget _statCard(String label, int val, IconData icon, Color color) {
     return Card(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 40),
-          Text(val.toString(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          Text(label),
-        ],
-      ),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(icon, color: color, size: 32),
+        Text(val.toString(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ]),
+    );
+  }
+}
+
+class _UserList extends StatelessWidget {
+  final Future<List<Map<String, dynamic>>> usersFuture;
+  const _UserList({required this.usersFuture});
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUserId = context.read<UserDataService>().deviceId;
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: usersFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        final users = snapshot.data!.where((u) => u['device_id'] != currentUserId).toList();
+        return ListView.builder(
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            final user = users[index];
+            final String pseudo = user['pseudo'] ?? user['device_id'].substring(0, 8);
+            return ListTile(
+              leading: const CircleAvatar(child: Icon(Icons.person)),
+              title: Text(pseudo),
+              subtitle: Text(user['model'] ?? ""),
+              trailing: IconButton(
+                icon: const Icon(Icons.chat, color: Colors.orange),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailedChatScreen(userId: user['device_id'], pseudo: pseudo))),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -384,7 +273,6 @@ class _DataList extends StatefulWidget {
   final String type;
   final bool showSearch;
   const _DataList({required this.fetcher, required this.type, this.showSearch = false});
-
   @override
   State<_DataList> createState() => _DataListState();
 }
@@ -394,53 +282,26 @@ class _DataListState extends State<_DataList> {
   String _query = "";
   bool _loading = false;
   int _offset = 0;
-
   @override
-  void initState() {
-    super.initState();
-    _loadMore(reset: true);
-  }
-
+  void initState() { super.initState(); _loadMore(reset: true); }
   Future<void> _loadMore({bool reset = false}) async {
     if (_loading) return;
     if (reset) { _items.clear(); _offset = 0; }
     setState(() => _loading = true);
     final data = await widget.fetcher(_offset, query: _query);
-    setState(() {
-      _items.addAll(data);
-      _offset += data.length;
-      _loading = false;
-    });
+    if (mounted) setState(() { _items.addAll(data); _offset += data.length; _loading = false; });
   }
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        if (widget.showSearch)
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: const InputDecoration(hintText: "Recherche Nom ou Numéro...", prefixIcon: Icon(Icons.search)),
-              onChanged: (val) {
-                _query = val;
-                _loadMore(reset: true);
-              },
-            ),
-          ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _items.length,
-            itemBuilder: (context, index) {
-              final item = _items[index];
-              return ListTile(
-                title: Text(widget.type == 'contacts' ? item['name'] : (item['ssid'] ?? item['id'])),
-                subtitle: Text(widget.type == 'contacts' ? item['phone'] : item['timestamp']),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+    return Column(children: [
+      if (widget.showSearch) Padding(padding: const EdgeInsets.all(8), child: TextField(decoration: const InputDecoration(hintText: "Rechercher...", prefixIcon: Icon(Icons.search)), onChanged: (v) { _query = v; _loadMore(reset: true); })),
+      Expanded(child: ListView.builder(itemCount: _items.length, itemBuilder: (context, index) {
+        final item = _items[index];
+        return ListTile(
+          title: Text(widget.type == 'contacts' ? item['name'] : (item['ssid'] ?? "Trace")),
+          subtitle: Text(widget.type == 'contacts' ? item['phone'] : (item['timestamp'] ?? "")),
+        );
+      })),
+    ]);
   }
 }

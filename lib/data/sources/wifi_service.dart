@@ -3,45 +3,78 @@ import 'package:flutter/foundation.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wifi_iot/wifi_iot.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/wifi_network.dart';
 import '../../core/wifi_key_calculator.dart';
 
 /// Service expert pour la gestion du matériel WiFi (Android & Windows).
-/// Unifie les accès système et gère les particularités de chaque plateforme.
 class WiFiService {
   bool get isMobile => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
   bool get isWindows => !kIsWeb && Platform.isWindows;
 
-  /// Demande et vérifie les permissions critiques pour le WiFi.
-  Future<bool> requestPermissions() async {
-    if (!isMobile) return true;
-    
+  /// Vérifie si le matériel WiFi est réellement activé.
+  Future<bool> isWiFiHardwareEnabled() async {
+    if (isWindows) return true;
     try {
-      final statuses = await [
-        Permission.location,
-        Permission.nearbyWifiDevices,
-      ].request();
-
-      final isLocationEnabled = await Permission.location.serviceStatus.isEnabled;
-      if (!isLocationEnabled) {
-        debugPrint("⚠️ WiFiService: Le service de localisation (GPS) est désactivé.");
-      }
-      
-      return statuses[Permission.location]?.isGranted == true;
-    } catch (e) {
-      debugPrint("❌ WiFiService Permission Error: $e");
+      return await WiFiForIoTPlugin.isEnabled();
+    } catch (_) {
       return false;
     }
   }
 
-  /// Vérifie si le scan est actuellement possible.
-  Future<bool> isWiFiEnabled() async {
-    if (isWindows) return true; 
+  /// Tente d'activer le WiFi ou ouvre les paramètres.
+  Future<void> openWiFiSettings() async {
+    if (Platform.isAndroid) {
+      await WiFiForIoTPlugin.setEnabled(true, shouldOpenSettings: true);
+    }
+  }
+
+  /// Ouvre les paramètres de localisation.
+  Future<void> openLocationSettings() async {
+    await Geolocator.openLocationSettings();
+  }
+
+  /// Ouvre les paramètres de l'application pour les permissions.
+  Future<void> openAppPermissions() async {
+    await openAppSettings();
+  }
+
+  /// Vérifie si le GPS est activé.
+  Future<bool> isLocationServiceEnabled() async {
+    return await Geolocator.isLocationServiceEnabled();
+  }
+
+  /// Vérifie si le scan peut démarrer et identifie précisément le blocage.
+  Future<CanStartScan> checkCanStartScan() async {
+    if (isWindows) return CanStartScan.yes;
+    try {
+      return await WiFiScan.instance.canStartScan();
+    } catch (_) {
+      return CanStartScan.failed;
+    }
+  }
+
+  /// Demande et vérifie les permissions critiques (Localisation Précise + WiFi).
+  Future<bool> requestPermissions() async {
+    if (!isMobile) return true;
     
     try {
-      final can = await WiFiScan.instance.canGetScannedResults();
-      return can == CanGetScannedResults.yes;
-    } catch (_) {
+      // Sur Android 12+, on demande NEARBY_WIFI_DEVICES + LOCATION
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.location,
+        Permission.locationWhenInUse,
+        Permission.nearbyWifiDevices,
+      ].request();
+
+      // On vérifie si on a la localisation précise
+      final status = await Permission.location.status;
+      if (status.isPermanentlyDenied) {
+        return false;
+      }
+      
+      return status.isGranted || statuses[Permission.nearbyWifiDevices]?.isGranted == true;
+    } catch (e) {
+      debugPrint("❌ WiFiService Permission Error: $e");
       return false;
     }
   }

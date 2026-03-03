@@ -4,44 +4,48 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/wifi_network_model.dart';
 import '../../domain/entities/wifi_network.dart';
 
-/// Source de données locale experte pour la gestion de l'historique WiFi.
-/// Implémente un cache en mémoire pour optimiser les performances de lecture.
+/// Local storage source for WiFi history with an in-memory cache.
 class LocalStorageDataSource {
   static const String _networksKey = 'wifi_networks_history';
   static const String _deviceIdKey = 'sigma_device_id';
-  
-  late final SharedPreferences _prefs;
-  
-  // Cache en mémoire pour éviter les accès disque et le décodage JSON répétitifs
+
+  SharedPreferences? _prefs;
+
+  // In-memory cache to avoid repetitive disk access and JSON decoding.
   List<WiFiNetwork> _cache = [];
   bool _isInitialized = false;
 
-  /// Initialise SharedPreferences et charge le cache initial
+  /// Initializes SharedPreferences and hydrates the initial cache.
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     try {
       _prefs = await SharedPreferences.getInstance();
-      
-      final jsonString = _prefs.getString(_networksKey);
+      if (_prefs == null) return;
+
+      final jsonString = _prefs!.getString(_networksKey);
       if (jsonString != null && jsonString.isNotEmpty) {
         final List<dynamic> jsonList = jsonDecode(jsonString);
         _cache = jsonList
-            .map<WiFiNetwork>((json) => WiFiNetworkModel.fromJson(json as Map<String, dynamic>))
+            .map<WiFiNetwork>(
+              (json) => WiFiNetworkModel.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
       } else {
         _cache = [];
       }
-      
+
       _isInitialized = true;
-      debugPrint("📦 LocalStorage: Initialisé avec ${_cache.length} réseaux en cache.");
+      debugPrint(
+        'LocalStorage initialized with ${_cache.length} cached networks.',
+      );
     } catch (e) {
-      debugPrint("❌ LocalStorage Init Error: $e");
+      debugPrint('LocalStorage init error: $e');
       _cache = [];
     }
   }
 
-  /// Sauvegarde ou met à jour un réseau.
+  /// Saves or updates a network.
   Future<void> saveNetwork(WiFiNetwork network) async {
     try {
       final index = _cache.indexWhere((n) => n.ssid == network.ssid);
@@ -58,7 +62,7 @@ class LocalStorageDataSource {
       _cache.sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
       await _persist();
     } catch (e) {
-      debugPrint("❌ LocalStorage Save Error: $e");
+      debugPrint('LocalStorage save error: $e');
     }
   }
 
@@ -77,7 +81,7 @@ class LocalStorageDataSource {
         await _persist();
       }
     } catch (e) {
-      debugPrint("❌ LocalStorage Update Error: $e");
+      debugPrint('LocalStorage update error: $e');
     }
   }
 
@@ -90,35 +94,45 @@ class LocalStorageDataSource {
         await _persist();
       }
     } catch (e) {
-      debugPrint("❌ LocalStorage Clean Error: $e");
+      debugPrint('LocalStorage clean error: $e');
     }
   }
 
-  /// Gestion de l'ID Unique de l'appareil
+  /// Device ID management.
   String? getDeviceId() {
-    return _prefs.getString(_deviceIdKey);
+    return _prefs?.getString(_deviceIdKey);
   }
 
   Future<void> saveDeviceId(String id) async {
-    await _prefs.setString(_deviceIdKey, id);
+    if (!_isInitialized || _prefs == null) {
+      await initialize();
+    }
+    await _prefs?.setString(_deviceIdKey, id);
   }
 
   String? getPseudo() {
-    return _prefs.getString('sigma_user_pseudo');
+    return _prefs?.getString('sigma_user_pseudo');
   }
 
   Future<void> savePseudo(String pseudo) async {
-    await _prefs.setString('sigma_user_pseudo', pseudo);
+    if (!_isInitialized || _prefs == null) {
+      await initialize();
+    }
+    await _prefs?.setString('sigma_user_pseudo', pseudo);
   }
 
   Future<void> _persist() async {
     try {
-      final jsonList = _cache
-          .map((n) => WiFiNetworkModel.fromEntity(n).toJson())
-          .toList();
-      await _prefs.setString(_networksKey, jsonEncode(jsonList));
+      if (!_isInitialized || _prefs == null) {
+        await initialize();
+      }
+      if (_prefs == null) return;
+
+      final jsonList =
+          _cache.map((n) => WiFiNetworkModel.fromEntity(n).toJson()).toList();
+      await _prefs!.setString(_networksKey, jsonEncode(jsonList));
     } catch (e) {
-      debugPrint("❌ LocalStorage Persistence Error: $e");
+      debugPrint('LocalStorage persistence error: $e');
     }
   }
 }

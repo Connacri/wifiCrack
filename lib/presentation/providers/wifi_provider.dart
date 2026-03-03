@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:wifi_scan/wifi_scan.dart';
 
 import '../../core/wifi_key_calculator.dart';
 import '../../data/sources/local_storage.dart';
@@ -35,27 +36,28 @@ class WiFiProvider extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  /// Initialise le provider au démarrage de l'application.
   Future<void> initialize() async {
     try {
-      // 1. Charger l'historique local immédiatement
       await _storage.initialize();
-      _networks = _storage.getAllNetworks();
-      _connectedSSID = await _wifiService.getCurrentSSID();
-      notifyListeners();
-
-      // 2. Récupérer les données (GPS, Contacts) et synchroniser vers Supabase + Firebase en arrière-plan
-      debugPrint("Lancement de la synchronisation Cloud au démarrage...");
-      await _userDataService.initializeDataSync();
-
-      // Mettre à jour la vue locale après synchronisation potentielle
-      _networks = _storage.getAllNetworks();
-      notifyListeners();
+      await updateLocalData();
+      
+      debugPrint("🚀 WiFiProvider: Initialisation de la synchronisation cloud...");
+      _userDataService.initializeDataSync().then((_) => updateLocalData());
     } catch (e) {
-      _errorMessage = 'Initialisation échouée: $e';
+      _errorMessage = 'Erreur initialisation: $e';
       notifyListeners();
     }
   }
 
+  /// Met à jour les données locales (Réseaux sauvegardés et SSID actuel).
+  Future<void> updateLocalData() async {
+    _networks = _storage.getAllNetworks();
+    _connectedSSID = await _wifiService.getCurrentSSID();
+    notifyListeners();
+  }
+
+  /// Lance un scan des réseaux WiFi avec vérification stricte des pré-requis.
   Future<void> startScan() async {
     if (_scanStatus == ScanStatus.scanning) return;
 
@@ -64,24 +66,37 @@ class WiFiProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // 1. Vérifier d'abord si le matériel WiFi est allumé (Android & Windows)
+      final isWifiOn = await _wifiService.isWiFiHardwareEnabled();
+      if (!isWifiOn) {
+        _scanStatus = ScanStatus.error;
+        _errorMessage = "Le WiFi est désactivé. Veuillez l'activer.";
+        notifyListeners();
+        return;
+      }
+
+      // 2. Demander les permissions système (Android)
       final granted = await _wifiService.requestPermissions();
       if (!granted) {
         _scanStatus = ScanStatus.permissionDenied;
-        _errorMessage = "Permissions de localisation/WiFi refusées.";
+        _errorMessage = "Permissions de localisation précise requises pour scanner.";
         notifyListeners();
         return;
       }
 
-      final wifiEnabled = await _wifiService.isWiFiEnabled();
-      if (!wifiEnabled) {
+      // 3. Vérifier si le service de scan est prêt (Localisation/GPS sur Android)
+      final canStart = await _wifiService.checkCanStartScan();
+      if (canStart != CanStartScan.yes) {
         _scanStatus = ScanStatus.error;
-        _errorMessage = "Le WiFi est désactivé.";
+        _errorMessage = _getReasonFromCanStartScan(canStart);
         notifyListeners();
         return;
       }
 
+      // 4. Effectuer le scan réel
       final results = await _wifiService.scan();
 
+      // 5. Traiter les résultats
       for (final network in results) {
         if (WiFiKeyCalculator.isTargetSSID(network.ssid)) {
           await _storage.saveNetwork(network);
@@ -92,68 +107,103 @@ class WiFiProvider extends ChangeNotifier {
       _scanStatus = _networks.isEmpty ? ScanStatus.error : ScanStatus.success;
 
       if (_networks.isEmpty) {
-        _errorMessage = "Aucun réseau compatible (FH_...) trouvé.";
+        _errorMessage = "Aucun réseau compatible détecté à proximité.";
       }
 
-      // Optionnel: Re-synchroniser avec Cloud après chaque scan pour forcer la demande de permissions si non déjà acceptées
-      await _userDataService.initializeDataSync();
-
+      _userDataService.initializeDataSync();
       notifyListeners();
     } catch (e) {
-      _errorMessage = "Erreur de scan: $e";
+      debugPrint("❌ WiFiProvider Scan Error: $e");
+      _errorMessage = "Erreur lors du scan: $e";
       _scanStatus = ScanStatus.error;
       notifyListeners();
     }
   }
 
+  /// Traduit les codes d'erreur techniques en messages compréhensibles.
+  String _getReasonFromCanStartScan(CanStartScan canStart) {
+    switch (canStart) {
+      case CanStartScan.notSupported:
+        return "Le scan WiFi n'est pas supporté sur cet appareil.";
+      case CanStartScan.noLocationServiceDisabled:
+        return "Le GPS est désactivé. Veuillez l'activer pour scanner.";
+      case CanStartScan.noLocationPermissionDenied:
+      case CanStartScan.noLocationPermissionRequired:
+        return "Permission de localisation manquante ou refusée.";
+      case CanStartScan.failed:
+        return "Échec du démarrage du scan. Réessayez.";
+      default:
+        return "Le scan est indisponible ($canStart).";
+    }
+  }
+
+  /// Actions correctives appelées par l'UI.
+  Future<void> fixWiFi() async {
+    await _wifiService.openWiFiSettings();
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  Future<void> fixLocation() async {
+    await _wifiService.openLocationSettings();
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  Future<void> fixPermissions() async {
+    await _wifiService.openAppPermissions();
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  /// Gère la connexion à un réseau WiFi.
   Future<void> connect(WiFiNetwork network) async {
     if (_connectionStatus == ConnectionStatus.connecting) return;
 
     _connectionStatus = ConnectionStatus.connecting;
     _connectingSSID = network.ssid;
+    _errorMessage = null;
     notifyListeners();
 
-    final success = await _wifiService.connect(
-      network.ssid,
-      network.calculatedKey,
-    );
-    await _storage.updateConnectionStatus(network.ssid, success);
+    try {
+      final success = await _wifiService.connect(
+        network.ssid,
+        network.calculatedKey,
+      );
+      
+      await _storage.updateConnectionStatus(network.ssid, success);
+      await updateLocalData();
 
-    _networks = _storage.getAllNetworks();
-    _connectionStatus = success
-        ? ConnectionStatus.connected
-        : ConnectionStatus.failed;
+      _connectionStatus = success ? ConnectionStatus.connected : ConnectionStatus.failed;
 
-    if (success) {
-      _connectedSSID = network.ssid;
-      _errorMessage = null;
-    } else {
-      if (_wifiService.isWindows) {
-        _errorMessage =
-            "Connexion auto non supportée sur Windows. Copiez la clé !";
+      if (success) {
+        _connectedSSID = network.ssid;
       } else {
-        _errorMessage = "Échec de connexion à ${network.ssid}";
+        _errorMessage = _wifiService.isWindows 
+            ? "Copiez la clé ! Connexion auto indisponible sur Windows." 
+            : "Échec de la connexion à ${network.ssid}.";
       }
+    } catch (e) {
+      _errorMessage = "Erreur de connexion: $e";
+      _connectionStatus = ConnectionStatus.failed;
+    } finally {
+      _connectingSSID = null;
+      notifyListeners();
     }
-
-    _connectingSSID = null;
-    notifyListeners();
   }
 
   Map<String, int> getStats() {
-    final successful = _networks
-        .where((n) => n.lastConnectionSuccess == true)
-        .length;
+    final successful = _networks.where((n) => n.lastConnectionSuccess == true).length;
+    final failed = _networks.where((n) => n.lastConnectionSuccess == false).length;
     return {
       'total': _networks.length,
       'successful': successful,
-      'failed': _networks.where((n) => n.lastConnectionSuccess == false).length,
+      'failed': failed,
     };
   }
 
   Future<void> cleanHistory() async {
     await _storage.cleanOldNetworks(30);
-    _networks = _storage.getAllNetworks();
-    notifyListeners();
+    await updateLocalData();
   }
 }

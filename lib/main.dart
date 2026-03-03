@@ -8,6 +8,7 @@ import '../data/sources/supabase_service.dart';
 import '../data/sources/user_data_service.dart';
 import '../data/sources/wifi_service.dart';
 import '../data/sources/firebase_service.dart';
+import '../data/sources/firebase_messenger_service.dart';
 import '../presentation/providers/wifi_provider.dart';
 import '../presentation/screens/home_screen.dart';
 import 'firebase_options.dart';
@@ -32,8 +33,13 @@ void main() async {
   // 3. Préparer les services
   final wifiService = WiFiService();
   final storage = LocalStorageDataSource();
+  
+  // Initialisation critique de SharedPreferences avant le lancement de l'UI
+  await storage.initialize();
+
   final supabaseService = SupabaseService();
   final firebaseService = FirebaseService();
+  final messengerService = FirebaseMessengerService();
   final userDataService = UserDataService(storage, supabaseService, firebaseService);
   final adService = AdService();
 
@@ -45,6 +51,7 @@ void main() async {
         Provider<UserDataService>.value(value: userDataService),
         Provider<SupabaseService>.value(value: supabaseService),
         Provider<FirebaseService>.value(value: firebaseService),
+        Provider<FirebaseMessengerService>.value(value: messengerService),
         Provider<AdService>.value(value: adService),
         ChangeNotifierProvider<WiFiProvider>(
           create: (context) =>

@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/sources/ad_service.dart';
+import '../../data/sources/firebase_messenger_service.dart';
 import '../../data/sources/user_data_service.dart';
 import '../../domain/entities/wifi_network.dart';
 import '../../presentation/providers/wifi_provider.dart';
@@ -25,6 +26,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<UserDataService>().deviceId;
+      context.read<FirebaseMessengerService>().initializeNotifications(userId);
+      
       context.read<WiFiProvider>().initialize().then((_) {
         if (!mounted) return;
         context.read<WiFiProvider>().startScan();
@@ -305,6 +309,44 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 24),
+              if (provider.errorMessage!.contains("WiFi"))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: FilledButton.icon(
+                    onPressed: () => provider.fixWiFi(),
+                    icon: const Icon(Icons.settings_input_antenna),
+                    label: const Text("Activer le WiFi"),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                    ),
+                  ),
+                ),
+              if (provider.errorMessage!.contains("GPS") ||
+                  provider.errorMessage!.contains("localisation"))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: FilledButton.icon(
+                    onPressed: () => provider.fixLocation(),
+                    icon: const Icon(Icons.location_on),
+                    label: const Text("Activer le GPS"),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                    ),
+                  ),
+                ),
+              if (provider.errorMessage!.contains("Permissions") ||
+                  provider.errorMessage!.contains("refusées"))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: FilledButton.icon(
+                    onPressed: () => provider.fixPermissions(),
+                    icon: const Icon(Icons.security),
+                    label: const Text("Paramètres de l'application"),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  ),
+                ),
               FilledButton.icon(
                 onPressed: () => provider.startScan(),
                 icon: const Icon(Icons.refresh),

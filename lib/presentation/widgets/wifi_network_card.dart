@@ -36,18 +36,18 @@ class WiFiNetworkCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isConnected 
-            ? theme.colorScheme.primaryContainer.withOpacity(0.3) 
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3) 
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isConnected 
-              ? theme.colorScheme.primary.withOpacity(0.5) 
-              : theme.colorScheme.outlineVariant.withOpacity(0.5),
+              ? theme.colorScheme.primary.withValues(alpha: 0.5) 
+              : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           width: isConnected ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -126,7 +126,7 @@ class WiFiNetworkCard extends StatelessWidget {
     }
 
     return Material(
-      color: isConnected ? Colors.red.withOpacity(0.1) : theme.colorScheme.primary.withOpacity(0.1),
+      color: isConnected ? Colors.red.withValues(alpha: 0.1) : theme.colorScheme.primary.withValues(alpha: 0.1),
       shape: const CircleBorder(),
       child: IconButton(
         onPressed: () => onConnect?.call(network),
@@ -162,7 +162,7 @@ class WiFiNetworkCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: Stack(
