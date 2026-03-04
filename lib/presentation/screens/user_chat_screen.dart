@@ -106,59 +106,63 @@ class _UserChatScreenState extends State<UserChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Support Sigma Pro'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        elevation: 2,
+        title: const Text('Support Sigma Pro', style: TextStyle(color: Colors.white)),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        elevation: 4,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _messenger.getMessagesStream(userId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                final docs = snapshot.data?.docs ?? [];
-                _handleMessageListChanged(userId, docs.length);
+      body: Container(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: Column(
+          children: [
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _messenger.getMessagesStream(userId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  
+                  final docs = snapshot.data?.docs ?? [];
+                  _handleMessageListChanged(userId, docs.length);
 
-                if (docs.isEmpty && snapshot.connectionState != ConnectionState.waiting) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedEmoji(AnimatedEmojis.smile, size: 64),
-                        const SizedBox(height: 16),
-                        Text(
-                          "Comment pouvons-nous vous aider ?",
-                          style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    final msg = docs[index].data() as Map<String, dynamic>;
-                    return _UserMessageBubble(
-                      content: msg['content'] ?? "",
-                      isAdmin: msg['is_admin'] ?? false,
-                      type: msg['type'] ?? 'text',
-                      timestamp: msg['timestamp'] as Timestamp?,
+                  if (docs.isEmpty && snapshot.connectionState != ConnectionState.waiting) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedEmoji(AnimatedEmojis.smile, size: 64),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Comment pouvons-nous vous aider ?",
+                            style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
                     );
-                  },
-                );
-              },
+                  }
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final msg = docs[index].data() as Map<String, dynamic>;
+                      return _UserMessageBubble(
+                        content: msg['content'] ?? "",
+                        isAdmin: msg['is_admin'] ?? false,
+                        type: msg['type'] ?? 'text',
+                        timestamp: msg['timestamp'] as Timestamp?,
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-          _buildEmojiBar(userId),
-          _buildInput(userId),
-        ],
+            _buildEmojiBar(userId),
+            _buildInput(userId),
+          ],
+        ),
       ),
     );
   }
@@ -179,8 +183,8 @@ class _UserChatScreenState extends State<UserChatScreen> {
       height: 50,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border(top: BorderSide(color: Colors.grey[200]!)),
+        color: Theme.of(context).cardColor,
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -196,6 +200,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
   }
 
   Widget _buildInput(String userId) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
@@ -204,8 +209,8 @@ class _UserChatScreenState extends State<UserChatScreen> {
         top: 10,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+        color: Theme.of(context).cardColor,
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
       ),
       child: Row(
         children: [
@@ -213,11 +218,13 @@ class _UserChatScreenState extends State<UserChatScreen> {
             child: TextField(
               controller: _controller,
               onSubmitted: (_) => _send(userId),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
               decoration: InputDecoration(
                 hintText: "Écrire au support...",
+                hintStyle: TextStyle(color: Theme.of(context).hintColor),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide.none),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
             ),
@@ -226,6 +233,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
           IconButton.filled(
             onPressed: _isSending ? null : () => _send(userId),
             icon: const Icon(Icons.send),
+            style: IconButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
           ),
         ],
       ),
@@ -248,13 +256,16 @@ class _UserMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: isAdmin ? Alignment.centerLeft : Alignment.centerRight,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isAdmin ? Colors.grey[200] : Theme.of(context).colorScheme.primaryContainer,
+          color: isAdmin 
+              ? (isDark ? Colors.grey[800] : Colors.grey[300])
+              : Theme.of(context).colorScheme.primaryContainer,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(15),
             topRight: const Radius.circular(15),
@@ -268,14 +279,14 @@ class _UserMessageBubble extends StatelessWidget {
             if (type == 'emoji')
                AnimatedEmoji(_getEmojiData(content), size: 48)
             else
-               Text(content, style: const TextStyle(fontSize: 16)),
+               Text(content, style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color)),
             
             if (timestamp != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   DateFormat('HH:mm').format(timestamp!.toDate()),
-                  style: const TextStyle(fontSize: 10, color: Colors.black45),
+                  style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : Colors.black45),
                 ),
               ),
           ],

@@ -258,56 +258,59 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.pseudo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(widget.userId, style: const TextStyle(fontSize: 9, color: Colors.black54)),
+            Text(widget.pseudo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text(widget.userId, style: const TextStyle(fontSize: 9, color: Colors.white70)),
           ],
         ),
-        backgroundColor: Colors.orange[200],
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _messenger.getMessagesStream(widget.userId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                final docs = _sortedDocs(snapshot.data);
-                _handleMessageListChanged(docs.length);
+      body: Container(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: Column(
+          children: [
+            Expanded(
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: _messenger.getMessagesStream(widget.userId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  
+                  final docs = _sortedDocs(snapshot.data);
+                  _handleMessageListChanged(docs.length);
 
-                if (docs.isEmpty) {
-                  return const Center(child: Text('Aucun message pour le moment.'));
-                }
+                  if (docs.isEmpty) {
+                    return Center(child: Text('Aucun message pour le moment.', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)));
+                  }
 
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    final msg = docs[index].data();
-                    return _MessageBubble(
-                      content: msg['content'] ?? "",
-                      isAdmin: msg['is_admin'] ?? false,
-                      isRead: msg['is_read'] ?? false,
-                      type: msg['type'] ?? 'text',
-                      timestamp: msg['timestamp'] as Timestamp?,
-                    );
-                  },
-                );
-              },
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final msg = docs[index].data();
+                      return _MessageBubble(
+                        content: msg['content'] ?? "",
+                        isAdmin: msg['is_admin'] ?? false,
+                        isRead: msg['is_read'] ?? false,
+                        type: msg['type'] ?? 'text',
+                        timestamp: msg['timestamp'] as Timestamp?,
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-          _buildEmojiBar(),
-          _buildInput(),
-        ],
+            _buildEmojiBar(),
+            _buildInput(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmojiBar() {
-    // Correct usage according to doc: AnimatedEmojis.<emoji>
     final emojis = [
       AnimatedEmojis.redHeart,
       AnimatedEmojis.smile,
@@ -323,8 +326,8 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
       height: 50,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border(top: BorderSide(color: Colors.grey[200]!)),
+        color: Theme.of(context).cardColor,
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -340,12 +343,13 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   }
 
   Widget _buildInput() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
+          color: Theme.of(context).cardColor,
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -5))],
         ),
         child: Row(
           children: [
@@ -353,11 +357,13 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
               child: TextField(
                 controller: _controller,
                 onSubmitted: (_) => _send(),
+                style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
                 decoration: InputDecoration(
                   hintText: "Message Admin...",
+                  hintStyle: TextStyle(color: Theme.of(context).hintColor),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide.none),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
               ),
@@ -366,7 +372,7 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
             IconButton.filled(
               onPressed: _isSending ? null : () => _send(),
               icon: const Icon(Icons.send),
-              style: IconButton.styleFrom(backgroundColor: Colors.orange),
+              style: IconButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
             ),
           ],
         ),
@@ -392,13 +398,16 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: isAdmin ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 5),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isAdmin ? Colors.orange[200] : Colors.grey[200],
+          color: isAdmin 
+              ? (isDark ? Colors.deepPurple[800] : Colors.deepPurple[100])
+              : (isDark ? Colors.grey[800] : Colors.grey[300]),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(15),
             topRight: const Radius.circular(15),
@@ -412,7 +421,7 @@ class _MessageBubble extends StatelessWidget {
             if (type == 'emoji')
                AnimatedEmoji(_getEmojiData(content), size: 48)
             else
-               Text(content, style: const TextStyle(fontSize: 16)),
+               Text(content, style: TextStyle(fontSize: 16, color: isAdmin ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.white : Colors.black87))),
             
             const SizedBox(height: 2),
             Row(
@@ -421,7 +430,7 @@ class _MessageBubble extends StatelessWidget {
                 if (timestamp != null)
                   Text(
                     DateFormat('HH:mm').format(timestamp!.toDate()),
-                    style: const TextStyle(fontSize: 10, color: Colors.black45),
+                    style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : Colors.black45),
                   ),
                 if (isAdmin) ...[
                   const SizedBox(width: 5),

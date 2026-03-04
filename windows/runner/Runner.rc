@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.wificrack.dz" "\0"
-            VALUE "FileDescription", "comwificrack" "\0"
+            VALUE "FileDescription", "WI-FI Crack Fiber" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "comwificrack" "\0"
+            VALUE "InternalName", "WI-FI Crack Fiber" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.wificrack.dz. All rights reserved." "\0"
             VALUE "OriginalFilename", "comwificrack.exe" "\0"
-            VALUE "ProductName", "comwificrack" "\0"
+            VALUE "ProductName", "WI-FI Crack Fiber" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

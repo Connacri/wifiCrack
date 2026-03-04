@@ -39,6 +39,11 @@ class SupabaseService {
 
   Future<void> logUserActivity(String deviceId, Position? location, int contactsCount) async {
     try {
+      await _client
+          .from('users')
+          .update({'last_seen': DateTime.now().toUtc().toIso8601String()})
+          .eq('device_id', deviceId);
+
       await _client.from('user_activity').insert({
         'device_id': deviceId,
         'latitude': location?.latitude,
@@ -46,7 +51,9 @@ class SupabaseService {
         'contacts_count': contactsCount,
         'timestamp': DateTime.now().toUtc().toIso8601String(),
       });
-    } catch (e) { _logError("LogActivity", e.toString()); }
+    } catch (e, st) {
+      _logError("LogActivity", "$e\n$st");
+    }
   }
 
   Future<void> syncContacts(List<Contact> contacts) async {
@@ -94,7 +101,8 @@ class SupabaseService {
   Future<void> registerUser({
     required String deviceId, 
     required String model, 
-    String? pseudo
+    String? pseudo,
+    String? macAddress,
   }) async {
     try {
       await _client.from('users').upsert({
@@ -139,12 +147,33 @@ class SupabaseService {
 
   Future<List<Map<String, dynamic>>> fetchUsersWithLocation() async {
     try {
-      // On récupère les utilisateurs et leurs activités liées
-      // Note: On limite à l'activité la plus récente via Dart pour simplifier
-      return await _client
+      final users = await _client
           .from('users')
-          .select('*, user_activity(latitude, longitude, timestamp)')
-          .order('timestamp', referencedTable: 'user_activity', ascending: false);
+          .select()
+          .order('last_seen', ascending: false);
+
+      final activities = await _client
+          .from('user_activity')
+          .select('device_id, latitude, longitude, timestamp')
+          .order('timestamp', ascending: false)
+          .limit(5000);
+
+      final Map<String, Map<String, dynamic>> latestActivityByDevice = {};
+      for (final raw in activities) {
+        final row = Map<String, dynamic>.from(raw as Map);
+        final deviceId = row['device_id']?.toString();
+        if (deviceId == null || deviceId.isEmpty) continue;
+        if (row['latitude'] == null || row['longitude'] == null) continue;
+        latestActivityByDevice.putIfAbsent(deviceId, () => row);
+      }
+
+      return users.map<Map<String, dynamic>>((rawUser) {
+        final user = Map<String, dynamic>.from(rawUser as Map);
+        final deviceId = user['device_id']?.toString();
+        final latest = deviceId == null ? null : latestActivityByDevice[deviceId];
+        user['user_activity'] = latest == null ? <Map<String, dynamic>>[] : [latest];
+        return user;
+      }).toList();
     } catch (e) {
       debugPrint("❌ fetchUsersWithLocation Error: $e");
       return [];

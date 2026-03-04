@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../data/sources/ad_service.dart';
 import '../../data/sources/firebase_messenger_service.dart';
 import '../../data/sources/user_data_service.dart';
+import '../../data/sources/wifi_service.dart';
 import '../../domain/entities/wifi_network.dart';
 import '../../presentation/providers/wifi_provider.dart';
 import '../../presentation/screens/admin_screen.dart';
@@ -21,6 +22,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   BannerAd? _bannerAd;
+  bool _serviceDialogVisible = false;
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
       
       context.read<WiFiProvider>().initialize().then((_) {
         if (!mounted) return;
+        _checkCriticalServices();
         context.read<WiFiProvider>().startScan();
       });
 
@@ -52,6 +55,87 @@ class _HomeScreenState extends State<HomeScreen> {
     _bannerAd?.dispose();
     AdService().stopListeningToLifecycle();
     super.dispose();
+  }
+
+  Future<void> _checkCriticalServices() async {
+    if (!mounted || _serviceDialogVisible) return;
+
+    final wifiService = context.read<WiFiService>();
+    final isWifiOn = await wifiService.isWiFiHardwareEnabled();
+    if (!mounted) return;
+
+    if (!isWifiOn) {
+      await _showServiceDialog(
+        title: "Wi-Fi désactivé",
+        message: "Le Wi-Fi doit être activé pour scanner les réseaux.",
+        confirmLabel: "Activer Wi-Fi",
+        onConfirm: () async {
+          await context.read<WiFiProvider>().fixWiFi();
+          if (mounted) {
+            Future.delayed(
+              const Duration(milliseconds: 500),
+              _checkCriticalServices,
+            );
+          }
+        },
+      );
+      return;
+    }
+
+    final isGpsOn = await wifiService.isLocationServiceEnabled();
+    if (!mounted) return;
+
+    if (!isGpsOn) {
+      await _showServiceDialog(
+        title: "GPS désactivé",
+        message: "Le GPS doit être activé pour le tracking et l'enregistrement de user_activity.",
+        confirmLabel: "Activer GPS",
+        onConfirm: () async {
+          await context.read<WiFiProvider>().fixLocation();
+          await context.read<UserDataService>().startLocationTracking();
+          if (mounted) {
+            Future.delayed(
+              const Duration(milliseconds: 500),
+              _checkCriticalServices,
+            );
+          }
+        },
+      );
+    }
+  }
+
+  Future<void> _showServiceDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required Future<void> Function() onConfirm,
+  }) async {
+    if (!mounted || _serviceDialogVisible) return;
+    _serviceDialogVisible = true;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Plus tard"),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await onConfirm();
+            },
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+
+    _serviceDialogVisible = false;
   }
 
   void _onConnect(WiFiNetwork network) {
@@ -149,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
               controller: passwordController,
               obscureText: obscurePassword,
               decoration: InputDecoration(
-                labelText: 'Mot de passe Sigma',
+                labelText: 'Mot de passe',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -216,14 +300,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Text(
-                  'Version Clean Arch',
+                  'Sigma Edition',
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.info_outline),
+            leading: Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
             title: const Text('À propos'),
             onTap: () => _showAboutDialog(context),
           ),
@@ -232,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Icons.account_circle_outlined,
               color: Colors.green,
             ),
-            title: const Text('Mon Profil Sigma'),
+            title: const Text('Mon Profil'),
             onTap: () {
               Navigator.pop(context);
               _showProfileDialog(context);
@@ -240,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.bolt, color: Colors.orange),
-            title: const Text('Sigma Messenger'),
+            title: const Text('Messenger'),
             onTap: () {
               Navigator.pop(context);
               AdService().showRewardedInterstitialAd(() {
@@ -255,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.chat_outlined, color: Colors.blue),
-            title: const Text('Support Sigma'),
+            title: const Text('Support'),
             onTap: () {
               Navigator.pop(context);
               AdService().showRewardedInterstitialAd(() {
@@ -267,6 +351,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               });
             },
+          ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              "ID: ${context.read<UserDataService>().deviceId}",
+              style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor),
+            ),
           ),
         ],
       ),
@@ -484,7 +576,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showAboutDialog(
       context: context,
       applicationName: 'WiFi Key Scanner',
-      applicationVersion: '2.0.0 (Clean Arch)',
+      applicationVersion: '2.0.0',
       applicationIcon: const Icon(Icons.wifi_password, size: 48),
       children: [
         const Text("Application de décodage et connexion WiFi automatique."),
@@ -507,7 +599,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Mon Profil Sigma'),
+          title: const Text('Mon Profil'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

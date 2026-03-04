@@ -69,7 +69,7 @@ class WiFiKeyScanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WiFi Key Tool',
+      title: 'WI-FI Crack Fiber',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
@@ -79,16 +79,45 @@ class WiFiKeyScanner extends StatelessWidget {
   }
 
   ThemeData _buildTheme(Brightness brightness) {
+    final bool isDark = brightness == Brightness.dark;
+    final primaryColor = Colors.deepPurple;
+    final accentColor = Colors.orangeAccent;
+
     return ThemeData(
       useMaterial3: true,
+      brightness: brightness,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.deepPurple,
+        seedColor: primaryColor,
         brightness: brightness,
+        primary: primaryColor,
+        secondary: accentColor,
+        surface: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+      ),
+      scaffoldBackgroundColor: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF5F5F7),
+      appBarTheme: AppBarTheme(
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.5),
+      ),
+      drawerTheme: DrawerThemeData(
+        backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
       ),
       cardTheme: CardThemeData(
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        elevation: 4,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
-      appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(fontWeight: FontWeight.bold),
+        bodyLarge: TextStyle(fontSize: 16),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: accentColor,
+        foregroundColor: Colors.black,
+      ),
     );
   }
 }
