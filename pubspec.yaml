@@ -56,7 +56,7 @@ flutter_launcher_icons:
 flutter_native_splash:
   background_image: "assets/splash.png"
   android_12:
-    image: "assets/splash_android12_icon.png"
+    image: "assets/icon.png"
     color: "#ffffff"
     fullscreen: true
   fullscreen: true
