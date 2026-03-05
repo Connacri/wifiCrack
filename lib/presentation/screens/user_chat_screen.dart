@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:animated_emoji/animated_emoji.dart';
 import '../../data/sources/firebase_messenger_service.dart';
 import '../../data/sources/user_data_service.dart';
+import '../widgets/messenger_audio_widgets.dart';
 
 class UserChatScreen extends StatefulWidget {
   const UserChatScreen({super.key});
@@ -72,16 +73,30 @@ class _UserChatScreenState extends State<UserChatScreen> {
     });
   }
 
-  Future<void> _send(String userId, {String? content, String type = 'text'}) async {
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _sortedDocs(QuerySnapshot? snapshot) {
+    final docs = List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(snapshot?.docs ?? const []);
+    docs.sort((a, b) {
+      final aTs = a.data()['timestamp'] as Timestamp?;
+      final bTs = b.data()['timestamp'] as Timestamp?;
+      final aTime = aTs?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+      final bTime = bTs?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+      return aTime.compareTo(bTime);
+    });
+    return docs;
+  }
+
+  Future<void> _send(String userId, {String? content, String type = 'text', String? fileUrl, int? duration}) async {
     final msg = content ?? _controller.text.trim();
-    if (msg.isEmpty || _isSending) return;
+    if ((msg.isEmpty && fileUrl == null && type != 'audio') || _isSending) return;
 
     setState(() => _isSending = true);
     final sent = await _messenger.sendMessage(
       userId,
-      msg,
+      msg.isEmpty ? (type == 'audio' ? '🎤 Vocal' : 'Message') : msg,
       isAdmin: false,
       type: type,
+      fileUrl: fileUrl,
+      durationInSeconds: duration,
     );
     if (!mounted) return;
     setState(() => _isSending = false);
@@ -98,6 +113,13 @@ class _UserChatScreenState extends State<UserChatScreen> {
       if (!mounted) return;
       _scrollToBottom();
     });
+  }
+
+  Future<void> _handleAudio(String userId, String path, Duration duration) async {
+    final url = await _messenger.uploadAudio(userId, path);
+    if (url != null) {
+      await _send(userId, type: 'audio', fileUrl: url, duration: duration.inSeconds);
+    }
   }
 
   @override
@@ -123,7 +145,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   
-                  final docs = snapshot.data?.docs ?? [];
+                  final docs = _sortedDocs(snapshot.data);
                   _handleMessageListChanged(userId, docs.length);
 
                   if (docs.isEmpty && snapshot.connectionState != ConnectionState.waiting) {
@@ -152,6 +174,8 @@ class _UserChatScreenState extends State<UserChatScreen> {
                         content: msg['content'] ?? "",
                         isAdmin: msg['is_admin'] ?? false,
                         type: msg['type'] ?? 'text',
+                        fileUrl: msg['file_url'],
+                        duration: msg['duration'],
                         timestamp: msg['timestamp'] as Timestamp?,
                       );
                     },
@@ -217,7 +241,6 @@ class _UserChatScreenState extends State<UserChatScreen> {
           Expanded(
             child: TextField(
               controller: _controller,
-              onSubmitted: (_) => _send(userId),
               style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
               decoration: InputDecoration(
                 hintText: "Écrire au support...",
@@ -229,12 +252,14 @@ class _UserChatScreenState extends State<UserChatScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 10),
-          IconButton.filled(
-            onPressed: _isSending ? null : () => _send(userId),
-            icon: const Icon(Icons.send),
-            style: IconButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
-          ),
+          const SizedBox(width: 8),
+          _controller.text.trim().isEmpty 
+            ? VoiceRecorder(onStop: (path, dur) => _handleAudio(userId, path, dur))
+            : IconButton.filled(
+                onPressed: _isSending ? null : () => _send(userId),
+                icon: const Icon(Icons.send),
+                style: IconButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+              ),
         ],
       ),
     );
@@ -245,12 +270,16 @@ class _UserMessageBubble extends StatelessWidget {
   final String content;
   final bool isAdmin;
   final String type;
+  final String? fileUrl;
+  final int? duration;
   final Timestamp? timestamp;
 
   const _UserMessageBubble({
     required this.content,
     required this.isAdmin,
     required this.type,
+    this.fileUrl,
+    this.duration,
     this.timestamp,
   });
 
@@ -261,8 +290,8 @@ class _UserMessageBubble extends StatelessWidget {
       alignment: isAdmin ? Alignment.centerLeft : Alignment.centerRight,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
+        padding: type == 'audio' ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: type == 'audio' ? null : BoxDecoration(
           color: isAdmin 
               ? (isDark ? Colors.grey[800] : Colors.grey[300])
               : Theme.of(context).colorScheme.primaryContainer,
@@ -278,6 +307,8 @@ class _UserMessageBubble extends StatelessWidget {
           children: [
             if (type == 'emoji')
                AnimatedEmoji(_getEmojiData(content), size: 48)
+            else if (type == 'audio' && fileUrl != null)
+               AudioMessageBubble(url: fileUrl!, isAdmin: isAdmin, duration: duration != null ? Duration(seconds: duration!) : null)
             else
                Text(content, style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color)),
             

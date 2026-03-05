@@ -3,16 +3,16 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/sources/ad_service.dart';
-import '../data/sources/local_storage.dart';
-import '../data/sources/supabase_service.dart';
-import '../data/sources/user_data_service.dart';
-import '../data/sources/wifi_service.dart';
-import '../data/sources/firebase_service.dart';
-import '../data/sources/firebase_messenger_service.dart';
-import '../data/sources/p2p_transfer_service.dart';
-import '../presentation/providers/wifi_provider.dart';
-import '../presentation/screens/home_screen.dart';
+import 'data/sources/ad_service.dart';
+import 'data/sources/local_storage.dart';
+import 'data/sources/supabase_service.dart';
+import 'data/sources/user_data_service.dart';
+import 'data/sources/wifi_service.dart';
+import 'data/sources/firebase_service.dart';
+import 'data/sources/firebase_messenger_service.dart';
+import 'data/sources/p2p_transfer_service.dart';
+import 'presentation/providers/wifi_provider.dart';
+import 'presentation/screens/home_screen.dart';
 import 'firebase_options.dart';
 
 /// Gestionnaire obligatoire pour les notifications quand l'app est fermée (Android)
@@ -23,16 +23,26 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
-  // 1. Initialisation minimale pour un démarrage instantané
+  // 1. Initialisation vitale du framework
   WidgetsFlutterBinding.ensureInitialized();
   
+  // 2. INITIALISATION BLOQUANTE DE FIREBASE (Indispensable pour éviter le StateError)
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    debugPrint("🔥 Firebase Initialisé avec succès.");
+  } catch (e) {
+    debugPrint("❌ Erreur critique Firebase: $e");
+  }
+
+  // 3. Stockage local bloquant
   final storage = LocalStorageDataSource();
-  await storage.initialize(); // Seul le stockage local est bloquant
+  await storage.initialize(); 
 
   runApp(
     MultiProvider(
       providers: [
-        // Services de base (Singletons)
+        // Services de base (Déjà initialisés ou sans dépendances bloquantes)
         Provider<WiFiService>(create: (_) => WiFiService()),
         Provider<LocalStorageDataSource>.value(value: storage),
         Provider<SupabaseService>(create: (_) => SupabaseService()),
@@ -40,19 +50,19 @@ void main() async {
         Provider<FirebaseMessengerService>(create: (_) => FirebaseMessengerService()),
         Provider<AdService>(create: (_) => AdService()),
         
-        // Service P2P expert (Signaling via Supabase)
+        // Service P2P
         ProxyProvider2<SupabaseService, UserDataService, P2PTransferService>(
           update: (_, supabase, userData, __) => 
               P2PTransferService(supabase, userData.deviceId),
         ),
 
-        // Service dépendant (UserDataService dépend des services cloud)
+        // Service dépendant des 4 piliers
         ProxyProvider4<LocalStorageDataSource, SupabaseService, FirebaseService, FirebaseMessengerService, UserDataService>(
           update: (_, storage, supabase, firebase, messenger, __) => 
               UserDataService(storage, supabase, firebase, messenger),
         ),
 
-        // Provider de l'UI (Dépendant de WiFiService et UserDataService)
+        // Provider de l'UI
         ChangeNotifierProxyProvider3<WiFiService, LocalStorageDataSource, UserDataService, WiFiProvider>(
           create: (context) => WiFiProvider(
             context.read<WiFiService>(),
@@ -67,22 +77,15 @@ void main() async {
     ),
   );
 
-  // 2. Initialisations Cloud en arrière-plan (Non bloquant pour l'UI)
-  _initCloudServices();
+  // 4. Autres services Cloud (Peuvent rester en arrière-plan)
+  _initOtherServices();
 }
 
-/// Initialise les services lourds sans bloquer le thread principal
-Future<void> _initCloudServices() async {
+Future<void> _initOtherServices() async {
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    
-    // Configurer le handler de messages en arrière-plan
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    
     await SupabaseService.initialize();
     await AdService.initialize();
-    
-    debugPrint("✅ Cloud Services Initialisés (Background)");
+    debugPrint("✅ Autres services initialisés.");
   } catch (e) {
     debugPrint("⚠️ Background Init Warning: $e");
   }
@@ -94,7 +97,7 @@ class WiFiKeyScanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WI-FI Crack Fiber',
+      title: 'Sigma WiFi Crack',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),

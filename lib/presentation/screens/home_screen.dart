@@ -24,6 +24,38 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _openAdmin(BuildContext context) {
+    final ctrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Accès Admin"),
+        content: TextField(
+          controller: ctrl,
+          obscureText: true,
+          decoration: const InputDecoration(labelText: "Mot de passe Sigma"),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+          FilledButton(
+            onPressed: () {
+              if (ctrl.text == "Sigma31311!") {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Accès refusé.")),
+                );
+              }
+            },
+            child: const Text("Entrer"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final wifi = context.watch<WiFiProvider>();
@@ -36,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.admin_panel_settings),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen())),
+            onPressed: () => _openAdmin(context),
           ),
           IconButton(
             icon: const Icon(Icons.chat),

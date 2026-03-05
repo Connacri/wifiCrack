@@ -200,19 +200,22 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
     docs.sort((a, b) {
       final aTs = a.data()['timestamp'] as Timestamp?;
       final bTs = b.data()['timestamp'] as Timestamp?;
-      return (aTs?.millisecondsSinceEpoch ?? 0).compareTo(bTs?.millisecondsSinceEpoch ?? 0);
+      // Use current time as fallback for null timestamps to prevent jumping
+      final aTime = aTs?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+      final bTime = bTs?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+      return aTime.compareTo(bTime);
     });
     return docs;
   }
 
   Future<void> _send({String? content, String type = 'text', String? fileUrl, int? duration}) async {
     final msg = content ?? _controller.text.trim();
-    if ((msg.isEmpty && fileUrl == null) || _isSending) return;
+    if ((msg.isEmpty && fileUrl == null && type != 'audio') || _isSending) return;
 
     setState(() => _isSending = true);
     final sent = await _messenger.sendMessage(
       widget.userId,
-      msg.isEmpty ? (type == 'audio' ? '🎤 Vocal' : 'Message') : msg,
+      msg.isEmpty ? (type == 'audio' ? '🎤 Vocal Sigma' : 'Message') : msg,
       isAdmin: true,
       type: type,
       fileUrl: fileUrl,
@@ -227,14 +230,49 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   }
 
   Future<void> _handleAudio(String path, Duration duration) async {
-    // 1. Envoyer un signal "Vocal Sigma" via Firebase (Léger)
-    await _send(type: 'audio', content: '🎤 Vocal P2P (En attente...)');
-    
-    // 2. Mettre le fichier en file d'attente P2P (Zéro coût Cloud)
-    final p2p = context.read<P2PTransferService>();
-    await p2p.queueFileForTransfer(widget.userId, path);
-    
-    debugPrint("🚀 Transfert P2P initié pour le fichier : $path");
+    // 1. Upload vers Firebase Storage (Plus fiable que P2P pour l'admin)
+    final url = await _messenger.uploadAudio(widget.userId, path);
+    if (url != null) {
+      await _send(type: 'audio', fileUrl: url, duration: duration.inSeconds);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erreur lors de l'envoi du vocal.")),
+      );
+    }
+  }
+
+  void _showAddCoinsDialog() {
+    final ctrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Coins pour ${widget.pseudo}"),
+        content: TextField(
+          controller: ctrl,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: "Nombre de coins à ajouter"),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+          FilledButton(
+            onPressed: () async {
+              final amount = int.tryParse(ctrl.text) ?? 0;
+              if (amount > 0) {
+                await context.read<SupabaseService>().addCoins(widget.userId, amount);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("$amount coins ajoutés à ${widget.pseudo}")),
+                  );
+                }
+              }
+            },
+            child: const Text("Ajouter"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -247,6 +285,13 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
         ]),
         backgroundColor: Theme.of(context).colorScheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.monetization_on, color: Colors.orange),
+            tooltip: "Ajouter des coins",
+            onPressed: _showAddCoinsDialog,
+          ),
+        ],
       ),
       body: Column(
         children: [

@@ -64,8 +64,8 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
         children: [
           _DashboardSummary(supabase: _supabase),
           _CarouselManager(supabase: _supabase),
-          _UserList(usersFuture: _usersFuture, supabase: _supabase),
-          _AdminMapView(supabase: _supabase),
+          _UserList(usersFuture: _usersFuture, supabase: _supabase, onRefresh: _refreshData),
+          _AdminMapView(supabase: _supabase, onRefresh: _refreshData),
           _DataList(fetcher: _supabase.fetchUserActivity, type: 'activity'),
           _DataList(fetcher: _supabase.fetchContacts, type: 'contacts', showSearch: true),
         ],
@@ -117,7 +117,8 @@ class _CarouselManagerState extends State<_CarouselManager> {
 
 class _AdminMapView extends StatelessWidget {
   final SupabaseService supabase;
-  const _AdminMapView({required this.supabase});
+  final VoidCallback onRefresh;
+  const _AdminMapView({required this.supabase, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -161,27 +162,73 @@ class _AdminMapView extends StatelessWidget {
   }
 
   void _showUserSheet(BuildContext context, Map<String, dynamic> user) {
+    final String pseudo = user['pseudo'] ?? user['device_id'].toString().substring(0, 8);
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(user['pseudo'] ?? "Anonyme", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(pseudo, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                Text("Coins: ${user['coins'] ?? 0}", style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+              ],
+            ),
             const SizedBox(height: 8),
             Text("Modèle: ${user['model'] ?? 'Inconnu'}", style: const TextStyle(color: Colors.grey)),
             const Divider(height: 32),
-            SizedBox(width: double.infinity, height: 50, child: FilledButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => DetailedChatScreen(userId: user['device_id'], pseudo: user['pseudo'] ?? user['device_id'].substring(0,8))));
-                },
-                icon: const Icon(Icons.chat_bubble),
-                label: const Text("Démarrer un chat Sigma"),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => DetailedChatScreen(userId: user['device_id'], pseudo: pseudo)));
+                    },
+                    icon: const Icon(Icons.chat_bubble),
+                    label: const Text("Chat"),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showAddCoinsDialog(context, user['device_id'], pseudo);
+                    },
+                    icon: const Icon(Icons.monetization_on),
+                    label: const Text("Donner Coins"),
+                    style: FilledButton.styleFrom(backgroundColor: Colors.orange[800]),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAddCoinsDialog(BuildContext context, String userId, String pseudo) {
+    final ctrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Coins pour $pseudo"),
+        content: TextField(controller: ctrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "Nombre de coins")),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+          FilledButton(onPressed: () async {
+            final amount = int.tryParse(ctrl.text) ?? 0;
+            if (amount > 0) {
+              await supabase.addCoins(userId, amount);
+              onRefresh();
+            }
+            if (context.mounted) Navigator.pop(context);
+          }, child: const Text("Ajouter")),
+        ],
       ),
     );
   }
@@ -223,7 +270,8 @@ class _DashboardSummary extends StatelessWidget {
 class _UserList extends StatelessWidget {
   final Future<List<Map<String, dynamic>>> usersFuture;
   final SupabaseService supabase;
-  const _UserList({required this.usersFuture, required this.supabase});
+  final VoidCallback onRefresh;
+  const _UserList({required this.usersFuture, required this.supabase, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -273,7 +321,10 @@ class _UserList extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
           FilledButton(onPressed: () async {
             final amount = int.tryParse(ctrl.text) ?? 0;
-            await supabase.addCoins(userId, amount);
+            if (amount > 0) {
+              await supabase.addCoins(userId, amount);
+              onRefresh();
+            }
             if (context.mounted) Navigator.pop(context);
           }, child: const Text("Ajouter")),
         ],
