@@ -1,8 +1,6 @@
 name: comwificrack
 description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
 version: 1.0.0+1
 
@@ -23,9 +21,10 @@ dependencies:
   flutter_contacts: ^1.1.9+2
   supabase_flutter: ^2.12.0
   google_mobile_ads: ^7.0.0
-  firebase_core: ^4.4.0
+  firebase_core: ^4.5.0
   firebase_messaging: ^16.1.2
-  cloud_firestore: ^6.1.2
+  cloud_firestore: ^6.1.3
+  firebase_storage: ^13.1.0
 
   provider: ^6.1.5+1
   flutter_map: ^8.2.2
@@ -33,26 +32,35 @@ dependencies:
   intl: ^0.20.2
   animated_emoji: ^3.2.1
   material_color_utilities: any
+  carousel_slider: ^5.1.2
+  url_launcher: ^6.3.2
+  
+  # --- DEPENDANCES EXPERTES AUDIO & P2P ---
+  record: ^6.2.0
+  audioplayers: ^6.6.0
+  flutter_webrtc: ^1.3.1
+  path_provider: ^2.1.5
+  flutter_local_notifications: ^20.1.0
+  # ----------------------------------------
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: ^2.11.1
+  build_runner: ^2.12.1
   flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
   flutter_native_splash: ^2.4.7
 
-# Configuration de l'icône de l'application
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon.png" # Si vous n'avez pas encore icon.png, utilisez splash.png ici aussi
+  image_path: "assets/icon.png"
   min_sdk_android: 21
   windows:
     generate: true
     image_path: "assets/splash.png"
     icon_size: 256
 
-# Configuration de l'écran de démarrage (Splash) en plein écran
 flutter_native_splash:
   background_image: "assets/splash.png"
   android_12:

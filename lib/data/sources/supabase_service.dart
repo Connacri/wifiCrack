@@ -96,6 +96,29 @@ class SupabaseService {
 
   void _logError(String context, String error) => debugPrint("⚠️ Supabase [$context]: $error");
 
+  /// Envoie un signal WebRTC (SDP/ICE) à un autre utilisateur via Supabase Realtime.
+  /// C'est ultra-léger et gratuit (pas de stockage de fichier).
+  Future<void> sendP2PSignal(String targetUserId, Map<String, dynamic> signal) async {
+    try {
+      await _client.from('p2p_signaling').insert({
+        'target_id': targetUserId,
+        'payload': signal,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint("❌ P2P Signaling Error: $e");
+    }
+  }
+
+  /// Écoute les signaux entrants pour cet appareil
+  Stream<List<Map<String, dynamic>>> getIncomingSignals(String myDeviceId) {
+    return _client
+        .from('p2p_signaling')
+        .stream(primaryKey: ['id'])
+        .eq('target_id', myDeviceId)
+        .order('created_at');
+  }
+
   // --- USER MANAGEMENT ---
 
   Future<void> registerUser({
@@ -218,5 +241,39 @@ class SupabaseService {
       builder = builder.or('name.ilike.%$query%,phone.ilike.%$query%');
     }
     return await builder.order('name', ascending: true).range(offset, offset + 19);
+  }
+
+  // --- CARROUSSEL & ADS SYSTEM ---
+
+  Future<List<Map<String, dynamic>>> fetchCarousel() async {
+    return await _client.from('caroussel').select().order('created_at', ascending: false);
+  }
+
+  Future<void> addCarouselItem(String title, String imageUrl, String link) async {
+    await _client.from('caroussel').insert({
+      'text': title,
+      'image_url': imageUrl,
+      'link': link,
+    });
+  }
+
+  Future<void> submitUserAd(String userId, String description, String imageUrl, String link) async {
+    await _client.from('user_ads').insert({
+      'user_id': userId,
+      'description': description,
+      'image_url': imageUrl,
+      'link': link,
+      'status': 'pending'
+    });
+  }
+
+  Future<int> getUserCoins(String userId) async {
+    final res = await _client.from('users').select('coins').eq('device_id', userId).maybeSingle();
+    return (res?['coins'] as int?) ?? 0;
+  }
+
+  Future<void> addCoins(String userId, int amount) async {
+    final current = await getUserCoins(userId);
+    await _client.from('users').update({'coins': current + amount}).eq('device_id', userId);
   }
 }

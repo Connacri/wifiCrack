@@ -4,6 +4,8 @@ import 'package:comwificrack/data/sources/supabase_service.dart';
 import 'package:comwificrack/data/sources/user_data_service.dart';
 import 'package:comwificrack/data/sources/wifi_service.dart';
 import 'package:comwificrack/data/sources/firebase_service.dart';
+import 'package:comwificrack/data/sources/firebase_messenger_service.dart';
+import 'package:comwificrack/data/sources/p2p_transfer_service.dart';
 import 'package:comwificrack/presentation/providers/wifi_provider.dart';
 import 'package:comwificrack/presentation/screens/home_screen.dart';
 import 'package:flutter/material.dart';
@@ -13,32 +15,11 @@ import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 
-// Mock pour AdService pour éviter les appels natifs dans les tests
+// Mocks légers pour les tests
 class MockAdService extends AdService {
   MockAdService() : super.internal();
-
   @override
   BannerAd? getBannerAd() => null;
-  @override
-  void showInterstitialAd() {}
-  @override
-  void loadAppOpenAd({bool showImmediately = false}) {}
-  @override
-  void loadInterstitialAd() {}
-  @override
-  void loadRewardedAd() {}
-  @override
-  void showAppOpenAdIfAvailable() {}
-  @override
-  void showRewardedAd(Function onRewardEarned, Function onAdClosed) { onAdClosed(); }
-  @override
-  void startListeningToLifecycle() {}
-  @override
-  void stopListeningToLifecycle() {}
-  @override
-  void showRewardedInterstitialAd(Function onRewardEarned) { onRewardEarned(); }
-  @override
-  NativeAd getNativeAd(VoidCallback onLoaded) { throw UnimplementedError(); }
 }
 
 class MockFirebaseService implements FirebaseService {
@@ -51,16 +32,20 @@ class MockFirebaseService implements FirebaseService {
 }
 
 void main() {
-  testWidgets('Test de démarrage et de présence du titre WiFi Key Scanner', (
+  testWidgets('Test de démarrage et de présence du titre Sigma WiFi Crack', (
     WidgetTester tester,
   ) async {
+    // 1. Initialiser les services
     final wifiService = WiFiService();
     final storage = LocalStorageDataSource();
     final supabaseService = SupabaseService();
     final firebaseService = MockFirebaseService();
-    final userDataService = UserDataService(storage, supabaseService, firebaseService);
+    final messengerService = FirebaseMessengerService();
+    final userDataService = UserDataService(storage, supabaseService, firebaseService, messengerService);
     final mockAdService = MockAdService();
+    final p2pService = P2PTransferService(supabaseService, "test_device");
 
+    // 2. Build l'UI avec tous les Providers requis
     await tester.pumpWidget(
       MultiProvider(
         providers: [
@@ -69,18 +54,19 @@ void main() {
           Provider<UserDataService>.value(value: userDataService),
           Provider<SupabaseService>.value(value: supabaseService),
           Provider<FirebaseService>.value(value: firebaseService),
+          Provider<FirebaseMessengerService>.value(value: messengerService),
           Provider<AdService>.value(value: mockAdService),
+          Provider<P2PTransferService>.value(value: p2pService),
           ChangeNotifierProvider<WiFiProvider>(
-            create: (context) =>
-                WiFiProvider(wifiService, storage, userDataService),
+            create: (context) => WiFiProvider(wifiService, storage, userDataService),
           ),
         ],
         child: const MaterialApp(home: HomeScreen()),
       ),
     );
 
-    await tester.pump();
-    expect(find.text('WiFi Key Scanner'), findsWidgets);
+    // 3. Vérifications
+    expect(find.text('Sigma WiFi Crack'), findsWidgets);
     expect(find.byType(FloatingActionButton), findsOneWidget);
   });
 }

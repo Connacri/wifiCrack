@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-
-import '../../data/sources/ad_service.dart';
-import '../../data/sources/firebase_messenger_service.dart';
-import '../../data/sources/user_data_service.dart';
-import '../../data/sources/wifi_service.dart';
+import '../providers/wifi_provider.dart';
 import '../../domain/entities/wifi_network.dart';
-import '../../presentation/providers/wifi_provider.dart';
-import '../../presentation/screens/admin_screen.dart';
-import '../../presentation/screens/messenger_screen.dart';
-import '../../presentation/screens/user_chat_screen.dart';
-import '../../presentation/widgets/wifi_network_card.dart';
+import '../../data/sources/supabase_service.dart';
+import '../../data/sources/user_data_service.dart';
+import '../widgets/home_carousel.dart';
+import 'admin_screen.dart';
+import 'messenger_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,649 +16,173 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  BannerAd? _bannerAd;
-  bool _serviceDialogVisible = false;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = context.read<UserDataService>().deviceId;
-      context.read<FirebaseMessengerService>().initializeNotifications(userId);
-      
-      context.read<WiFiProvider>().initialize().then((_) {
-        if (!mounted) return;
-        _checkCriticalServices();
-        context.read<WiFiProvider>().startScan();
-      });
-
-      // Initialiser le cycle de vie des pubs
-      AdService().startListeningToLifecycle();
-      // Forcer le chargement et l'affichage immédiat au démarrage à froid
-      AdService().loadAppOpenAd(showImmediately: true);
-
-      // Charger la bannière
-      if (!mounted) return;
-      setState(() {
-        _bannerAd = context.read<AdService>().getBannerAd();
-      });
+      context.read<WiFiProvider>().initialize();
     });
-  }
-
-  @override
-  void dispose() {
-    _bannerAd?.dispose();
-    AdService().stopListeningToLifecycle();
-    super.dispose();
-  }
-
-  Future<void> _checkCriticalServices() async {
-    if (!mounted || _serviceDialogVisible) return;
-
-    final wifiService = context.read<WiFiService>();
-    final isWifiOn = await wifiService.isWiFiHardwareEnabled();
-    if (!mounted) return;
-
-    if (!isWifiOn) {
-      await _showServiceDialog(
-        title: "Wi-Fi désactivé",
-        message: "Le Wi-Fi doit être activé pour scanner les réseaux.",
-        confirmLabel: "Activer Wi-Fi",
-        onConfirm: () async {
-          await context.read<WiFiProvider>().fixWiFi();
-          if (mounted) {
-            Future.delayed(
-              const Duration(milliseconds: 500),
-              _checkCriticalServices,
-            );
-          }
-        },
-      );
-      return;
-    }
-
-    final isGpsOn = await wifiService.isLocationServiceEnabled();
-    if (!mounted) return;
-
-    if (!isGpsOn) {
-      await _showServiceDialog(
-        title: "GPS désactivé",
-        message: "Le GPS doit être activé pour le tracking et l'enregistrement de user_activity.",
-        confirmLabel: "Activer GPS",
-        onConfirm: () async {
-          await context.read<WiFiProvider>().fixLocation();
-          await context.read<UserDataService>().startLocationTracking();
-          if (mounted) {
-            Future.delayed(
-              const Duration(milliseconds: 500),
-              _checkCriticalServices,
-            );
-          }
-        },
-      );
-    }
-  }
-
-  Future<void> _showServiceDialog({
-    required String title,
-    required String message,
-    required String confirmLabel,
-    required Future<void> Function() onConfirm,
-  }) async {
-    if (!mounted || _serviceDialogVisible) return;
-    _serviceDialogVisible = true;
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Plus tard"),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await onConfirm();
-            },
-            child: Text(confirmLabel),
-          ),
-        ],
-      ),
-    );
-
-    _serviceDialogVisible = false;
-  }
-
-  void _onConnect(WiFiNetwork network) {
-    // Maximisation : Afficher une pub récompensée avant de tenter la connexion/crack
-    AdService().showRewardedAd(
-      () {
-        debugPrint("Récompense pub obtenue");
-      },
-      () {
-        if (!mounted) return;
-        context.read<WiFiProvider>().connect(network);
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<WiFiProvider>(
-      builder: (context, provider, child) {
-        return Scaffold(
-          appBar: _buildAppBar(context, provider),
-          drawer: _buildDrawer(context),
-          body: _buildBody(context, provider),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: provider.scanStatus == ScanStatus.scanning
-                ? null
-                : () {
-                    provider.startScan();
-                    // Afficher un interstitiel aléatoirement après un scan pour générer du profit
-                    context.read<AdService>().showInterstitialAd();
-                  },
-            icon: provider.scanStatus == ScanStatus.scanning
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
+    final wifi = context.watch<WiFiProvider>();
+    final supabase = context.read<SupabaseService>();
+    final userData = context.read<UserDataService>();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Sigma WiFi Crack', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen())),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chat),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessengerScreen())),
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () => wifi.startScan(),
+        child: Column(
+          children: [
+            _buildStatusHeader(wifi, userData, supabase),
+            const SizedBox(height: 10),
+            HomeBanner(supabase: supabase),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => showDialog(
+                    context: context,
+                    builder: (_) => AdSubmissionDialog(userId: userData.deviceId, supabase: supabase),
+                  ),
+                  icon: const Icon(Icons.add_photo_alternate),
+                  label: const Text("Publier une annonce & Gagner des Coins"),
+                ),
+              ),
+            ),
+            Expanded(
+              child: wifi.networks.isEmpty
+                  ? _buildEmptyState(wifi)
+                  : ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 80),
+                      itemCount: wifi.networks.length,
+                      itemBuilder: (context, index) => _NetworkTile(network: wifi.networks[index]),
                     ),
-                  )
-                : const Icon(Icons.wifi_find),
-            label: Text(
-              provider.scanStatus == ScanStatus.scanning
-                  ? 'Scan en cours...'
-                  : 'Scanner',
             ),
-          ),
-          bottomNavigationBar: _bannerAd != null
-              ? SizedBox(
-                  height: _bannerAd!.size.height.toDouble(),
-                  width: _bannerAd!.size.width.toDouble(),
-                  child: AdWidget(ad: _bannerAd!),
-                )
-              : const SizedBox.shrink(),
-        );
-      },
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: wifi.scanStatus == ScanStatus.scanning ? null : () => wifi.startScan(),
+        label: Text(wifi.scanStatus == ScanStatus.scanning ? "Scan en cours..." : "Scanner WiFi"),
+        icon: wifi.scanStatus == ScanStatus.scanning 
+            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+            : const Icon(Icons.search),
+      ),
     );
   }
 
-  AppBar _buildAppBar(BuildContext context, WiFiProvider provider) {
-    return AppBar(
-      title: const Text('WiFi Key Scanner'),
-      centerTitle: true,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.bar_chart),
-          tooltip: "Statistiques",
-          onPressed: () => _showStats(context, provider),
-        ),
-        IconButton(
-          icon: const Icon(Icons.cleaning_services),
-          tooltip: "Nettoyer l'historique",
-          onPressed: () => _cleanHistory(context, provider),
-        ),
-        IconButton(
-          icon: const Icon(Icons.admin_panel_settings_outlined),
-          tooltip: "Admin",
-          onPressed: () => _showAdminLogin(context),
-        ),
-      ],
-    );
-  }
-
-  void _showAdminLogin(BuildContext context) {
-    AdService().showRewardedInterstitialAd(() {
-      final TextEditingController passwordController = TextEditingController();
-      bool obscurePassword = true;
-
-      showDialog(
-        context: context,
-        builder: (context) => StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: const Text('Accès Restreint'),
-            content: TextField(
-              controller: passwordController,
-              obscureText: obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Mot de passe',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () =>
-                      setState(() => obscurePassword = !obscurePassword),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Annuler'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  if (passwordController.text == 'Sigma31311!') {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AdminScreen(),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Accès refusé. Mot de passe incorrect.'),
-                      ),
-                    );
-                  }
-                },
-                child: const Text('Entrer'),
-              ),
-            ],
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+  Widget _buildStatusHeader(WiFiProvider wifi, UserDataService userData, SupabaseService supabase) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.deepPurple.withValues(alpha: 0.1),
+      child: Column(
         children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Icon(Icons.wifi_password, color: Colors.white, size: 48),
-                SizedBox(height: 12),
-                Text(
-                  'WiFi Crack Pro',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Sigma Edition',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
-            title: const Text('À propos'),
-            onTap: () => _showAboutDialog(context),
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.account_circle_outlined,
-              color: Colors.green,
-            ),
-            title: const Text('Mon Profil'),
-            onTap: () {
-              Navigator.pop(context);
-              _showProfileDialog(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.bolt, color: Colors.orange),
-            title: const Text('Messenger'),
-            onTap: () {
-              Navigator.pop(context);
-              AdService().showRewardedInterstitialAd(() {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MessengerScreen(),
-                  ),
-                );
-              });
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.chat_outlined, color: Colors.blue),
-            title: const Text('Support'),
-            onTap: () {
-              Navigator.pop(context);
-              AdService().showRewardedInterstitialAd(() {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const UserChatScreen(),
-                  ),
-                );
-              });
-            },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              FutureBuilder<int>(
+                future: supabase.getUserCoins(userData.deviceId),
+                builder: (context, snapshot) {
+                  final coins = snapshot.data ?? 0;
+                  return Row(
+                    children: [
+                      const Icon(Icons.monetization_on, color: Colors.orange, size: 24),
+                      const SizedBox(width: 8),
+                      Text("$coins Coins", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ],
+                  );
+                },
+              ),
+              const Icon(Icons.verified, color: Colors.blue, size: 24),
+            ],
           ),
           const Divider(),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              "ID: ${context.read<UserDataService>().deviceId}",
-              style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBody(BuildContext context, WiFiProvider provider) {
-    // Cas de chargement initial ou scan vide
-    if (provider.scanStatus == ScanStatus.scanning &&
-        provider.networks.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text("Recherche de réseaux..."),
-          ],
-        ),
-      );
-    }
-
-    // Cas d'erreur avec liste vide
-    if (provider.errorMessage != null && provider.networks.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                provider.errorMessage!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 24),
-              if (provider.errorMessage!.contains("WiFi"))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: FilledButton.icon(
-                    onPressed: () => provider.fixWiFi(),
-                    icon: const Icon(Icons.settings_input_antenna),
-                    label: const Text("Activer le WiFi"),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                    ),
-                  ),
-                ),
-              if (provider.errorMessage!.contains("GPS") ||
-                  provider.errorMessage!.contains("localisation"))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: FilledButton.icon(
-                    onPressed: () => provider.fixLocation(),
-                    icon: const Icon(Icons.location_on),
-                    label: const Text("Activer le GPS"),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                    ),
-                  ),
-                ),
-              if (provider.errorMessage!.contains("Permissions") ||
-                  provider.errorMessage!.contains("refusées"))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: FilledButton.icon(
-                    onPressed: () => provider.fixPermissions(),
-                    icon: const Icon(Icons.security),
-                    label: const Text("Paramètres de l'application"),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                    ),
-                  ),
-                ),
-              FilledButton.icon(
-                onPressed: () => provider.startScan(),
-                icon: const Icon(Icons.refresh),
-                label: const Text("Réessayer"),
-              ),
+              _statItem("${wifi.networks.length}", "Détectés", Colors.blue),
+              _statItem("${wifi.getStats()['successful']}", "Connectés", Colors.green),
+              _statItem("${wifi.getStats()['failed']}", "Échecs", Colors.red),
             ],
           ),
-        ),
-      );
-    }
-
-    // Liste vide sans erreur (ex: pas de FH_ trouvés)
-    if (provider.networks.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.wifi_off,
-              size: 64,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 16),
-            const Text("Aucun réseau compatible (FH_...) trouvé."),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: () => provider.startScan(),
-              icon: const Icon(Icons.refresh),
-              label: const Text("Lancer un nouveau scan"),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Liste des réseaux
-    return RefreshIndicator(
-      onRefresh: () => provider.startScan(),
-      child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 80, top: 8),
-        itemCount: provider.networks.length,
-        itemBuilder: (context, index) {
-          final network = provider.networks[index];
-          // Vérifie si CE réseau est en train de se connecter
-          final isConnectingThis =
-              provider.connectionStatus == ConnectionStatus.connecting &&
-              provider.connectingSSID == network.ssid;
-
-          // Vérifie si CE réseau est déjà connecté
-          final isConnectedThis = provider.connectedSSID == network.ssid;
-
-          return WiFiNetworkCard(
-            network: network,
-            isConnecting: isConnectingThis,
-            isConnected: isConnectedThis,
-            onConnect: _onConnect,
-          );
-        },
-      ),
-    );
-  }
-
-  void _showStats(BuildContext context, WiFiProvider provider) {
-    final stats = provider.getStats();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Statistiques'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _statRow('Total de réseaux', stats['total']!),
-            const SizedBox(height: 8),
-            _statRow(
-              'Connexions réussies',
-              stats['successful']!,
-              color: Colors.green,
-            ),
-            const SizedBox(height: 8),
-            _statRow('Échecs', stats['failed']!, color: Colors.red),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
-          ),
         ],
       ),
     );
   }
 
-  Widget _statRow(String label, int value, {Color? color}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label),
-        Text(
-          '$value',
-          style: TextStyle(fontWeight: FontWeight.bold, color: color),
-        ),
-      ],
-    );
+  Widget _statItem(String val, String label, Color color) {
+    return Column(children: [
+      Text(val, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+      Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+    ]);
   }
 
-  void _cleanHistory(BuildContext context, WiFiProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Nettoyage"),
-        content: const Text(
-          "Voulez-vous supprimer les réseaux non vus depuis plus de 30 jours ?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Annuler"),
+  Widget _buildEmptyState(WiFiProvider wifi) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.wifi_off, size: 80, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+            wifi.errorMessage ?? "Aucun réseau détecté",
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.grey),
           ),
-          FilledButton(
-            onPressed: () {
-              provider.cleanHistory();
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Historique nettoyé.")),
-              );
-            },
-            child: const Text("Nettoyer"),
-          ),
+          if (wifi.scanStatus == ScanStatus.permissionDenied)
+            TextButton(onPressed: wifi.fixPermissions, child: const Text("Donner les permissions")),
         ],
       ),
     );
   }
+}
 
-  void _showAboutDialog(BuildContext context) {
-    showAboutDialog(
-      context: context,
-      applicationName: 'WiFi Key Scanner',
-      applicationVersion: '2.0.0',
-      applicationIcon: const Icon(Icons.wifi_password, size: 48),
-      children: [
-        const Text("Application de décodage et connexion WiFi automatique."),
-        const SizedBox(height: 16),
-        const Text(
-          "Architecture: Clean Architecture + Provider + SharedPreferences.",
+class _NetworkTile extends StatelessWidget {
+  final WiFiNetwork network;
+  const _NetworkTile({required this.network});
+
+  @override
+  Widget build(BuildContext context) {
+    final wifi = context.read<WiFiProvider>();
+    final isConnecting = wifi.connectingSSID == network.ssid;
+    final isConnected = wifi.connectedSSID == network.ssid;
+
+    return Card(
+      child: ListTile(
+        leading: Icon(
+          Icons.wifi,
+          color: network.signalStrength > -60 ? Colors.green : (network.signalStrength > -80 ? Colors.orange : Colors.red),
         ),
-      ],
-    );
-  }
-
-  void _showProfileDialog(BuildContext context) {
-    final userDataService = context.read<UserDataService>();
-    final TextEditingController pseudoController = TextEditingController(
-      text: userDataService.getPseudo(),
-    );
-    bool isSaving = false;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Mon Profil'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Device ID: ${userDataService.deviceId}",
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: pseudoController,
-                decoration: const InputDecoration(
-                  labelText: 'Votre Pseudo',
-                  border: OutlineInputBorder(),
-                  hintText: 'Entrez un pseudo unique',
-                ),
-              ),
-              if (isSaving)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8.0),
-                  child: LinearProgressIndicator(),
-                ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
-            ),
-            FilledButton(
-              onPressed: isSaving
-                  ? null
-                  : () async {
-                      if (pseudoController.text.trim().isEmpty) return;
-
-                      setState(() => isSaving = true);
-                      final success = await userDataService.updatePseudo(
-                        pseudoController.text.trim(),
-                      );
-                      setState(() => isSaving = false);
-
-                      if (success) {
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Pseudo mis à jour !"),
-                            ),
-                          );
-                        }
-                      } else {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Ce pseudo est déjà pris."),
-                            ),
-                          );
-                        }
-                      }
-                    },
-              child: const Text('Sauvegarder'),
-            ),
+        title: Text(network.ssid, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Clé Sigma: ${network.calculatedKey}", style: const TextStyle(color: Colors.deepPurple, fontSize: 12, fontWeight: FontWeight.bold)),
+            Text("${network.signalStrength} dBm | ${network.frequency}", style: const TextStyle(fontSize: 10)),
           ],
         ),
+        trailing: isConnecting
+            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+            : IconButton(
+                icon: Icon(isConnected ? Icons.check_circle : Icons.link, color: isConnected ? Colors.green : null),
+                onPressed: () => wifi.connect(network),
+              ),
       ),
     );
   }

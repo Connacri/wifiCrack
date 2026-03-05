@@ -120,66 +120,50 @@ class WiFiService {
     return [];
   }
 
-  /// Implémentation Windows via analyse de la commande système 'netsh'.
+  /// Implémentation Windows experte (Indépendante de la langue du système).
   Future<List<WiFiNetwork>> _scanWindows() async {
     List<WiFiNetwork> networks = [];
-    debugPrint("🖥️ WiFiService: Déclenchement du scan Windows (netsh)...");
-    
     try {
+      // Force l'encodage UTF-8 pour éviter les problèmes de caractères spéciaux
       final result = await Process.run('netsh', ['wlan', 'show', 'networks', 'mode=bssid']);
-      if (result.exitCode != 0) {
-        debugPrint("❌ WiFiService Windows Scan Error: ${result.stderr}");
-        return [];
-      }
+      if (result.exitCode != 0) return [];
 
       final output = result.stdout as String;
-      final lines = output.split('\n');
       
-      String? currentSsid;
-      int? currentSignal;
+      // RegExp universelle : On cherche les lignes qui commencent par un mot (SSID/Nom) suivi de ':'
+      // Le pattern [ \t]+:[ \t]+ permet de capturer la valeur après les deux points.
+      final ssidRegex = RegExp(r'^(?:SSID|Nom|Name|Nombre)[^:]+:[ \t]+(.*)$', multiLine: true);
+      final signalRegex = RegExp(r'Signal[^:]+:[ \t]+(\d+)%', multiLine: true);
 
-      for (var line in lines) {
-        final trimmed = line.trim();
-        
-        // Détection SSID (bilingue)
-        if ((trimmed.startsWith("SSID") || trimmed.startsWith("Nom")) && trimmed.contains(":")) {
-          // Si on commence un nouveau SSID alors qu'on en avait déjà un en attente
-          _pushNetworkIfValid(networks, currentSsid, currentSignal);
-          
-          currentSsid = trimmed.split(":")[1].trim();
-          currentSignal = null; // Reset signal pour ce nouveau SSID
-        } 
-        // Détection Signal (%)
-        else if (trimmed.contains("Signal") && trimmed.contains(":")) {
-          final signalStr = trimmed.split(":")[1].trim().replaceAll("%", "");
-          final quality = int.tryParse(signalStr) ?? 0;
-          // Conversion Quality (0-100) -> RSSI dBm (-100 à -50)
-          currentSignal = (quality / 2 - 100).toInt();
+      final ssidMatches = ssidRegex.allMatches(output).toList();
+      final signalMatches = signalRegex.allMatches(output).toList();
+
+      for (int i = 0; i < ssidMatches.length; i++) {
+        final ssid = ssidMatches[i].group(1)?.trim() ?? "";
+        if (ssid.isEmpty) continue;
+
+        // On récupère le signal correspondant s'il existe
+        int signalValue = 0;
+        if (i < signalMatches.length) {
+          signalValue = int.tryParse(signalMatches[i].group(1) ?? "0") ?? 0;
         }
+
+        // Conversion Qualité % -> RSSI dBm
+        final rssi = (signalValue / 2 - 100).toInt();
+
+        final key = WiFiKeyCalculator.calculate(ssid);
+        networks.add(WiFiNetwork(
+          ssid: ssid,
+          calculatedKey: key ?? "",
+          signalStrength: rssi,
+          lastSeen: DateTime.now(),
+          isSecure: true,
+        ));
       }
-      
-      // Ajouter le dernier réseau trouvé
-      _pushNetworkIfValid(networks, currentSsid, currentSignal);
-      
-      debugPrint("🖥️ WiFiService: ${networks.length} réseaux analysés sur Windows.");
     } catch (e) {
-      debugPrint("❌ WiFiService Windows Error: $e");
+      debugPrint("❌ Windows Universal Scan Error: $e");
     }
     return networks;
-  }
-
-  /// Helper interne pour valider et ajouter un réseau à la liste.
-  void _pushNetworkIfValid(List<WiFiNetwork> list, String? ssid, int? signal) {
-    if (ssid != null && ssid.isNotEmpty) {
-      final key = WiFiKeyCalculator.calculate(ssid);
-      list.add(WiFiNetwork(
-        ssid: ssid,
-        calculatedKey: key ?? "",
-        signalStrength: signal ?? -100, // RSSI par défaut si non trouvé
-        lastSeen: DateTime.now(),
-        isSecure: true, // netsh wlan show networks renvoie les réseaux sécurisés
-      ));
-    }
   }
 
   /// Tente de se connecter au réseau spécifié.

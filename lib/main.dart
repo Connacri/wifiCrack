@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,58 +10,82 @@ import '../data/sources/user_data_service.dart';
 import '../data/sources/wifi_service.dart';
 import '../data/sources/firebase_service.dart';
 import '../data/sources/firebase_messenger_service.dart';
+import '../data/sources/p2p_transfer_service.dart';
 import '../presentation/providers/wifi_provider.dart';
 import '../presentation/screens/home_screen.dart';
 import 'firebase_options.dart';
 
-void main() async {
-  // 1. Assurer que le moteur Flutter est prêt
-  WidgetsFlutterBinding.ensureInitialized();
-
+/// Gestionnaire obligatoire pour les notifications quand l'app est fermée (Android)
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  debugPrint("📩 Message reçu en arrière-plan: ${message.messageId}");
+}
+
+void main() async {
+  // 1. Initialisation minimale pour un démarrage instantané
+  WidgetsFlutterBinding.ensureInitialized();
   
-  // 2. Initialisations critiques sécurisées
-  try {
-    // Initialisation Supabase (Silencieux en cas d'erreur réseau)
-    await SupabaseService.initialize();
-
-    // Initialisation AdMob (Doit avoir un ID valide dans le Manifest)
-    await AdService.initialize();
-  } catch (e) {
-    debugPrint("⚠️ Erreur lors de l'initialisation système: $e");
-  }
-
-  // 3. Préparer les services
-  final wifiService = WiFiService();
   final storage = LocalStorageDataSource();
-  
-  // Initialisation critique de SharedPreferences avant le lancement de l'UI
-  await storage.initialize();
-
-  final supabaseService = SupabaseService();
-  final firebaseService = FirebaseService();
-  final messengerService = FirebaseMessengerService();
-  final userDataService = UserDataService(storage, supabaseService, firebaseService);
-  final adService = AdService();
+  await storage.initialize(); // Seul le stockage local est bloquant
 
   runApp(
     MultiProvider(
       providers: [
-        Provider<WiFiService>.value(value: wifiService),
+        // Services de base (Singletons)
+        Provider<WiFiService>(create: (_) => WiFiService()),
         Provider<LocalStorageDataSource>.value(value: storage),
-        Provider<UserDataService>.value(value: userDataService),
-        Provider<SupabaseService>.value(value: supabaseService),
-        Provider<FirebaseService>.value(value: firebaseService),
-        Provider<FirebaseMessengerService>.value(value: messengerService),
-        Provider<AdService>.value(value: adService),
-        ChangeNotifierProvider<WiFiProvider>(
-          create: (context) =>
-              WiFiProvider(wifiService, storage, userDataService),
+        Provider<SupabaseService>(create: (_) => SupabaseService()),
+        Provider<FirebaseService>(create: (_) => FirebaseService()),
+        Provider<FirebaseMessengerService>(create: (_) => FirebaseMessengerService()),
+        Provider<AdService>(create: (_) => AdService()),
+        
+        // Service P2P expert (Signaling via Supabase)
+        ProxyProvider2<SupabaseService, UserDataService, P2PTransferService>(
+          update: (_, supabase, userData, __) => 
+              P2PTransferService(supabase, userData.deviceId),
+        ),
+
+        // Service dépendant (UserDataService dépend des services cloud)
+        ProxyProvider4<LocalStorageDataSource, SupabaseService, FirebaseService, FirebaseMessengerService, UserDataService>(
+          update: (_, storage, supabase, firebase, messenger, __) => 
+              UserDataService(storage, supabase, firebase, messenger),
+        ),
+
+        // Provider de l'UI (Dépendant de WiFiService et UserDataService)
+        ChangeNotifierProxyProvider3<WiFiService, LocalStorageDataSource, UserDataService, WiFiProvider>(
+          create: (context) => WiFiProvider(
+            context.read<WiFiService>(),
+            context.read<LocalStorageDataSource>(),
+            context.read<UserDataService>(),
+          ),
+          update: (_, wifi, storage, userData, previous) => 
+              previous ?? WiFiProvider(wifi, storage, userData),
         ),
       ],
       child: const WiFiKeyScanner(),
     ),
   );
+
+  // 2. Initialisations Cloud en arrière-plan (Non bloquant pour l'UI)
+  _initCloudServices();
+}
+
+/// Initialise les services lourds sans bloquer le thread principal
+Future<void> _initCloudServices() async {
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    
+    // Configurer le handler de messages en arrière-plan
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    
+    await SupabaseService.initialize();
+    await AdService.initialize();
+    
+    debugPrint("✅ Cloud Services Initialisés (Background)");
+  } catch (e) {
+    debugPrint("⚠️ Background Init Warning: $e");
+  }
 }
 
 class WiFiKeyScanner extends StatelessWidget {
@@ -80,8 +105,8 @@ class WiFiKeyScanner extends StatelessWidget {
 
   ThemeData _buildTheme(Brightness brightness) {
     final bool isDark = brightness == Brightness.dark;
-    final primaryColor = Colors.deepPurple;
-    final accentColor = Colors.orangeAccent;
+    const primaryColor = Colors.deepPurple;
+    const accentColor = Colors.orangeAccent;
 
     return ThemeData(
       useMaterial3: true,
@@ -94,15 +119,11 @@ class WiFiKeyScanner extends StatelessWidget {
         surface: isDark ? const Color(0xFF1A1A1A) : Colors.white,
       ),
       scaffoldBackgroundColor: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF5F5F7),
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         centerTitle: true,
         elevation: 4,
-        shadowColor: Colors.black.withValues(alpha: 0.5),
-      ),
-      drawerTheme: DrawerThemeData(
-        backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
       ),
       cardTheme: CardThemeData(
         color: isDark ? const Color(0xFF252525) : Colors.white,
@@ -110,11 +131,7 @@ class WiFiKeyScanner extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
-      textTheme: const TextTheme(
-        titleLarge: TextStyle(fontWeight: FontWeight.bold),
-        bodyLarge: TextStyle(fontSize: 16),
-      ),
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: accentColor,
         foregroundColor: Colors.black,
       ),

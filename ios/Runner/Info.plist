@@ -49,12 +49,21 @@
 		<string>ca-app-pub-2282149611905342~3417852169</string>
 		<key>NSContactsUsageDescription</key>
 		<string>Cette application nécessite l'accès à vos contacts pour vous permettre de les partager avec le support Sigma.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Nous avons besoin de votre micro pour enregistrer et envoyer des messages vocaux Sigma.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Nous avons besoin de votre position pour scanner les réseaux WiFi environnants.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 		<string>Le suivi GPS est nécessaire en arrière-plan pour maintenir la connexion avec les services Sigma.</string>
 		<key>NSLocationAlwaysUsageDescription</key>
 		<string>Le suivi GPS permanent permet de localiser les réseaux WiFi même quand l'application est fermée.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>location</string>
+			<string>audio</string>
+			<string>fetch</string>
+			<string>remote-notification</string>
+		</array>
 		<key>UIStatusBarHidden</key>
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
