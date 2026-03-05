@@ -3,146 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sigma WiFi Crack - Présentation & Téléchargement</title>
+    
+    <!-- SEO & APPERÇU RESEAUX SOCIAUX (Open Graph) -->
+    <title>Sigma WiFi Crack - L'Élite de l'Analyse WiFi</title>
+    <meta name="description" content="Découvrez Sigma WiFi Crack : Scan intelligent, messagerie P2P cryptée et économie de Coins. L'application indispensable pour les experts.">
+    
+    <!-- Facebook / Messenger / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://connacri.github.io/wifiCrack/">
+    <meta property="og:title" content="Sigma WiFi Crack - Scan & Messagerie P2P">
+    <meta property="og:description" content="Messagerie vocale gratuite via WebRTC et scan WiFi intelligent. Téléchargez l'APK maintenant.">
+    <meta property="og:image" content="https://raw.githubusercontent.com/Connacri/wifiCrack/main/assets/splash.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://connacri.github.io/wifiCrack/">
+    <meta property="twitter:title" content="Sigma WiFi Crack">
+    <meta property="twitter:description" content="L'outil ultime pour experts WiFi avec transfert P2P sécurisé.">
+    <meta property="twitter:image" content="https://raw.githubusercontent.com/Connacri/wifiCrack/main/assets/splash.png">
+
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary: #673ab7;
-            --secondary: #ff9800;
-            --dark: #121212;
-            --light: #f5f5f7;
+            --primary: #6366f1;
+            --secondary: #f59e0b;
+            --accent: #10b981;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --glass: rgba(255, 255, 255, 0.03);
         }
+
+        * { box-sizing: border-box; transition: all 0.3s ease; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: var(--light);
-            color: var(--dark);
-            line-height: 1.6;
+            background-color: var(--dark);
+            color: var(--light);
+            overflow-x: hidden;
         }
+
+        /* Hero Section avec Background Animé */
         header {
-            background: linear-gradient(135deg, var(--primary), #4527a0);
-            color: white;
-            padding: 100px 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top right, #4338ca, transparent),
+                        radial-gradient(circle at bottom left, #1e1b4b, #0f172a);
             text-align: center;
-            clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%);
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
             padding: 20px;
+            position: relative;
         }
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
+
+        .hero-content {
+            z-index: 10;
+            max-width: 800px;
+            animation: fadeIn 1.5s ease-out;
         }
-        .btn-download {
-            display: inline-block;
-            background-color: var(--secondary);
-            color: white;
-            padding: 15px 35px;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
-            transition: transform 0.3s ease;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .btn-download:hover {
-            transform: scale(1.05);
-        }
-        .section {
-            padding: 60px 0;
-        }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-        .feature-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-        .feature-card h3 {
-            color: var(--primary);
-            margin-top: 0;
-        }
-        .manual {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            margin-top: 40px;
-        }
-        footer {
-            text-align: center;
-            padding: 40px;
-            background: var(--dark);
-            color: white;
-        }
+
         .badge {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.1;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-p {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin: 2rem auto;
+            max-width: 600px;
+        }
+
+        .btn-main {
+            display: inline-flex;
+            align-items: center;
             background: var(--primary);
             color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            display: inline-block;
-            margin-bottom: 10px;
+            padding: 18px 45px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-main:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px -12px rgba(99, 102, 241, 0.6);
+            background: #4f46e5;
+        }
+
+        /* Features Section - Grid Moderne */
+        .section {
+            padding: 100px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        /* Manuel d'utilisation */
+        .manual-section {
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 60px;
+            margin-top: 50px;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .step-number {
+            min-width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 60px;
+            opacity: 0.6;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .manual-section { padding: 30px; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="container hero">
-        <span class="badge">Version Pro 1.0.0</span>
-        <h1>Sigma WiFi Crack</h1>
-        <p>L'outil ultime de gestion et d'analyse WiFi avec messagerie P2P sécurisée.</p>
-        <a href="https://github.com/Connacri/wifiCrack/releases/download/v1.0.0/app-release.apk" class="btn-download">🚀 Télécharger l'APK</a>
+    <div class="hero-content">
+        <span class="badge">V1.0.0 - SIGMA PROTOCOL ACTIVE</span>
+        <h1>Sigma WiFi<br>Crack Fiber</h1>
+        <p class="hero-p">L'application tout-en-un pour l'audit réseau, la messagerie P2P ultra-privée et la monétisation communautaire.</p>
+        <a href="https://github.com/Connacri/wifiCrack/releases/download/v1.0.0/app-release.apk" class="btn-main">
+            📥 Télécharger l'APK (Android)
+        </a>
     </div>
 </header>
 
-<div class="container">
-    <section class="section">
-        <h2 style="text-align: center;">Fonctionnalités Clés</h2>
-        <div class="features">
-            <div class="feature-card">
-                <h3>🔍 Scan WiFi Intelligent</h3>
-                <p>Détectez tous les réseaux environnants avec une précision chirurgicale. Algorithme Sigma intégré pour les réseaux fibre.</p>
-            </div>
-            <div class="feature-card">
-                <h3>🎤 Messagerie P2P</h3>
-                <p>Envoyez des messages vocaux directement de téléphone à téléphone via WebRTC. Zéro stockage cloud, 100% privé.</p>
-            </div>
-            <div class="feature-card">
-                <h3>💰 Économie de Coins</h3>
-                <p>Gagnez des coins en publiant des annonces et échangez-les contre des fonctionnalités premium.</p>
-            </div>
+<div class="section">
+    <div class="grid">
+        <div class="card">
+            <div class="icon-box">📡</div>
+            <h3>Scan WiFi Profond</h3>
+            <p>Algorithme exclusif pour réseaux Fibre. Identifiez les failles et optimisez votre connexion en un clic.</p>
         </div>
-    </section>
+        <div class="card">
+            <div class="icon-box">🔒</div>
+            <h3>P2P Messenger</h3>
+            <p>Communication directe via WebRTC. Vos messages vocaux ne transitent par aucun serveur. Confidentialité absolue.</p>
+        </div>
+        <div class="card">
+            <div class="icon-box">🪙</div>
+            <h3>Coins & Ads</h3>
+            <p>Participez à l'écosystème, publiez des annonces et gagnez des Sigma Coins pour débloquer des bonus.</p>
+        </div>
+    </div>
 
-    <section class="section" id="manuel">
-        <div class="manual">
-            <h2>Manuel d'Utilisation</h2>
-            <hr>
-            <h3>1. Installation</h3>
-            <p>Téléchargez l'APK via le bouton ci-dessus. Autorisez l'installation depuis des sources inconnues dans les paramètres de votre téléphone Android.</p>
-            
-            <h3>2. Premier démarrage</h3>
-            <p>Lors du lancement, l'application vous demandera les permissions de localisation et de contacts. Ces permissions sont nécessaires pour scanner le WiFi et synchroniser vos services Sigma.</p>
-            
-            <h3>3. Utilisation de la messagerie</h3>
-            <p>Pour envoyer un vocal, maintenez le bouton micro dans le chat. Le transfert se fera automatiquement dès que votre interlocuteur sera en ligne grâce à la technologie WebRTC.</p>
-            
-            <h3>4. Gagner des Coins</h3>
-            <p>Allez dans la section carrousel en haut de l'écran d'accueil et cliquez sur "Publier une annonce". Remplissez le formulaire. Une fois validé par l'administrateur, vous recevrez vos coins.</p>
+    <div class="manual-section" id="how-to">
+        <h2 style="font-size: 2rem; margin-bottom: 40px;">Guide de démarrage rapide</h2>
+        
+        <div class="step">
+            <div class="step-number">1</div>
+            <div>
+                <h4>Installation</h4>
+                <p>Après le téléchargement, autorisez "l'installation depuis des sources inconnues" dans vos réglages Android.</p>
+            </div>
         </div>
-    </section>
+
+        <div class="step">
+            <div class="step-number">2</div>
+            <div>
+                <h4>Configuration Sigma</h4>
+                <p>Lancez l'app et acceptez les permissions. L'identifiant unique Sigma de votre appareil sera généré automatiquement.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">3</div>
+            <div>
+                <h4>Synchronisation P2P</h4>
+                <p>Pour la messagerie vocale, assurez-vous d'être en ligne en même temps que votre correspondant pour initier le tunnel sécurisé.</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <footer>
-    <p>&copy; 2026 Sigma Technology. Tous droits réservés.</p>
+    <p>&copy; 2026 Sigma Technology Global. Protocole de sécurité renforcé.</p>
+    <div style="margin-top: 10px;">
+        <a href="https://github.com/Connacri/wifiCrack" style="color: white; text-decoration: none;">Code Source GitHub</a>
+    </div>
 </footer>
 
 </body>
