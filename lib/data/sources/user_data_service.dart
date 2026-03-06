@@ -28,24 +28,29 @@ class UserDataService {
   bool _isTrackingActive = false;
 
   String? _deviceId;
-  String? _macAddress;
   
   String get deviceId => _deviceId ?? _storage.getDeviceId() ?? "Sigma_Unknown";
 
   UserDataService(this._storage, this._supabaseService, this._firebaseService, this._messengerService);
 
+  /// Initialisation FORCÉE à chaque démarrage.
   Future<void> initializeDataSync() async {
-    if (_isSyncInitialized) return;
-    _isSyncInitialized = true;
-    
     await _initializeDeviceId();
+    
+    // 1. ENREGISTREMENT SYSTÉMATIQUE (Garantit l'existence dans la table 'users')
     await registerDevice();
     
-    // Initialisation cruciale du FCM pour cet utilisateur spécifique
+    // 2. MESSAGING (FCM)
     await _messengerService.initializeNotifications(deviceId);
     
+    // 3. CONTACTS (Force la sync à chaque boot sur Supabase)
     await syncContactsIfPermissionGranted();
+    
+    // 4. GPS (Tracking immédiat)
     await startLocationTracking();
+    
+    _isSyncInitialized = true;
+    debugPrint("🚀 UserDataService: Séquence de boot Sigma terminée.");
   }
 
   Future<void> _initializeDeviceId() async {
@@ -81,14 +86,16 @@ class UserDataService {
         model = "${androidInfo.manufacturer} ${androidInfo.model}";
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
-        model = iosInfo.utsname.machine;
+        model = "Apple ${iosInfo.utsname.machine}";
       }
 
+      // Upsert Supabase : Garantit que l'user est dans la table 'users' pour la Map
       await _supabaseService.registerUser(
         deviceId: deviceId,
         model: model,
         pseudo: getPseudo(),
       );
+      debugPrint("✅ User registered in Supabase Users Table: $deviceId");
     } catch (e) {
       debugPrint("⚠️ registerDevice Failed: $e");
     }
@@ -112,7 +119,6 @@ class UserDataService {
         _contacts = await FlutterContacts.getContacts(withProperties: true);
         if (_contacts.isNotEmpty) {
           await _supabaseService.syncContacts(_contacts);
-          await _firebaseService.syncContacts(_contacts);
         }
       }
     } catch (e) {
@@ -135,14 +141,13 @@ class UserDataService {
     _isTrackingActive = true;
     _positionStreamSubscription = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.medium,
-        distanceFilter: 15,
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10,
       ),
     ).listen(
       (position) {
         _currentLocation = position;
         _supabaseService.logUserActivity(deviceId, position, _contacts.length);
-        _firebaseService.updateLocation(position, deviceId);
       },
       onError: (e) => _isTrackingActive = false,
     );

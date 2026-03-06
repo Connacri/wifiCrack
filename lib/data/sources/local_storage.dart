@@ -110,6 +110,18 @@ class LocalStorageDataSource {
     await _prefs?.setString(_deviceIdKey, id);
   }
 
+  /// Admin Session management.
+  bool isAdminLoggedIn() {
+    return _prefs?.getBool('sigma_admin_logged_in') ?? false;
+  }
+
+  Future<void> setAdminLoggedIn(bool value) async {
+    if (!_isInitialized || _prefs == null) {
+      await initialize();
+    }
+    await _prefs?.setBool('sigma_admin_logged_in', value);
+  }
+
   String? getPseudo() {
     return _prefs?.getString('sigma_user_pseudo');
   }

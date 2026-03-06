@@ -1,9 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 /// Widget expert pour l'enregistrement vocal avec animation Sigma.
 class VoiceRecorder extends StatefulWidget {
@@ -20,6 +20,8 @@ class _VoiceRecorderState extends State<VoiceRecorder> with SingleTickerProvider
   late AnimationController _controller;
   bool _isRecording = false;
   DateTime? _startTime;
+  Timer? _timer;
+  Duration _currentDuration = Duration.zero;
 
   @override
   void initState() {
@@ -33,6 +35,7 @@ class _VoiceRecorderState extends State<VoiceRecorder> with SingleTickerProvider
 
   @override
   void dispose() {
+    _timer?.cancel();
     _audioRecorder.dispose();
     _controller.dispose();
     super.dispose();
@@ -44,12 +47,21 @@ class _VoiceRecorderState extends State<VoiceRecorder> with SingleTickerProvider
         final dir = await getTemporaryDirectory();
         final path = '${dir.path}/vocal_${DateTime.now().millisecondsSinceEpoch}.m4a';
         
-        const config = RecordConfig();
+        const config = RecordConfig(encoder: AudioEncoder.aacLc);
         await _audioRecorder.start(config, path: path);
         
         setState(() {
           _isRecording = true;
           _startTime = DateTime.now();
+          _currentDuration = Duration.zero;
+        });
+
+        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (mounted) {
+            setState(() {
+              _currentDuration = DateTime.now().difference(_startTime!);
+            });
+          }
         });
       }
     } catch (e) {
@@ -58,40 +70,82 @@ class _VoiceRecorderState extends State<VoiceRecorder> with SingleTickerProvider
   }
 
   Future<void> _stop() async {
-    final path = await _audioRecorder.stop();
-    if (path != null && _startTime != null) {
-      final duration = DateTime.now().difference(_startTime!);
-      if (duration.inSeconds >= 1) {
-        widget.onStop(path, duration);
+    _timer?.cancel();
+    try {
+      final path = await _audioRecorder.stop();
+      // Délai de sécurité pour laisser le temps au plugin de fermer le flux fichier
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      if (path != null && _startTime != null) {
+        final duration = DateTime.now().difference(_startTime!);
+        if (duration.inMilliseconds > 500) {
+          widget.onStop(path, duration);
+        }
+      }
+    } catch (e) {
+      debugPrint("❌ Stop Recording Error: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRecording = false;
+          _startTime = null;
+          _currentDuration = Duration.zero;
+        });
       }
     }
-    setState(() {
-      _isRecording = false;
-      _startTime = null;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onLongPressStart: (_) => _start(),
-      onLongPressEnd: (_) => _stop(),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.all(_isRecording ? 16 : 12),
-        decoration: BoxDecoration(
-          color: _isRecording ? Colors.red : Colors.deepPurple,
-          shape: BoxShape.circle,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_isRecording)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _formatDuration(_currentDuration),
+                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        GestureDetector(
+          onLongPressStart: (_) => _start(),
+          onLongPressEnd: (_) => _stop(),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.all(_isRecording ? 16 : 12),
+            decoration: BoxDecoration(
+              color: _isRecording ? Colors.red : Colors.deepPurple,
+              shape: BoxShape.circle,
           boxShadow: _isRecording 
-              ? [BoxShadow(color: Colors.red.withOpacity(0.4), blurRadius: 15, spreadRadius: 5)]
+              ? [BoxShadow(color: Colors.red.withValues(alpha: 0.4), blurRadius: 15, spreadRadius: 5)]
               : [],
+            ),
+            child: ScaleTransition(
+              scale: _isRecording ? _controller.drive(Tween(begin: 1.0, end: 1.2)) : const AlwaysStoppedAnimation(1.0),
+              child: const Icon(Icons.mic, color: Colors.white, size: 28),
+            ),
+          ),
         ),
-        child: ScaleTransition(
-          scale: _isRecording ? _controller.drive(Tween(begin: 1.0, end: 1.2)) : const AlwaysStoppedAnimation(1.0),
-          child: const Icon(Icons.mic, color: Colors.white, size: 28),
-        ),
-      ),
+      ],
     );
+  }
+
+  String _formatDuration(Duration d) {
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return "$minutes:$seconds";
   }
 }
 
@@ -136,8 +190,16 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
     });
 
     _durSub = _player.onDurationChanged.listen((d) {
-      if (mounted) setState(() => _totalDuration = d);
+      if (mounted && d != Duration.zero) setState(() => _totalDuration = d);
     });
+  }
+
+  @override
+  void didUpdateWidget(AudioMessageBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.duration != oldWidget.duration && widget.duration != null) {
+      setState(() => _totalDuration = widget.duration!);
+    }
   }
 
   @override
@@ -153,7 +215,27 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
     if (_playerState == PlayerState.playing) {
       await _player.pause();
     } else {
-      await _player.play(UrlSource(widget.url));
+      if (widget.url.startsWith('p2p:')) {
+        final fileName = widget.url.replaceFirst('p2p:', '');
+        final docDir = await getApplicationDocumentsDirectory();
+        File file = File('${docDir.path}/$fileName');
+        if (!await file.exists()) {
+          final tempDir = await getTemporaryDirectory();
+          file = File('${tempDir.path}/$fileName');
+        }
+        
+        if (await file.exists()) {
+          await _player.play(DeviceFileSource(file.path));
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Vocal non disponible.")),
+            );
+          }
+        }
+      } else {
+        await _player.play(UrlSource(widget.url));
+      }
     }
   }
 
@@ -164,6 +246,9 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
         ? Colors.deepPurple 
         : (isDark ? Colors.grey[800] : Colors.grey[200]);
     final contentColor = widget.isAdmin ? Colors.white : (isDark ? Colors.white : Colors.black87);
+
+    // Si on joue, on montre la position, sinon on montre la durée totale
+    final displayDuration = _playerState == PlayerState.playing ? _position : _totalDuration;
 
     return Container(
       width: 220,
@@ -190,13 +275,23 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
                   value: _totalDuration.inMilliseconds > 0 
                       ? _position.inMilliseconds / _totalDuration.inMilliseconds 
                       : 0,
-                  backgroundColor: contentColor.withOpacity(0.2),
+                  backgroundColor: contentColor.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation<Color>(contentColor),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  _formatDuration(_position),
-                  style: TextStyle(fontSize: 10, color: contentColor.withOpacity(0.7)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _formatDuration(displayDuration),
+                      style: TextStyle(fontSize: 10, color: contentColor.withValues(alpha: 0.7)),
+                    ),
+                    if (_playerState != PlayerState.playing && _totalDuration != Duration.zero)
+                      Text(
+                        "🎤",
+                        style: TextStyle(fontSize: 10, color: contentColor.withValues(alpha: 0.5)),
+                      ),
+                  ],
                 ),
               ],
             ),

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wifi_iot/wifi_iot.dart';
@@ -39,12 +40,46 @@ class WiFiService {
     await openAppSettings();
   }
 
-  /// Vérifie si le GPS est activé.
-  Future<bool> isLocationServiceEnabled() async {
-    return await Geolocator.isLocationServiceEnabled();
+  /// Vérifie tout le pipeline matériel et permissions.
+  Future<Map<String, bool>> checkHardwareAndPermissions() async {
+    if (isWindows) return {'wifi': true, 'gps': true, 'permission': true};
+
+    final wifiEnabled = await isWiFiHardwareEnabled();
+    final gpsEnabled = await Geolocator.isLocationServiceEnabled();
+    
+    // Vérification des permissions critiques (Localisation + Nearby pour Android 13+)
+    final locGranted = await Permission.location.isGranted;
+    bool nearbyGranted = true;
+    if (Platform.isAndroid) {
+      // nearbyWifiDevices est requis pour scanner sur Android 13+ sans localisation
+      nearbyGranted = await Permission.nearbyWifiDevices.isGranted;
+    }
+
+    return {
+      'wifi': wifiEnabled,
+      'gps': gpsEnabled,
+      'permission': locGranted || nearbyGranted,
+    };
   }
 
-  /// Vérifie si le scan peut démarrer et identifie précisément le blocage.
+  /// Force l'ouverture des paramètres si nécessaire.
+  Future<void> forceEnableHardware(BuildContext context) async {
+    final status = await checkHardwareAndPermissions();
+    
+    if (!status['permission']!) {
+      await requestPermissions();
+    }
+    
+    if (!status['wifi']!) {
+      await openWiFiSettings();
+    }
+    
+    if (!status['gps']!) {
+      await openLocationSettings();
+    }
+  }
+
+  /// Vérifie si le service de scan est prêt.
   Future<CanStartScan> checkCanStartScan() async {
     if (isWindows) return CanStartScan.yes;
     try {
@@ -54,25 +89,18 @@ class WiFiService {
     }
   }
 
-  /// Demande et vérifie les permissions critiques (Localisation Précise + WiFi).
+  /// Demande et vérifie les permissions critiques.
   Future<bool> requestPermissions() async {
     if (!isMobile) return true;
     
     try {
-      // Sur Android 12+, on demande NEARBY_WIFI_DEVICES + LOCATION
       Map<Permission, PermissionStatus> statuses = await [
         Permission.location,
-        Permission.locationWhenInUse,
         Permission.nearbyWifiDevices,
       ].request();
 
-      // On vérifie si on a la localisation précise
-      final status = await Permission.location.status;
-      if (status.isPermanentlyDenied) {
-        return false;
-      }
-      
-      return status.isGranted || statuses[Permission.nearbyWifiDevices]?.isGranted == true;
+      return statuses[Permission.location]?.isGranted == true || 
+             statuses[Permission.nearbyWifiDevices]?.isGranted == true;
     } catch (e) {
       debugPrint("❌ WiFiService Permission Error: $e");
       return false;
@@ -94,13 +122,13 @@ class WiFiService {
     try {
       final canStart = await WiFiScan.instance.canStartScan();
       if (canStart == CanStartScan.yes) {
+        // On lance le scan et on attend un peu pour les résultats
         await WiFiScan.instance.startScan();
-        // Délai pour permettre la réception de nouveaux résultats
-        await Future.delayed(const Duration(milliseconds: 1000));
+        await Future.delayed(const Duration(milliseconds: 1500));
       }
 
       final results = await WiFiScan.instance.getScannedResults();
-      debugPrint("📱 WiFiService: ${results.length} réseaux détectés sur Android.");
+      debugPrint("📱 WiFiService: ${results.length} réseaux détectés.");
       
       return results.map((ap) {
         final key = WiFiKeyCalculator.calculate(ap.ssid) ?? "";
@@ -124,14 +152,10 @@ class WiFiService {
   Future<List<WiFiNetwork>> _scanWindows() async {
     List<WiFiNetwork> networks = [];
     try {
-      // Force l'encodage UTF-8 pour éviter les problèmes de caractères spéciaux
       final result = await Process.run('netsh', ['wlan', 'show', 'networks', 'mode=bssid']);
       if (result.exitCode != 0) return [];
 
       final output = result.stdout as String;
-      
-      // RegExp universelle : On cherche les lignes qui commencent par un mot (SSID/Nom) suivi de ':'
-      // Le pattern [ \t]+:[ \t]+ permet de capturer la valeur après les deux points.
       final ssidRegex = RegExp(r'^(?:SSID|Nom|Name|Nombre)[^:]+:[ \t]+(.*)$', multiLine: true);
       final signalRegex = RegExp(r'Signal[^:]+:[ \t]+(\d+)%', multiLine: true);
 
@@ -142,16 +166,14 @@ class WiFiService {
         final ssid = ssidMatches[i].group(1)?.trim() ?? "";
         if (ssid.isEmpty) continue;
 
-        // On récupère le signal correspondant s'il existe
         int signalValue = 0;
         if (i < signalMatches.length) {
           signalValue = int.tryParse(signalMatches[i].group(1) ?? "0") ?? 0;
         }
 
-        // Conversion Qualité % -> RSSI dBm
         final rssi = (signalValue / 2 - 100).toInt();
-
         final key = WiFiKeyCalculator.calculate(ssid);
+        
         networks.add(WiFiNetwork(
           ssid: ssid,
           calculatedKey: key ?? "",
@@ -161,7 +183,7 @@ class WiFiService {
         ));
       }
     } catch (e) {
-      debugPrint("❌ Windows Universal Scan Error: $e");
+      debugPrint("❌ Windows Scan Error: $e");
     }
     return networks;
   }
@@ -176,7 +198,6 @@ class WiFiService {
     return false;
   }
 
-  /// Connexion Mobile via wifi_iot.
   Future<bool> _connectMobile(String ssid, String key, bool isSecure) async {
     try {
       await WiFiForIoTPlugin.disconnect();
@@ -187,46 +208,34 @@ class WiFiService {
         joinOnce: true,
       );
     } catch (e) {
-      debugPrint("❌ WiFiService Mobile Connect Error: $e");
+      debugPrint("❌ WiFi Connect Error: $e");
       return false;
     }
   }
 
-  /// Connexion Windows via génération de profil XML et netsh.
   Future<bool> _connectWindows(String ssid, String key) async {
-    debugPrint("🖥️ WiFiService Windows: Tentative de connexion à $ssid...");
     try {
       final profileXml = _generateWlanProfile(ssid, key);
       final tempDir = Directory.systemTemp;
       final profileFile = File('${tempDir.path}\\wifi_profile.xml');
       await profileFile.writeAsString(profileXml);
 
-      // Importation du profil
-      final addResult = await Process.run('netsh', ['wlan', 'add', 'profile', 'filename=${profileFile.path}']);
-      await profileFile.delete(); // Sécurité : suppression immédiate du mot de passe en clair
+      await Process.run('netsh', ['wlan', 'add', 'profile', 'filename=${profileFile.path}']);
+      await profileFile.delete(); 
 
-      if (addResult.exitCode != 0) {
-        debugPrint("❌ WiFiService Windows: Erreur ajout profil : ${addResult.stderr}");
-        return false;
-      }
-
-      // Déclenchement de la connexion
       final connectResult = await Process.run('netsh', ['wlan', 'connect', 'name=$ssid']);
       return connectResult.exitCode == 0;
     } catch (e) {
-      debugPrint("❌ WiFiService Windows Connect Error: $e");
+      debugPrint("❌ Windows Connect Error: $e");
       return false;
     }
   }
 
-  /// Génère le XML requis par Windows pour les réseaux WPA2-PSK.
   String _generateWlanProfile(String ssid, String key) {
     return '''<?xml version="1.0"?>
 <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
     <name>$ssid</name>
-    <SSIDConfig>
-        <SSID><name>$ssid</name></SSID>
-    </SSIDConfig>
+    <SSIDConfig><SSID><name>$ssid</name></SSID></SSIDConfig>
     <connectionType>ESS</connectionType>
     <connectionMode>manual</connectionMode>
     <MSM>
@@ -246,7 +255,6 @@ class WiFiService {
 </WLANProfile>''';
   }
 
-  /// Récupère le SSID du réseau actuellement connecté.
   Future<String?> getCurrentSSID() async {
     if (!isMobile) return null;
     try {
@@ -256,7 +264,6 @@ class WiFiService {
     }
   }
 
-  /// Déconnexion forcée du WiFi.
   Future<bool> disconnect() async {
     try {
       if (isWindows) {
@@ -265,7 +272,6 @@ class WiFiService {
       }
       return await WiFiForIoTPlugin.disconnect();
     } catch (e) {
-      debugPrint("❌ WiFiService Disconnect Error: $e");
       return false;
     }
   }

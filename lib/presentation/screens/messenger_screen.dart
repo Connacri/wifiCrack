@@ -1,15 +1,16 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:animated_emoji/animated_emoji.dart';
+
 import '../../data/sources/firebase_messenger_service.dart';
+import '../../data/sources/p2p_transfer_service.dart';
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/user_data_service.dart';
-import '../../data/sources/p2p_transfer_service.dart';
 import '../widgets/messenger_audio_widgets.dart';
 
-/// Screen "Messenger Sigma" : Dashboard Admin pour voir toutes les cibles.
+/// Admin dashboard listing users from Supabase and messages from Firestore.
 class MessengerScreen extends StatefulWidget {
   const MessengerScreen({super.key});
 
@@ -19,13 +20,22 @@ class MessengerScreen extends StatefulWidget {
 
 class _MessengerScreenState extends State<MessengerScreen> {
   final SupabaseService _supabase = SupabaseService();
-  final FirebaseMessengerService _messenger = FirebaseMessengerService();
+  late FirebaseMessengerService _messenger;
   late Future<List<Map<String, dynamic>>> _usersFuture;
+  bool _messengerInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _usersFuture = _supabase.fetchUniqueUsers();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_messengerInitialized) return;
+    _messenger = context.read<FirebaseMessengerService>();
+    _messengerInitialized = true;
   }
 
   void _refreshUsers() {
@@ -55,31 +65,38 @@ class _MessengerScreenState extends State<MessengerScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("Aucun utilisateur trouvé."));
+            return const Center(child: Text('Aucun utilisateur trouve.'));
           }
 
-          final users = snapshot.data!.where((u) => u['device_id'] != currentUserId).toList();
+          final users = snapshot.data!
+              .where((u) => u['device_id'] != currentUserId)
+              .toList();
 
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            itemCount: users.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final user = users[index];
-              final String deviceId = user['device_id'];
-              final String pseudo = user['pseudo'] ?? deviceId.substring(0, 8);
-              final String model = user['model'] ?? "Inconnu";
-              
-              return _UserChatTile(
-                userId: deviceId,
-                displayTitle: pseudo,
-                subtitle: model,
-                messenger: _messenger,
-                onTap: () => _openChat(deviceId, pseudo),
-              );
-            },
+          return RefreshIndicator(
+            onRefresh: () async => _refreshUsers(),
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              itemCount: users.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final user = users[index];
+                final deviceId = user['device_id']?.toString() ?? '';
+                if (deviceId.isEmpty) return const SizedBox.shrink();
+                final pseudo =
+                    user['pseudo']?.toString() ?? deviceId.substring(0, 8);
+                final model = user['model']?.toString() ?? 'Inconnu';
+
+                return _UserChatTile(
+                  userId: deviceId,
+                  displayTitle: pseudo,
+                  subtitle: model,
+                  messenger: _messenger,
+                  onTap: () => _openChat(deviceId, pseudo),
+                );
+              },
+            ),
           );
         },
       ),
@@ -90,7 +107,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DetailedChatScreen(userId: deviceId, pseudo: pseudo),
+        builder: (_) => DetailedChatScreen(userId: deviceId, pseudo: pseudo),
       ),
     );
   }
@@ -104,11 +121,11 @@ class _UserChatTile extends StatelessWidget {
   final VoidCallback onTap;
 
   const _UserChatTile({
-    required this.userId, 
+    required this.userId,
     required this.displayTitle,
     required this.subtitle,
-    required this.messenger, 
-    required this.onTap
+    required this.messenger,
+    required this.onTap,
   });
 
   @override
@@ -117,20 +134,36 @@ class _UserChatTile extends StatelessWidget {
       stream: messenger.getUnreadCountStream(userId, isAdmin: true),
       builder: (context, snapshot) {
         final unreadCount = snapshot.data ?? 0;
-        
+
         return ListTile(
           onTap: onTap,
           leading: CircleAvatar(
             backgroundColor: Colors.orange[unreadCount > 0 ? 800 : 400],
             child: const Icon(Icons.person, color: Colors.white),
           ),
-          title: Text(displayTitle, style: TextStyle(fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.normal)),
+          title: Text(
+            displayTitle,
+            style: TextStyle(
+              fontWeight:
+                  unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
           subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
           trailing: unreadCount > 0
               ? Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                  child: Text(unreadCount.toString(), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    unreadCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 )
               : const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
         );
@@ -142,7 +175,12 @@ class _UserChatTile extends StatelessWidget {
 class DetailedChatScreen extends StatefulWidget {
   final String userId;
   final String pseudo;
-  const DetailedChatScreen({super.key, required this.userId, required this.pseudo});
+
+  const DetailedChatScreen({
+    super.key,
+    required this.userId,
+    required this.pseudo,
+  });
 
   @override
   State<DetailedChatScreen> createState() => _DetailedChatScreenState();
@@ -150,36 +188,65 @@ class DetailedChatScreen extends StatefulWidget {
 
 class _DetailedChatScreenState extends State<DetailedChatScreen> {
   final TextEditingController _controller = TextEditingController();
-  final FirebaseMessengerService _messenger = FirebaseMessengerService();
   final ScrollController _scrollController = ScrollController();
+
+  late FirebaseMessengerService _messenger;
+  bool _servicesReady = false;
+
   bool _isSending = false;
   bool _isMarkingRead = false;
+  bool _hasTypedText = false;
   int _lastMessageCount = 0;
 
   @override
   void initState() {
     super.initState();
+    _controller.addListener(_onInputChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_servicesReady) return;
+    _messenger = context.read<FirebaseMessengerService>();
+    _servicesReady = true;
     WidgetsBinding.instance.addPostFrameCallback((_) => _markAsRead());
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onInputChanged);
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
+  void _onInputChanged() {
+    final hasText = _controller.text.trim().isNotEmpty;
+    if (hasText != _hasTypedText && mounted) {
+      setState(() => _hasTypedText = hasText);
+    }
+  }
+
   Future<void> _markAsRead() async {
     if (_isMarkingRead) return;
     _isMarkingRead = true;
-    try { await _messenger.markAsRead(widget.userId, isAdmin: true); } finally { _isMarkingRead = false; }
+    try {
+      await _messenger.markAsRead(widget.userId, isAdmin: true);
+    } finally {
+      _isMarkingRead = false;
+    }
   }
 
   void _scrollToBottom({bool animated = true}) {
     if (!_scrollController.hasClients) return;
     final target = _scrollController.position.maxScrollExtent;
     if (animated) {
-      _scrollController.animateTo(target, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
     } else {
       _scrollController.jumpTo(target);
     }
@@ -195,80 +262,122 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
     });
   }
 
-  List<QueryDocumentSnapshot<Map<String, dynamic>>> _sortedDocs(QuerySnapshot<Map<String, dynamic>>? snapshot) {
-    final docs = List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(snapshot?.docs ?? const []);
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _sortedDocs(
+    QuerySnapshot<Map<String, dynamic>>? snapshot,
+  ) {
+    final docs = List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(
+      snapshot?.docs ?? const [],
+    );
+
     docs.sort((a, b) {
-      final aTs = a.data()['timestamp'] as Timestamp?;
-      final bTs = b.data()['timestamp'] as Timestamp?;
-      // Use current time as fallback for null timestamps to prevent jumping
-      final aTime = aTs?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
-      final bTime = bTs?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+      final aData = a.data();
+      final bData = b.data();
+
+      final aTs = aData['timestamp'] as Timestamp?;
+      final bTs = bData['timestamp'] as Timestamp?;
+
+      final aClient =
+          DateTime.tryParse(aData['client_timestamp']?.toString() ?? '')
+              ?.millisecondsSinceEpoch ??
+          0;
+      final bClient =
+          DateTime.tryParse(bData['client_timestamp']?.toString() ?? '')
+              ?.millisecondsSinceEpoch ??
+          0;
+
+      final aTime = aTs?.millisecondsSinceEpoch ?? aClient;
+      final bTime = bTs?.millisecondsSinceEpoch ?? bClient;
       return aTime.compareTo(bTime);
     });
+
     return docs;
   }
 
-  Future<void> _send({String? content, String type = 'text', String? fileUrl, int? duration}) async {
+  Future<void> _send({
+    String? content,
+    String type = 'text',
+    String? fileUrl,
+    int? duration,
+  }) async {
     final msg = content ?? _controller.text.trim();
-    if ((msg.isEmpty && fileUrl == null && type != 'audio') || _isSending) return;
+    if ((msg.isEmpty && fileUrl == null && type != 'audio') || _isSending) {
+      return;
+    }
 
     setState(() => _isSending = true);
     final sent = await _messenger.sendMessage(
       widget.userId,
-      msg.isEmpty ? (type == 'audio' ? '🎤 Vocal Sigma' : 'Message') : msg,
+      msg.isEmpty ? (type == 'audio' ? 'Vocal Sigma' : 'Message') : msg,
       isAdmin: true,
       type: type,
       fileUrl: fileUrl,
       durationInSeconds: duration,
     );
+
     if (!mounted) return;
     setState(() => _isSending = false);
+
     if (sent) {
       _controller.clear();
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     }
   }
 
+
+
   Future<void> _handleAudio(String path, Duration duration) async {
-    // 1. Upload vers Firebase Storage (Plus fiable que P2P pour l'admin)
-    final url = await _messenger.uploadAudio(widget.userId, path);
-    if (url != null) {
-      await _send(type: 'audio', fileUrl: url, duration: duration.inSeconds);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Erreur lors de l'envoi du vocal.")),
-      );
-    }
+    final p2p = context.read<P2PTransferService>();
+    // Extraction robuste du nom de fichier (Windows \ ou Android /)
+    final fileName = path.split(RegExp(r'[\\/ ]')).last;
+
+    // 1. Déclenchement du transfert P2P direct via WebRTC
+    await p2p.sendVocalP2P(widget.userId, path);
+
+    // 2. Envoi de la trace dans Firestore pour l'UI avec préfixe p2p:
+    await _send(
+      type: 'audio', 
+      fileUrl: 'p2p:$fileName', 
+      duration: duration.inSeconds
+    );
   }
 
   void _showAddCoinsDialog() {
+    final supabase = context.read<SupabaseService>();
     final ctrl = TextEditingController();
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Coins pour ${widget.pseudo}"),
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Coins pour ${widget.pseudo}'),
         content: TextField(
           controller: ctrl,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: "Nombre de coins à ajouter"),
+          decoration: const InputDecoration(
+            labelText: 'Nombre de coins a ajouter',
+          ),
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
           FilledButton(
             onPressed: () async {
               final amount = int.tryParse(ctrl.text) ?? 0;
-              if (amount > 0) {
-                await context.read<SupabaseService>().addCoins(widget.userId, amount);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("$amount coins ajoutés à ${widget.pseudo}")),
-                  );
-                }
-              }
+              if (amount <= 0) return;
+
+              await supabase.addCoins(widget.userId, amount);
+              if (!mounted) return;
+
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$amount coins ajoutes a ${widget.pseudo}'),
+                ),
+              );
             },
-            child: const Text("Ajouter"),
+            child: const Text('Ajouter'),
           ),
         ],
       ),
@@ -279,16 +388,29 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(widget.pseudo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-          Text(widget.userId, style: const TextStyle(fontSize: 9, color: Colors.white70)),
-        ]),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.pseudo,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              widget.userId,
+              style: const TextStyle(fontSize: 9, color: Colors.white70),
+            ),
+          ],
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.monetization_on, color: Colors.orange),
-            tooltip: "Ajouter des coins",
+            tooltip: 'Ajouter des coins',
             onPressed: _showAddCoinsDialog,
           ),
         ],
@@ -299,9 +421,14 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _messenger.getMessagesStream(widget.userId),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
                 final docs = _sortedDocs(snapshot.data);
                 _handleMessageListChanged(docs.length);
+
                 return ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(16),
@@ -309,12 +436,12 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
                   itemBuilder: (context, index) {
                     final msg = docs[index].data();
                     return _MessageBubble(
-                      content: msg['content'] ?? "",
-                      isAdmin: msg['is_admin'] ?? false,
-                      isRead: msg['is_read'] ?? false,
-                      type: msg['type'] ?? 'text',
-                      fileUrl: msg['file_url'],
-                      duration: msg['duration'],
+                      content: msg['content']?.toString() ?? '',
+                      isAdmin: msg['is_admin'] as bool? ?? false,
+                      isRead: msg['is_read'] as bool? ?? false,
+                      type: msg['type']?.toString() ?? 'text',
+                      fileUrl: msg['file_url']?.toString(),
+                      duration: msg['duration'] as int?,
                       timestamp: msg['timestamp'] as Timestamp?,
                     );
                   },
@@ -330,43 +457,79 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   }
 
   Widget _buildEmojiBar() {
-    final emojis = [AnimatedEmojis.redHeart, AnimatedEmojis.smile, AnimatedEmojis.wink, AnimatedEmojis.laughing, AnimatedEmojis.partyPopper, AnimatedEmojis.fire, AnimatedEmojis.rocket, AnimatedEmojis.ok];
+    final emojis = [
+      AnimatedEmojis.redHeart,
+      AnimatedEmojis.smile,
+      AnimatedEmojis.wink,
+      AnimatedEmojis.laughing,
+      AnimatedEmojis.partyPopper,
+      AnimatedEmojis.fire,
+      AnimatedEmojis.rocket,
+      AnimatedEmojis.ok,
+    ];
+
     return Container(
       height: 50,
-      decoration: BoxDecoration(color: Theme.of(context).cardColor, border: Border(top: BorderSide(color: Theme.of(context).dividerColor))),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+      ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: emojis.length,
-        itemBuilder: (context, index) => IconButton(onPressed: () => _send(content: emojis[index].name, type: 'emoji'), icon: AnimatedEmoji(emojis[index], size: 24)),
+        itemBuilder: (context, index) => IconButton(
+          onPressed: () => _send(content: emojis[index].name, type: 'emoji'),
+          icon: AnimatedEmoji(emojis[index], size: 24),
+        ),
       ),
     );
   }
 
   Widget _buildInput() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(color: Theme.of(context).cardColor, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+            ),
+          ],
+        ),
         child: Row(
           children: [
             Expanded(
               child: TextField(
                 controller: _controller,
-                style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
                 decoration: InputDecoration(
-                  hintText: "Message Sigma...",
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide.none),
+                  hintText: 'Message Sigma...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: BorderSide.none,
+                  ),
                   filled: true,
                   fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            _controller.text.trim().isEmpty 
-              ? VoiceRecorder(onStop: _handleAudio)
-              : IconButton.filled(onPressed: _isSending ? null : () => _send(), icon: const Icon(Icons.send)),
+            !_hasTypedText
+                ? VoiceRecorder(onStop: _handleAudio)
+                : IconButton.filled(
+                    onPressed: _isSending ? null : () => _send(),
+                    icon: const Icon(Icons.send),
+                  ),
           ],
         ),
       ),
@@ -383,35 +546,84 @@ class _MessageBubble extends StatelessWidget {
   final int? duration;
   final Timestamp? timestamp;
 
-  const _MessageBubble({required this.content, required this.isAdmin, required this.isRead, required this.type, this.fileUrl, this.duration, this.timestamp});
+  const _MessageBubble({
+    required this.content,
+    required this.isAdmin,
+    required this.isRead,
+    required this.type,
+    this.fileUrl,
+    this.duration,
+    this.timestamp,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Align(
       alignment: isAdmin ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 5),
-        padding: type == 'audio' ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: type == 'audio' ? null : BoxDecoration(
-          color: isAdmin ? (isDark ? Colors.deepPurple[800] : Colors.deepPurple[100]) : (isDark ? Colors.grey[800] : Colors.grey[300]),
-          borderRadius: BorderRadius.only(topLeft: const Radius.circular(15), topRight: const Radius.circular(15), bottomLeft: Radius.circular(isAdmin ? 15 : 0), bottomRight: Radius.circular(isAdmin ? 0 : 15)),
-        ),
+        padding: type == 'audio'
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: type == 'audio'
+            ? null
+            : BoxDecoration(
+                color: isAdmin
+                    ? (isDark ? Colors.deepPurple[800] : Colors.deepPurple[100])
+                    : (isDark ? Colors.grey[800] : Colors.grey[300]),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(15),
+                  topRight: const Radius.circular(15),
+                  bottomLeft: Radius.circular(isAdmin ? 15 : 0),
+                  bottomRight: Radius.circular(isAdmin ? 0 : 15),
+                ),
+              ),
         child: Column(
-          crossAxisAlignment: isAdmin ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment:
+              isAdmin ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            if (type == 'emoji') AnimatedEmoji(_getEmojiData(content), size: 48)
-            else if (type == 'audio' && fileUrl != null) AudioMessageBubble(url: fileUrl!, isAdmin: isAdmin, duration: duration != null ? Duration(seconds: duration!) : null)
-            else Text(content, style: TextStyle(fontSize: 16, color: isDark ? Colors.white : Colors.black87)),
-            
+            if (type == 'emoji')
+              AnimatedEmoji(_getEmojiData(content), size: 48)
+            else if (type == 'audio' && fileUrl != null)
+              AudioMessageBubble(
+                url: fileUrl!,
+                isAdmin: isAdmin,
+                duration: duration != null ? Duration(seconds: duration!) : null,
+              )
+            else
+              Text(
+                content,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
             const SizedBox(height: 2),
             Padding(
-              padding: type == 'audio' ? const EdgeInsets.only(right: 8, bottom: 4) : EdgeInsets.zero,
+              padding: type == 'audio'
+                  ? const EdgeInsets.only(right: 8, bottom: 4)
+                  : EdgeInsets.zero,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (timestamp != null) Text(DateFormat('HH:mm').format(timestamp!.toDate()), style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : Colors.black45)),
-                  if (isAdmin) ...[const SizedBox(width: 5), Icon(Icons.done_all, size: 14, color: isRead ? Colors.blue : Colors.grey)],
+                  if (timestamp != null)
+                    Text(
+                      DateFormat('HH:mm').format(timestamp!.toDate()),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? Colors.white54 : Colors.black45,
+                      ),
+                    ),
+                  if (isAdmin) ...[
+                    const SizedBox(width: 5),
+                    Icon(
+                      Icons.done_all,
+                      size: 14,
+                      color: isRead ? Colors.blue : Colors.grey,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -422,7 +634,17 @@ class _MessageBubble extends StatelessWidget {
   }
 
   AnimatedEmojiData _getEmojiData(String name) {
-    final map = {'heart': AnimatedEmojis.redHeart, 'redHeart': AnimatedEmojis.redHeart, 'smile': AnimatedEmojis.smile, 'wink': AnimatedEmojis.wink, 'laughing': AnimatedEmojis.laughing, 'partyPopper': AnimatedEmojis.partyPopper, 'fire': AnimatedEmojis.fire, 'rocket': AnimatedEmojis.rocket, 'ok': AnimatedEmojis.ok};
+    const map = {
+      'heart': AnimatedEmojis.redHeart,
+      'redHeart': AnimatedEmojis.redHeart,
+      'smile': AnimatedEmojis.smile,
+      'wink': AnimatedEmojis.wink,
+      'laughing': AnimatedEmojis.laughing,
+      'partyPopper': AnimatedEmojis.partyPopper,
+      'fire': AnimatedEmojis.fire,
+      'rocket': AnimatedEmojis.rocket,
+      'ok': AnimatedEmojis.ok,
+    };
     return map[name] ?? AnimatedEmojis.smile;
   }
 }

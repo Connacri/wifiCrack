@@ -137,13 +137,21 @@ class FirebaseMessengerService {
     int? durationInSeconds,
   }) async {
     try {
+      final normalizedContent = content.trim();
+      if (userId.trim().isEmpty) return false;
+      if (normalizedContent.isEmpty && type != 'audio' && fileUrl == null) {
+        return false;
+      }
+
       await _messages.add({
         'user_id': userId,
-        'content': content,
+        'content': normalizedContent,
         'is_admin': isAdmin,
         'type': type,
         'file_url': fileUrl,
         'duration': durationInSeconds,
+        // Horodatage client pour stabiliser l'affichage avant résolution serverTimestamp.
+        'client_timestamp': DateTime.now().toUtc().toIso8601String(),
         'timestamp': FieldValue.serverTimestamp(),
         'is_read': false,
       });
@@ -156,20 +164,43 @@ class FirebaseMessengerService {
 
   Future<String?> uploadAudio(String userId, String filePath) async {
     try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        debugPrint("❌ Audio Upload Error: Le fichier n'existe pas au chemin $filePath");
+        return null;
+      }
+
+      // Lecture en bytes pour éviter les conflits d'accès au fichier
+      final Uint8List bytes = await file.readAsBytes();
+      
       final fileName = "vocal_${DateTime.now().millisecondsSinceEpoch}.m4a";
       final ref = _storage.ref().child('sigma_messenger/audio/$userId/$fileName');
-      await ref.putFile(File(filePath));
-      return await ref.getDownloadURL();
+      
+      // Utilisation de putData au lieu de putFile
+      final uploadTask = await ref.putData(
+        bytes,
+        SettableMetadata(contentType: 'audio/m4a'),
+      );
+      
+      final url = await uploadTask.ref.getDownloadURL();
+      debugPrint("✅ Vocal uploadé avec succès: $url");
+      
+      // Nettoyage du fichier temporaire après upload réussi
+      try { await file.delete(); } catch (_) {}
+      
+      return url;
     } catch (e) {
-      debugPrint("❌ Audio Upload Error: $e");
+      debugPrint("❌ Audio Upload Error Details: $e");
       return null;
     }
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getMessagesStream(String userId) {
+    // On retire le orderBy serveur pour éviter l'obligation d'index composite.
+    // Le tri est géré de manière plus flexible dans l'UI via _sortedDocs.
     return _messages
         .where('user_id', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
+        .limit(500)
         .snapshots();
   }
 
@@ -183,11 +214,15 @@ class FirebaseMessengerService {
 
       if (snapshot.docs.isEmpty) return;
 
-      final batch = _firestore.batch();
-      for (var doc in snapshot.docs) {
-        batch.update(doc.reference, {'is_read': true});
+      // Firestore batch: 500 opérations max.
+      for (int i = 0; i < snapshot.docs.length; i += 450) {
+        final batch = _firestore.batch();
+        final chunk = snapshot.docs.skip(i).take(450);
+        for (final doc in chunk) {
+          batch.update(doc.reference, {'is_read': true});
+        }
+        await batch.commit();
       }
-      await batch.commit();
     } catch (e) {
       debugPrint("⚠️ Messenger: Erreur markAsRead: $e");
     }

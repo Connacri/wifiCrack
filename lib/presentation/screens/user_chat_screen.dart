@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:animated_emoji/animated_emoji.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:animated_emoji/animated_emoji.dart';
+
 import '../../data/sources/firebase_messenger_service.dart';
 import '../../data/sources/user_data_service.dart';
 import '../widgets/messenger_audio_widgets.dart';
@@ -16,15 +17,28 @@ class UserChatScreen extends StatefulWidget {
 
 class _UserChatScreenState extends State<UserChatScreen> {
   final TextEditingController _controller = TextEditingController();
-  final FirebaseMessengerService _messenger = FirebaseMessengerService();
   final ScrollController _scrollController = ScrollController();
+
+  late FirebaseMessengerService _messenger;
+  bool _servicesReady = false;
+
   bool _isSending = false;
   bool _isMarkingRead = false;
+  bool _hasTypedText = false;
   int _lastMessageCount = 0;
 
   @override
   void initState() {
     super.initState();
+    _controller.addListener(_onInputChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_servicesReady) return;
+    _messenger = context.read<FirebaseMessengerService>();
+    _servicesReady = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final userId = context.read<UserDataService>().deviceId;
@@ -34,9 +48,17 @@ class _UserChatScreenState extends State<UserChatScreen> {
 
   @override
   void dispose() {
+    _controller.removeListener(_onInputChanged);
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onInputChanged() {
+    final hasText = _controller.text.trim().isNotEmpty;
+    if (hasText != _hasTypedText && mounted) {
+      setState(() => _hasTypedText = hasText);
+    }
   }
 
   Future<void> _markAsRead(String userId) async {
@@ -73,26 +95,48 @@ class _UserChatScreenState extends State<UserChatScreen> {
     });
   }
 
-  List<QueryDocumentSnapshot<Map<String, dynamic>>> _sortedDocs(QuerySnapshot? snapshot) {
-    final docs = List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(snapshot?.docs ?? const []);
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _sortedDocs(
+    QuerySnapshot<Map<String, dynamic>>? snapshot,
+  ) {
+    final docs = List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(
+      snapshot?.docs ?? const [],
+    );
     docs.sort((a, b) {
-      final aTs = a.data()['timestamp'] as Timestamp?;
-      final bTs = b.data()['timestamp'] as Timestamp?;
-      final aTime = aTs?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
-      final bTime = bTs?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+      final aData = a.data();
+      final bData = b.data();
+      final aTs = aData['timestamp'] as Timestamp?;
+      final bTs = bData['timestamp'] as Timestamp?;
+      final aClient =
+          DateTime.tryParse(aData['client_timestamp']?.toString() ?? '')
+              ?.millisecondsSinceEpoch ??
+          0;
+      final bClient =
+          DateTime.tryParse(bData['client_timestamp']?.toString() ?? '')
+              ?.millisecondsSinceEpoch ??
+          0;
+      final aTime = aTs?.millisecondsSinceEpoch ?? aClient;
+      final bTime = bTs?.millisecondsSinceEpoch ?? bClient;
       return aTime.compareTo(bTime);
     });
     return docs;
   }
 
-  Future<void> _send(String userId, {String? content, String type = 'text', String? fileUrl, int? duration}) async {
+  Future<void> _send(
+    String userId, {
+    String? content,
+    String type = 'text',
+    String? fileUrl,
+    int? duration,
+  }) async {
     final msg = content ?? _controller.text.trim();
-    if ((msg.isEmpty && fileUrl == null && type != 'audio') || _isSending) return;
+    if ((msg.isEmpty && fileUrl == null && type != 'audio') || _isSending) {
+      return;
+    }
 
     setState(() => _isSending = true);
     final sent = await _messenger.sendMessage(
       userId,
-      msg.isEmpty ? (type == 'audio' ? '🎤 Vocal' : 'Message') : msg,
+      msg.isEmpty ? (type == 'audio' ? 'Vocal' : 'Message') : msg,
       isAdmin: false,
       type: type,
       fileUrl: fileUrl,
@@ -138,17 +182,19 @@ class _UserChatScreenState extends State<UserChatScreen> {
         child: Column(
           children: [
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: _messenger.getMessagesStream(userId),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  
+
                   final docs = _sortedDocs(snapshot.data);
                   _handleMessageListChanged(userId, docs.length);
 
-                  if (docs.isEmpty && snapshot.connectionState != ConnectionState.waiting) {
+                  if (docs.isEmpty &&
+                      snapshot.connectionState != ConnectionState.waiting) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -156,8 +202,11 @@ class _UserChatScreenState extends State<UserChatScreen> {
                           AnimatedEmoji(AnimatedEmojis.smile, size: 64),
                           const SizedBox(height: 16),
                           Text(
-                            "Comment pouvons-nous vous aider ?",
-                            style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontWeight: FontWeight.w500),
+                            'Comment pouvons-nous vous aider ?',
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
@@ -169,13 +218,13 @@ class _UserChatScreenState extends State<UserChatScreen> {
                     padding: const EdgeInsets.all(16),
                     itemCount: docs.length,
                     itemBuilder: (context, index) {
-                      final msg = docs[index].data() as Map<String, dynamic>;
+                      final msg = docs[index].data();
                       return _UserMessageBubble(
-                        content: msg['content'] ?? "",
-                        isAdmin: msg['is_admin'] ?? false,
-                        type: msg['type'] ?? 'text',
-                        fileUrl: msg['file_url'],
-                        duration: msg['duration'],
+                        content: msg['content']?.toString() ?? '',
+                        isAdmin: msg['is_admin'] as bool? ?? false,
+                        type: msg['type']?.toString() ?? 'text',
+                        fileUrl: msg['file_url']?.toString(),
+                        duration: msg['duration'] as int?,
                         timestamp: msg['timestamp'] as Timestamp?,
                       );
                     },
@@ -234,7 +283,9 @@ class _UserChatScreenState extends State<UserChatScreen> {
       ),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
+        ],
       ),
       child: Row(
         children: [
@@ -243,9 +294,12 @@ class _UserChatScreenState extends State<UserChatScreen> {
               controller: _controller,
               style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
               decoration: InputDecoration(
-                hintText: "Écrire au support...",
+                hintText: 'Ecrire au support...',
                 hintStyle: TextStyle(color: Theme.of(context).hintColor),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide.none,
+                ),
                 filled: true,
                 fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -253,13 +307,15 @@ class _UserChatScreenState extends State<UserChatScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          _controller.text.trim().isEmpty 
-            ? VoiceRecorder(onStop: (path, dur) => _handleAudio(userId, path, dur))
-            : IconButton.filled(
-                onPressed: _isSending ? null : () => _send(userId),
-                icon: const Icon(Icons.send),
-                style: IconButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
-              ),
+          !_hasTypedText
+              ? VoiceRecorder(onStop: (path, dur) => _handleAudio(userId, path, dur))
+              : IconButton.filled(
+                  onPressed: _isSending ? null : () => _send(userId),
+                  icon: const Icon(Icons.send),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
         ],
       ),
     );
@@ -290,34 +346,51 @@ class _UserMessageBubble extends StatelessWidget {
       alignment: isAdmin ? Alignment.centerLeft : Alignment.centerRight,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: type == 'audio' ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: type == 'audio' ? null : BoxDecoration(
-          color: isAdmin 
-              ? (isDark ? Colors.grey[800] : Colors.grey[300])
-              : Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(15),
-            topRight: const Radius.circular(15),
-            bottomLeft: Radius.circular(isAdmin ? 0 : 15),
-            bottomRight: Radius.circular(isAdmin ? 15 : 0),
-          ),
-        ),
+        padding: type == 'audio'
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: type == 'audio'
+            ? null
+            : BoxDecoration(
+                color: isAdmin
+                    ? (isDark ? Colors.grey[800] : Colors.grey[300])
+                    : Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(15),
+                  topRight: const Radius.circular(15),
+                  bottomLeft: Radius.circular(isAdmin ? 0 : 15),
+                  bottomRight: Radius.circular(isAdmin ? 15 : 0),
+                ),
+              ),
         child: Column(
-          crossAxisAlignment: isAdmin ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          crossAxisAlignment:
+              isAdmin ? CrossAxisAlignment.start : CrossAxisAlignment.end,
           children: [
             if (type == 'emoji')
-               AnimatedEmoji(_getEmojiData(content), size: 48)
+              AnimatedEmoji(_getEmojiData(content), size: 48)
             else if (type == 'audio' && fileUrl != null)
-               AudioMessageBubble(url: fileUrl!, isAdmin: isAdmin, duration: duration != null ? Duration(seconds: duration!) : null)
+              AudioMessageBubble(
+                url: fileUrl!,
+                isAdmin: isAdmin,
+                duration: duration != null ? Duration(seconds: duration!) : null,
+              )
             else
-               Text(content, style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color)),
-            
+              Text(
+                content,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
             if (timestamp != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   DateFormat('HH:mm').format(timestamp!.toDate()),
-                  style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : Colors.black45),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDark ? Colors.white54 : Colors.black45,
+                  ),
                 ),
               ),
           ],
@@ -327,7 +400,7 @@ class _UserMessageBubble extends StatelessWidget {
   }
 
   AnimatedEmojiData _getEmojiData(String name) {
-    final map = {
+    const map = {
       'heart': AnimatedEmojis.redHeart,
       'redHeart': AnimatedEmojis.redHeart,
       'smile': AnimatedEmojis.smile,

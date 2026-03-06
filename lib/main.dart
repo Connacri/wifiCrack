@@ -26,23 +26,28 @@ void main() async {
   // 1. Initialisation vitale du framework
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 2. INITIALISATION BLOQUANTE DE FIREBASE (Indispensable pour éviter le StateError)
+  // 2. INITIALISATION BLOQUANTE DE FIREBASE
   try {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    debugPrint("🔥 Firebase Initialisé avec succès.");
   } catch (e) {
     debugPrint("❌ Erreur critique Firebase: $e");
   }
 
-  // 3. Stockage local bloquant
+  // 3. INITIALISATION BLOQUANTE DE SUPABASE (Crucial pour l'enregistrement user)
+  await SupabaseService.initialize();
+
+  // 4. Stockage local
   final storage = LocalStorageDataSource();
   await storage.initialize(); 
+
+  // 5. Initialisation AdMob
+  await AdService.initialize();
 
   runApp(
     MultiProvider(
       providers: [
-        // Services de base (Déjà initialisés ou sans dépendances bloquantes)
+        // --- NIVEAU 1 : Services Indépendants ---
         Provider<WiFiService>(create: (_) => WiFiService()),
         Provider<LocalStorageDataSource>.value(value: storage),
         Provider<SupabaseService>(create: (_) => SupabaseService()),
@@ -50,19 +55,20 @@ void main() async {
         Provider<FirebaseMessengerService>(create: (_) => FirebaseMessengerService()),
         Provider<AdService>(create: (_) => AdService()),
         
-        // Service P2P
-        ProxyProvider2<SupabaseService, UserDataService, P2PTransferService>(
-          update: (_, supabase, userData, __) => 
-              P2PTransferService(supabase, userData.deviceId),
-        ),
-
-        // Service dépendant des 4 piliers
+        // --- NIVEAU 2 : UserDataService (Dépend du niveau 1) ---
+        // Il doit être placé AVANT les services qui l'utilisent.
         ProxyProvider4<LocalStorageDataSource, SupabaseService, FirebaseService, FirebaseMessengerService, UserDataService>(
           update: (_, storage, supabase, firebase, messenger, __) => 
               UserDataService(storage, supabase, firebase, messenger),
         ),
 
-        // Provider de l'UI
+        // --- NIVEAU 3 : Services Dépendants de UserDataService ---
+        ProxyProvider2<SupabaseService, UserDataService, P2PTransferService>(
+          update: (_, supabase, userData, __) => 
+              P2PTransferService(supabase, userData.deviceId),
+        ),
+
+        // Provider de l'UI (Dépend du WiFiService et UserDataService)
         ChangeNotifierProxyProvider3<WiFiService, LocalStorageDataSource, UserDataService, WiFiProvider>(
           create: (context) => WiFiProvider(
             context.read<WiFiService>(),
@@ -76,19 +82,6 @@ void main() async {
       child: const WiFiKeyScanner(),
     ),
   );
-
-  // 4. Autres services Cloud (Peuvent rester en arrière-plan)
-  _initOtherServices();
-}
-
-Future<void> _initOtherServices() async {
-  try {
-    await SupabaseService.initialize();
-    await AdService.initialize();
-    debugPrint("✅ Autres services initialisés.");
-  } catch (e) {
-    debugPrint("⚠️ Background Init Warning: $e");
-  }
 }
 
 class WiFiKeyScanner extends StatelessWidget {

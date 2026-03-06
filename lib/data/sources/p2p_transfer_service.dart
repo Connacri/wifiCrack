@@ -108,8 +108,15 @@ class P2PTransferService {
     });
   }
 
+  /// Envoie un vocal via WebRTC sans passer par le cloud.
+  Future<void> sendVocalP2P(String targetUserId, String filePath) async {
+    debugPrint("🚀 P2P: Préparation de l'envoi vocal direct vers $targetUserId");
+    await queueFileForTransfer(targetUserId, filePath);
+  }
+
   void _setupDataChannel() {
     _dataChannel!.onDataChannelState = (state) {
+      debugPrint("📡 P2P: État du canal = $state");
       if (state == RTCDataChannelState.RTCDataChannelOpen) {
         _processQueue();
       }
@@ -123,6 +130,7 @@ class P2PTransferService {
         if (data['type'] == 'meta') {
           _currentReceivingFileName = data['name'];
           _receivingBuffers[_currentReceivingFileName!] = [];
+          debugPrint("📥 P2P: Réception de $_currentReceivingFileName...");
         } else if (data['type'] == 'end') {
           _saveReceivedFile(_currentReceivingFileName!);
         }

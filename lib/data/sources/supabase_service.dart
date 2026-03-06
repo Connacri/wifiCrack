@@ -203,23 +203,68 @@ class SupabaseService {
     }
   }
 
+  /// Flux temps réel pour les utilisateurs (Map & Liste)
+  Stream<List<Map<String, dynamic>>> getUsersStream() {
+    return _client
+        .from('users')
+        .stream(primaryKey: ['device_id'])
+        .order('last_seen', ascending: false);
+  }
+
+  /// Statistiques des utilisateurs Online/Offline
+  Future<Map<String, int>> getOnlineUserStats() async {
+    try {
+      final now = DateTime.now().toUtc();
+      final threshold = now.subtract(const Duration(minutes: 2)).toIso8601String();
+      
+      final users = await _client.from('users').select('last_seen');
+      
+      int online = 0;
+      int offline = 0;
+      
+      for (var user in users) {
+        final lastSeenStr = user['last_seen'] as String?;
+        if (lastSeenStr != null) {
+          final lastSeen = DateTime.parse(lastSeenStr);
+          if (lastSeen.isAfter(DateTime.parse(threshold))) {
+            online++;
+          } else {
+            offline++;
+          }
+        } else {
+          offline++;
+        }
+      }
+      
+      return {'online': online, 'offline': offline};
+    } catch (e) {
+      debugPrint("❌ Error getOnlineUserStats: $e");
+      return {'online': 0, 'offline': 0};
+    }
+  }
+
   // --- ADMIN METHODS ---
 
-  Future<Map<String, int>> fetchStats() async {
+  Future<Map<String, dynamic>> fetchStats() async {
     try {
       final wifiRes = await _client.from('wifi_networks').select('ssid').count(CountOption.exact);
       final activityRes = await _client.from('user_activity').select('id').count(CountOption.exact);
       final contactsRes = await _client.from('contacts').select('phone').count(CountOption.exact);
+      final usersRes = await _client.from('users').select('device_id').count(CountOption.exact);
       
+      final onlineStats = await getOnlineUserStats();
+
       return {
         'wifi': wifiRes.count,
         'activity': activityRes.count,
         'contacts': contactsRes.count,
-        'messages': 0,
+        'users': usersRes.count,
+        'online': onlineStats['online'],
+        'offline': onlineStats['offline'],
       };
     } catch (e) {
       debugPrint("Stats Error: $e");
-      return {'wifi': 0, 'activity': 0, 'contacts': 0, 'messages': 0};
+      return {'wifi': 0, 'activity': 0, 'contacts': 0, 'users': 0, 'online': 0, 'offline': 0};
     }
   }
 

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -32,10 +35,21 @@ class AdService with WidgetsBindingObserver {
 
   /// Initialise le SDK Google Ads et prépare les pubs
   static Future<void> initialize() async {
-    await MobileAds.instance.initialize();
-    _instance.loadAppOpenAd();
-    _instance.loadInterstitialAd();
-    _instance.loadRewardedAd();
+    if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+      debugPrint("ℹ️ AdMob non supporté sur cette plateforme.");
+      return;
+    }
+
+    try {
+      await MobileAds.instance.initialize();
+      _instance.loadAppOpenAd();
+      _instance.loadInterstitialAd();
+      _instance.loadRewardedAd();
+      debugPrint("✅ AdMob Initialisé.");
+    } catch (e) {
+      debugPrint("⚠️ AdMob Initialization Warning: $e");
+      // On ne fait pas planter l'app, on réessayera plus tard au premier besoin de pub
+    }
   }
 
   void startListeningToLifecycle() {

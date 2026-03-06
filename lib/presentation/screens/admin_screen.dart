@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/user_data_service.dart';
+import '../../data/sources/local_storage.dart';
 import 'messenger_screen.dart';
 
 class AdminScreen extends StatefulWidget {
@@ -17,19 +18,13 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final SupabaseService _supabase = SupabaseService();
-  late Future<List<Map<String, dynamic>>> _usersFuture;
+  late Stream<List<Map<String, dynamic>>> _usersStream;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 6, vsync: this);
-    _usersFuture = _supabase.fetchUniqueUsers();
-  }
-
-  void _refreshData() {
-    setState(() {
-      _usersFuture = _supabase.fetchUniqueUsers();
-    });
+    _usersStream = _supabase.getUsersStream();
   }
 
   @override
@@ -38,13 +33,28 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
     super.dispose();
   }
 
+  Future<void> _logout(BuildContext context) async {
+    final storage = context.read<LocalStorageDataSource>();
+    await storage.setAdminLoggedIn(false);
+    if (context.mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Déconnecté de l'admin.")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sigma Dashboard Pro', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshData),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: "Déconnexion locale",
+            onPressed: () => _logout(context),
+          ),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -59,16 +69,22 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _DashboardSummary(supabase: _supabase),
-          _CarouselManager(supabase: _supabase),
-          _UserList(usersFuture: _usersFuture, supabase: _supabase, onRefresh: _refreshData),
-          _AdminMapView(supabase: _supabase, onRefresh: _refreshData),
-          _DataList(fetcher: _supabase.fetchUserActivity, type: 'activity'),
-          _DataList(fetcher: _supabase.fetchContacts, type: 'contacts', showSearch: true),
-        ],
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _usersStream,
+        builder: (context, snapshot) {
+          final users = snapshot.data ?? [];
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              _DashboardSummary(supabase: _supabase),
+              _CarouselManager(supabase: _supabase),
+              _UserList(users: users, supabase: _supabase),
+              _AdminMapView(supabase: _supabase, users: users),
+              _DataList(fetcher: _supabase.fetchUserActivity, type: 'activity'),
+              _DataList(fetcher: _supabase.fetchContacts, type: 'contacts', showSearch: true),
+            ],
+          );
+        }
       ),
     );
   }
@@ -108,7 +124,7 @@ class _CarouselManagerState extends State<_CarouselManager> {
             label: const Text("Publier"),
           ),
           const Divider(height: 40),
-          const Expanded(child: Center(child: Text("Gestion des soumissions utilisateurs (À implémenter)"))),
+          const Expanded(child: Center(child: Text("Gestion des soumissions utilisateurs"))),
         ],
       ),
     );
@@ -117,8 +133,8 @@ class _CarouselManagerState extends State<_CarouselManager> {
 
 class _AdminMapView extends StatelessWidget {
   final SupabaseService supabase;
-  final VoidCallback onRefresh;
-  const _AdminMapView({required this.supabase, required this.onRefresh});
+  final List<Map<String, dynamic>> users;
+  const _AdminMapView({required this.supabase, required this.users});
 
   @override
   Widget build(BuildContext context) {
@@ -126,24 +142,32 @@ class _AdminMapView extends StatelessWidget {
       future: supabase.fetchUsersWithLocation(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        final users = snapshot.data!;
-        final markers = users.where((u) => (u['user_activity'] as List).isNotEmpty).map((user) {
+        final usersWithLoc = snapshot.data!;
+        final markers = usersWithLoc.where((u) => (u['user_activity'] as List).isNotEmpty).map((user) {
           final lastPos = (user['user_activity'] as List).first;
           final String pseudo = user['pseudo'] ?? user['device_id'].toString().substring(0, 8);
           final point = LatLng(lastPos['latitude'] as double, lastPos['longitude'] as double);
+          
+          final lastSeen = DateTime.tryParse(user['last_seen'] ?? "");
+          final bool isOnline = lastSeen != null && DateTime.now().difference(lastSeen).inMinutes < 2;
+
           return Marker(
             point: point,
-            width: 120, height: 85,
+            width: 120, height: 95,
             alignment: Alignment.bottomCenter,
             child: GestureDetector(
               onTap: () => _showUserSheet(context, user),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(color: Colors.deepPurple, borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(
+                      color: isOnline ? Colors.green[700] : Colors.deepPurple, 
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: isOnline ? [const BoxShadow(color: Colors.green, blurRadius: 10)] : []
+                    ),
                     child: Text(pseudo, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
                   ),
-                  const Icon(Icons.location_on_rounded, color: Colors.red, size: 36),
+                  Icon(Icons.location_on_rounded, color: isOnline ? Colors.green : Colors.red, size: 36),
                 ],
               ),
             ),
@@ -224,7 +248,6 @@ class _AdminMapView extends StatelessWidget {
             final amount = int.tryParse(ctrl.text) ?? 0;
             if (amount > 0) {
               await supabase.addCoins(userId, amount);
-              onRefresh();
             }
             if (context.mounted) Navigator.pop(context);
           }, child: const Text("Ajouter")),
@@ -239,7 +262,7 @@ class _DashboardSummary extends StatelessWidget {
   const _DashboardSummary({required this.supabase});
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, int>>(
+    return FutureBuilder<Map<String, dynamic>>(
       future: supabase.fetchStats(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
@@ -247,10 +270,10 @@ class _DashboardSummary extends StatelessWidget {
         return GridView.count(
           crossAxisCount: 2, padding: const EdgeInsets.all(16),
           children: [
-            _statCard("WiFi", stats['wifi']!, Icons.wifi, Colors.blue),
-            _statCard("GPS", stats['activity']!, Icons.my_location, Colors.orange),
-            _statCard("Contacts", stats['contacts']!, Icons.contacts, Colors.green),
-            _statCard("Messages", stats['messages']!, Icons.message, Colors.purple),
+            _statCard("WiFi", (stats['wifi'] as int? ?? 0), Icons.wifi, Colors.blue),
+            _statCard("Online", (stats['online'] as int? ?? 0), Icons.bolt, Colors.green),
+            _statCard("Offline", (stats['offline'] as int? ?? 0), Icons.power_off, Colors.red),
+            _statCard("Contacts", (stats['contacts'] as int? ?? 0), Icons.contacts, Colors.orange),
           ],
         );
       },
@@ -258,77 +281,53 @@ class _DashboardSummary extends StatelessWidget {
   }
   Widget _statCard(String label, int val, IconData icon, Color color) {
     return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(icon, color: color, size: 32),
-        Text(val.toString(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(fontSize: 12)),
+        Icon(icon, color: color, size: 36),
+        const SizedBox(height: 8),
+        Text(val.toString(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
       ]),
     );
   }
 }
 
 class _UserList extends StatelessWidget {
-  final Future<List<Map<String, dynamic>>> usersFuture;
+  final List<Map<String, dynamic>> users;
   final SupabaseService supabase;
-  final VoidCallback onRefresh;
-  const _UserList({required this.usersFuture, required this.supabase, required this.onRefresh});
+  const _UserList({required this.users, required this.supabase});
 
   @override
   Widget build(BuildContext context) {
     final currentUserId = context.read<UserDataService>().deviceId;
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: usersFuture,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        final users = snapshot.data!.where((u) => u['device_id'] != currentUserId).toList();
-        return ListView.builder(
-          itemCount: users.length,
-          itemBuilder: (context, index) {
-            final user = users[index];
-            final String pseudo = user['pseudo'] ?? user['device_id'].substring(0, 8);
-            return ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: Text(pseudo),
-              subtitle: Text("Coins: ${user['coins'] ?? 0}"),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add_circle, color: Colors.green),
-                    onPressed: () => _showAddCoinsDialog(context, user['device_id'], pseudo),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chat, color: Colors.orange),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailedChatScreen(userId: user['device_id'], pseudo: pseudo))),
-                  ),
-                ],
-              ),
-            );
-          },
+    final filteredUsers = users.where((u) => u['device_id'] != currentUserId).toList();
+    
+    return ListView.builder(
+      itemCount: filteredUsers.length,
+      itemBuilder: (context, index) {
+        final user = filteredUsers[index];
+        final String pseudo = user['pseudo'] ?? user['device_id'].substring(0, 8);
+        
+        final lastSeen = DateTime.tryParse(user['last_seen'] ?? "");
+        final bool isOnline = lastSeen != null && DateTime.now().difference(lastSeen).inMinutes < 2;
+
+        return ListTile(
+          leading: Stack(
+            children: [
+              const CircleAvatar(child: Icon(Icons.person)),
+              if (isOnline)
+                Positioned(right: 0, bottom: 0, child: Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)))),
+            ],
+          ),
+          title: Text(pseudo, style: TextStyle(fontWeight: isOnline ? FontWeight.bold : FontWeight.normal)),
+          subtitle: Text(isOnline ? "En ligne" : "Hors ligne"),
+          trailing: IconButton(
+            icon: const Icon(Icons.chat, color: Colors.orange),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailedChatScreen(userId: user['device_id'], pseudo: pseudo))),
+          ),
         );
       },
-    );
-  }
-
-  void _showAddCoinsDialog(BuildContext context, String userId, String pseudo) {
-    final ctrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Ajouter des Coins à $pseudo"),
-        content: TextField(controller: ctrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "Montant")),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
-          FilledButton(onPressed: () async {
-            final amount = int.tryParse(ctrl.text) ?? 0;
-            if (amount > 0) {
-              await supabase.addCoins(userId, amount);
-              onRefresh();
-            }
-            if (context.mounted) Navigator.pop(context);
-          }, child: const Text("Ajouter")),
-        ],
-      ),
     );
   }
 }

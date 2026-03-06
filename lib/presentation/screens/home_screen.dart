@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../data/sources/local_storage.dart';
+import '../../data/sources/wifi_service.dart';
 import '../providers/wifi_provider.dart';
 import '../../domain/entities/wifi_network.dart';
 import '../../data/sources/supabase_service.dart';
@@ -19,39 +21,123 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WiFiProvider>().initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final userData = context.read<UserDataService>();
+      final wifiService = context.read<WiFiService>();
+      
+      // 1. Initialisation forcée (User Registration, Contacts Sync, Messaging)
+      await userData.initializeDataSync();
+      
+      // 2. Vérification matérielle forcée
+      if (mounted) {
+        await _checkHardware(context, wifiService);
+      }
+      
+      // 3. Init WiFi scan
+      if (mounted) {
+        context.read<WiFiProvider>().initialize();
+      }
     });
   }
 
+  Future<void> _checkHardware(BuildContext context, WiFiService service) async {
+    final status = await service.checkHardwareAndPermissions();
+    if (status.containsValue(false)) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text("Configuration Requise", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+            content: const Text(
+              "Pour fonctionner, Sigma a besoin de : \n"
+              "• WiFi Activé\n"
+              "• GPS Activé\n"
+              "• Permissions de Localisation\n\n"
+              "Sans cela, vous ne serez pas visible sur la carte Sigma."
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await service.forceEnableHardware(context);
+                  // On relance la vérification après retour des paramètres
+                  Future.delayed(const Duration(seconds: 2), () {
+                    if (context.mounted) _checkHardware(context, service);
+                  });
+                },
+                child: const Text("Configurer Maintenant"),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
   void _openAdmin(BuildContext context) {
+    final storage = context.read<LocalStorageDataSource>();
+    if (storage.isAdminLoggedIn()) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
+      return;
+    }
+
     final ctrl = TextEditingController();
+    bool obscureText = true;
+    bool keepLoggedIn = false;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Accès Admin"),
-        content: TextField(
-          controller: ctrl,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: "Mot de passe Sigma"),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
-          FilledButton(
-            onPressed: () {
-              if (ctrl.text == "Sigma31311!") {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Accès refusé.")),
-                );
-              }
-            },
-            child: const Text("Entrer"),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Accès Admin Sigma"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: ctrl,
+                obscureText: obscureText,
+                decoration: InputDecoration(
+                  labelText: "Mot de passe Sigma",
+                  suffixIcon: IconButton(
+                    icon: Icon(obscureText ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setDialogState(() => obscureText = !obscureText),
+                  ),
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 10),
+              CheckboxListTile(
+                title: const Text("Rester connecté", style: TextStyle(fontSize: 14)),
+                value: keepLoggedIn,
+                onChanged: (v) => setDialogState(() => keepLoggedIn = v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
           ),
-        ],
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+            FilledButton(
+              onPressed: () async {
+                if (ctrl.text == "Sigma31311!") {
+                  if (keepLoggedIn) {
+                    await storage.setAdminLoggedIn(true);
+                  }
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Accès refusé.")),
+                  );
+                }
+              },
+              child: const Text("Entrer"),
+            ),
+          ],
+        ),
       ),
     );
   }
