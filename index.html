@@ -18,7 +18,7 @@
     <meta name="revisit-after" content="7 days">
     <meta name="language" content="French">
     <meta name="geo.region" content="FR">
-    <meta name="geo.placename" content="Paris"> <!-- Optionnel, adaptez votre ville -->
+    <meta name="geo.placename" content="Paris">
     
     <!-- === VERIFICATION PROPRIÉTÉ (À remplacer par vos codes) === -->
     <meta name="google-site-verification" content="VOTRE_CODE_GOOGLE_SEARCH_CONSOLE" />
@@ -51,12 +51,12 @@
     <meta property="og:image:alt" content="Sigma WiFi Crack - Interface de scan WiFi et messagerie P2P">
     <meta property="og:locale" content="fr_FR">
     
-    <!-- Image spécifique pour Instagram (carré) - Certains crawlers l'utilisent -->
+    <!-- Image spécifique pour Instagram (carré) -->
     <meta property="og:image:square" content="https://raw.githubusercontent.com/Connacri/wifiCrak/main/assets/og-square-1080x1080.png">
     
     <!-- Paramètres avancés Open Graph -->
-    <meta property="og:phone_number" content="+33123456789"> <!-- Optionnel si vous avez un support -->
-    <meta property="og:email" content="support@sigma-tech.io"> <!-- Optionnel -->
+    <meta property="og:phone_number" content="+33123456789">
+    <meta property="og:email" content="support@sigma-tech.io">
 
     <!-- === TWITTER / X (CARTE ENRICHIE) === -->
     <meta name="twitter:card" content="summary_large_image">
@@ -67,7 +67,7 @@
     <meta name="twitter:image" content="https://raw.githubusercontent.com/Connacri/wifiCrak/main/assets/twitter-card-1200x675.png">
     <meta name="twitter:image:alt" content="Aperçu de l'application Sigma WiFi Crack sur un smartphone">
     
-    <!-- Labels Twitter (créent des métadonnées structurées sous le tweet) -->
+    <!-- Labels Twitter -->
     <meta name="twitter:label1" content="Téléchargements">
     <meta name="twitter:data1" content="50k+ (Bêta)">
     <meta name="twitter:label2" content="Version">
@@ -110,20 +110,339 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
     <link rel="mask-icon" href="assets/safari-pinned-tab.svg" color="#6366f1">
-    <link rel="manifest" href="site.webmanifest"> <!-- Pour PWA avancée -->
+    <link rel="manifest" href="site.webmanifest">
 
-    <!-- === POLICES (Optimisées pour le chargement) === -->
+    <!-- === POLICES === -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     
-    <!-- === STYLES (Inchangés par rapport à la version améliorée précédente, juste le chemin du CSS si externalisé) === -->
+    <!-- === STYLES COMPLETS === -->
     <style>
-        /* ... Votre CSS existant (idéalement externalisé dans un fichier .css) ... */
-        /* Pour la brièveté de cet exemple, je ne recopie pas le CSS ici, 
-           mais vous devez conserver tout le style de la version améliorée précédente. */
+        /* === VARIABLES & RESET === */
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.6);
+            --secondary: #f59e0b;
+            --accent: #10b981;
+            --dark: #030712;
+            --dark-surface: #111827;
+            --light: #f8fafc;
+            --gray: #9ca3af;
+            --glass: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            
+            /* Typographie technique */
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-sans: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* === ARRIÈRE-PLAN FUTURISTE : Grille dynamique === */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* === SÉLECTEURS GLOBAUX === */
+        h1, h2, h3 {
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: clamp(2.8rem, 10vw, 5.5rem);
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            margin-bottom: 3rem;
+            text-align: center;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+            border-radius: 2px;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 2.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -15px var(--primary-glow);
+        }
+
+        /* === BOUTONS === */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            color: white;
+            padding: 1rem 2.8rem;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 30px -5px var(--primary-glow);
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 20px 40px -5px var(--primary-glow);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        /* === HEADER === */
+        header {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            animation: fadeUp 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(60px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .badge {
+            font-family: var(--font-mono);
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.5rem 1.5rem;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 2rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .hero-p {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            color: var(--gray);
+            max-width: 700px;
+            margin: 2rem auto;
+        }
+
+        /* === SECTIONS GÉNÉRALES === */
+        .section {
+            padding: 6rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* === GRILLE RESPONSIVE === */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(245, 158, 11, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.8rem;
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        /* === SECTION TECHNIQUE (Stats) === */
+        .stats-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4rem;
+            margin: 4rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--primary);
+            line-height: 1;
+        }
+        .stat-value small { 
+            font-size: 1rem; 
+            color: var(--gray); 
+        }
+        .stat-label { 
+            color: var(--gray); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+
+        /* === GUIDE DE DÉMARRAGE (plus visuel) === */
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .guide-step {
+            background: var(--dark-surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .guide-step:hover {
+            border-color: var(--accent);
+        }
+        .step-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.8rem;
+            color: var(--accent);
+        }
+
+        /* === FOOTER === */
+        footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: var(--gray);
+        }
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* === ACCESSIBILITÉ & DIVERS === */
+        :focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 4px;
+        }
+
+        /* Optimisation pour très grands écrans */
+        @media (min-width: 2000px) {
+            .section { max-width: 1800px; }
+        }
+
+        /* Ajustements mobiles */
+        @media (max-width: 600px) {
+            .glass-card { padding: 1.8rem; }
+            .btn-primary { width: 100%; padding: 1rem 1.5rem; }
+            .stats-grid { gap: 2rem; }
+            .section { padding: 3rem 1rem; }
+            .badge { font-size: 0.8rem; padding: 0.4rem 1rem; }
+        }
+
+        /* Correction pour l'élément small mal formé */
+        .stat-value small {
+            font-size: 1rem;
+            color: var(--gray);
+        }
     </style>
-</head><body>
+</head>
+<body>
 
     <!-- HEADER -->
     <header>
@@ -131,7 +450,6 @@
             <span class="badge">⚡ V2.0.0 - SIGMA PROTOCOL EN LIGNE</span>
             <h1>Sigma WiFi<br>Fiber Crack</h1>
             <p class="hero-p">Audit réseau quantique, messagerie P2P zero-trust & économie décentralisée. L'arsenal complet du cyber-expert.</p>
-            <!-- Ajout de fetchpriority pour accélérer le chargement perçu -->
             <a href="https://github.com/Connacri/wifiCrack/releases/download/v1.0.0/app-release.apk" class="btn-primary" fetchpriority="high">
                 <span>📥</span> Télécharger l'APK (Android)
             </a>
@@ -145,11 +463,11 @@
         <!-- Stats pour le côté technique -->
         <div class="stats-grid">
             <div class="stat-item">
-                <div class="stat-value">0.04<span small>ms</span></div>
+                <div class="stat-value">0.04<small>ms</small></div>
                 <div class="stat-label">Latence P2P</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value">256<span small>bits</span></div>
+                <div class="stat-value">256<small>bits</small></div>
                 <div class="stat-label">Chiffrement</div>
             </div>
             <div class="stat-item">
@@ -158,7 +476,7 @@
             </div>
         </div>
 
-        <!-- Cartes améliorées avec glassmorphisme -->
+        <!-- Cartes avec glassmorphisme -->
         <div class="grid-3">
             <div class="glass-card">
                 <div class="icon-box">📡</div>
@@ -178,7 +496,7 @@
         </div>
     </div>
 
-    <!-- SECTION GUIDE D'INSTALLATION (version visuelle) -->
+    <!-- SECTION GUIDE D'INSTALLATION -->
     <div class="section" style="background: radial-gradient(circle at 0% 0%, #1e1b4b, transparent);">
         <h2 class="section-title" style="color: white;">Déploiement Sigma</h2>
         
@@ -214,6 +532,5 @@
         </div>
     </footer>
 
-    <!-- Pas de JavaScript pour rester léger, mais on pourrait ajouter une animation de particules ici -->
 </body>
 </html>
