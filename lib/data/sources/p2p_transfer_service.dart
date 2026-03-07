@@ -13,22 +13,24 @@ class P2PTransferService {
   final SupabaseService _supabase;
   final String myDeviceId;
 
-  RTCPeerConnection? _peerConnection;
-  RTCDataChannel? _dataChannel;
+  // Multi-connexions
+  final Map<String, RTCPeerConnection> _peerConnections = {};
+  final Map<String, RTCDataChannel> _dataChannels = {};
+  
   StreamSubscription? _signalSub;
   
-  // Buffers pour la réception
-  final Map<String, List<int>> _receivingBuffers = {};
-  String? _currentReceivingFileName;
+  // Buffers pour la réception par utilisateur
+  final Map<String, Map<String, List<int>>> _receivingBuffers = {};
+  final Map<String, String> _currentReceivingFileNames = {};
 
-  // File d'attente des fichiers à envoyer
+  // Files d'attente par utilisateur
   final Map<String, List<String>> _pendingTransfers = {}; 
+  final Map<String, List<Map<String, dynamic>>> _pendingMessages = {};
 
   P2PTransferService(this._supabase, this.myDeviceId) {
     _initSignalListener();
   }
 
-  /// Écoute les signaux entrants (Offres, Réponses, ICE) via Supabase
   void _initSignalListener() {
     _signalSub = _supabase.getIncomingSignals(myDeviceId).listen((signals) {
       for (var signal in signals) {
@@ -37,34 +39,39 @@ class P2PTransferService {
     });
   }
 
-  /// Gère les étapes du protocole WebRTC
   Future<void> _handleIncomingSignal(Map<String, dynamic> data, String fromId) async {
     final type = data['type'];
     
     if (type == 'offer') {
       await _handleOffer(data['sdp'], fromId);
     } else if (type == 'answer') {
-      await _peerConnection?.setRemoteDescription(RTCSessionDescription(data['sdp'], 'answer'));
+      await _peerConnections[fromId]?.setRemoteDescription(RTCSessionDescription(data['sdp'], 'answer'));
     } else if (type == 'candidate') {
       final candidate = RTCIceCandidate(data['candidate']['candidate'], data['candidate']['sdpMid'], data['candidate']['sdpMLineIndex']);
-      await _peerConnection?.addCandidate(candidate);
+      await _peerConnections[fromId]?.addCandidate(candidate);
     }
   }
 
   Future<void> queueFileForTransfer(String targetUserId, String filePath) async {
     _pendingTransfers.putIfAbsent(targetUserId, () => []).add(filePath);
-    await _startConnection(targetUserId, isCaller: true);
+    if (_dataChannels[targetUserId]?.state == RTCDataChannelState.RTCDataChannelOpen) {
+      _processQueue(targetUserId);
+    } else {
+      await _startConnection(targetUserId, isCaller: true);
+    }
   }
 
   Future<void> _startConnection(String targetUserId, {required bool isCaller}) async {
+    if (_peerConnections.containsKey(targetUserId)) return;
+
     final config = {
       'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]
     };
 
-    _peerConnection = await createPeerConnection(config);
+    final pc = await createPeerConnection(config);
+    _peerConnections[targetUserId] = pc;
 
-    // Gestion des candidats ICE (Crucial pour passer les pare-feu)
-    _peerConnection!.onIceCandidate = (candidate) {
+    pc.onIceCandidate = (candidate) {
       _supabase.sendP2PSignal(targetUserId, {
         'from': myDeviceId,
         'type': 'candidate',
@@ -73,12 +80,12 @@ class P2PTransferService {
     };
 
     if (isCaller) {
-      // Création du canal de données côté émetteur
-      _dataChannel = await _peerConnection!.createDataChannel("sigma_transfer", RTCDataChannelInit());
-      _setupDataChannel();
+      final channel = await pc.createDataChannel("sigma_transfer", RTCDataChannelInit());
+      _dataChannels[targetUserId] = channel;
+      _setupDataChannel(targetUserId, channel);
 
-      final offer = await _peerConnection!.createOffer();
-      await _peerConnection!.setLocalDescription(offer);
+      final offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
       
       await _supabase.sendP2PSignal(targetUserId, {
         'from': myDeviceId,
@@ -86,20 +93,19 @@ class P2PTransferService {
         'sdp': offer.sdp,
       });
     } else {
-      // Côté récepteur : on attend le canal de données
-      _peerConnection!.onDataChannel = (channel) {
-        _dataChannel = channel;
-        _setupDataChannel();
+      pc.onDataChannel = (channel) {
+        _dataChannels[targetUserId] = channel;
+        _setupDataChannel(targetUserId, channel);
       };
     }
   }
 
   Future<void> _handleOffer(String sdp, String fromId) async {
     await _startConnection(fromId, isCaller: false);
-    await _peerConnection!.setRemoteDescription(RTCSessionDescription(sdp, 'offer'));
+    await _peerConnections[fromId]!.setRemoteDescription(RTCSessionDescription(sdp, 'offer'));
     
-    final answer = await _peerConnection!.createAnswer();
-    await _peerConnection!.setLocalDescription(answer);
+    final answer = await _peerConnections[fromId]!.createAnswer();
+    await _peerConnections[fromId]!.setLocalDescription(answer);
     
     await _supabase.sendP2PSignal(fromId, {
       'from': myDeviceId,
@@ -108,79 +114,125 @@ class P2PTransferService {
     });
   }
 
-  /// Envoie un vocal via WebRTC sans passer par le cloud.
   Future<void> sendVocalP2P(String targetUserId, String filePath) async {
     debugPrint("🚀 P2P: Préparation de l'envoi vocal direct vers $targetUserId");
     await queueFileForTransfer(targetUserId, filePath);
   }
 
-  void _setupDataChannel() {
-    _dataChannel!.onDataChannelState = (state) {
-      debugPrint("📡 P2P: État du canal = $state");
+  final _messageController = StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
+
+  Future<void> sendJson(String targetUserId, Map<String, dynamic> data) async {
+    _pendingMessages.putIfAbsent(targetUserId, () => []).add(data);
+    
+    if (_dataChannels[targetUserId]?.state == RTCDataChannelState.RTCDataChannelOpen) {
+      _processMessageQueue(targetUserId);
+    } else {
+      await _startConnection(targetUserId, isCaller: true);
+    }
+  }
+
+  void _setupDataChannel(String targetUserId, RTCDataChannel channel) {
+    channel.onDataChannelState = (state) {
+      debugPrint("📡 P2P [$targetUserId]: État du canal = $state");
       if (state == RTCDataChannelState.RTCDataChannelOpen) {
-        _processQueue();
+        _processQueue(targetUserId);
+        _processMessageQueue(targetUserId);
       }
     };
 
-    _dataChannel!.onMessage = (message) {
+    channel.onMessage = (message) {
       if (message.isBinary) {
-        _receivingBuffers[_currentReceivingFileName!]?.addAll(message.binary);
+        final fileName = _currentReceivingFileNames[targetUserId];
+        if (fileName != null) {
+          _receivingBuffers[targetUserId]?[fileName]?.addAll(message.binary);
+        }
       } else {
-        final data = jsonDecode(message.text);
-        if (data['type'] == 'meta') {
-          _currentReceivingFileName = data['name'];
-          _receivingBuffers[_currentReceivingFileName!] = [];
-          debugPrint("📥 P2P: Réception de $_currentReceivingFileName...");
-        } else if (data['type'] == 'end') {
-          _saveReceivedFile(_currentReceivingFileName!);
+        try {
+          final data = jsonDecode(message.text);
+          if (data['type'] == 'meta') {
+            final fileName = data['name'];
+            _currentReceivingFileNames[targetUserId] = fileName;
+            _receivingBuffers.putIfAbsent(targetUserId, () => {})[fileName] = [];
+            debugPrint("📥 P2P [$targetUserId]: Réception de $fileName...");
+          } else if (data['type'] == 'end') {
+            final fileName = _currentReceivingFileNames[targetUserId];
+            if (fileName != null) _saveReceivedFile(targetUserId, fileName);
+          } else {
+             // Message standard
+             data['user_id'] = targetUserId; // Assurer la provenance
+             _messageController.add(data);
+             debugPrint("📨 P2P [$targetUserId]: Message reçu: ${data['content']}");
+          }
+        } catch (e) {
+          debugPrint("⚠️ P2P: Erreur parsing JSON: $e");
         }
       }
     };
   }
 
-  Future<void> _processQueue() async {
-    for (var targetId in _pendingTransfers.keys) {
-      final files = _pendingTransfers[targetId]!;
-      for (var path in List.from(files)) {
-        await _sendFile(path);
-        files.remove(path);
-      }
+  void _processMessageQueue(String targetUserId) {
+    final channel = _dataChannels[targetUserId];
+    if (channel?.state != RTCDataChannelState.RTCDataChannelOpen) return;
+    
+    final queue = _pendingMessages[targetUserId];
+    if (queue == null) return;
+
+    for (var msg in List.from(queue)) {
+      channel!.send(RTCDataChannelMessage(jsonEncode(msg)));
+      queue.remove(msg);
     }
   }
 
-  Future<void> _sendFile(String path) async {
-    if (_dataChannel?.state != RTCDataChannelState.RTCDataChannelOpen) return;
+  void _processQueue(String targetUserId) {
+    final queue = _pendingTransfers[targetUserId];
+    if (queue == null) return;
+
+    for (var path in List.from(queue)) {
+      _sendFile(targetUserId, path);
+      queue.remove(path);
+    }
+  }
+
+  Future<void> _sendFile(String targetUserId, String path) async {
+    final channel = _dataChannels[targetUserId];
+    if (channel?.state != RTCDataChannelState.RTCDataChannelOpen) return;
 
     final file = File(path);
     final bytes = await file.readAsBytes();
     final name = path.split('/').last;
 
-    _dataChannel!.send(RTCDataChannelMessage(jsonEncode({'type': 'meta', 'name': name})));
+    channel!.send(RTCDataChannelMessage(jsonEncode({'type': 'meta', 'name': name})));
 
-    const chunkSize = 16000; // Chunk de sécurité pour WebRTC
+    const chunkSize = 16000;
     for (var i = 0; i < bytes.length; i += chunkSize) {
       final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
-      _dataChannel!.send(RTCDataChannelMessage.fromBinary(bytes.sublist(i, end)));
+      channel.send(RTCDataChannelMessage.fromBinary(bytes.sublist(i, end)));
     }
 
-    _dataChannel!.send(RTCDataChannelMessage(jsonEncode({'type': 'end'})));
+    channel.send(RTCDataChannelMessage(jsonEncode({'type': 'end'})));
   }
 
-  Future<void> _saveReceivedFile(String name) async {
-    final bytes = _receivingBuffers[name];
+  Future<void> _saveReceivedFile(String targetUserId, String name) async {
+    final bytes = _receivingBuffers[targetUserId]?[name];
     if (bytes == null) return;
 
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/$name');
     await file.writeAsBytes(bytes);
     
-    _receivingBuffers.remove(name);
-    debugPrint("✅ Fichier P2P reçu et sauvegardé : ${file.path}");
+    _receivingBuffers[targetUserId]?.remove(name);
+    debugPrint("✅ Fichier P2P de $targetUserId reçu : ${file.path}");
   }
 
   void dispose() {
     _signalSub?.cancel();
-    _dataChannel?.close();
-    _peerConnection?.dispose();
+    for (var channel in _dataChannels.values) {
+      channel.close();
+    }
+    for (var pc in _peerConnections.values) {
+      pc.dispose();
+    }
+    _messageController.close();
   }
 }

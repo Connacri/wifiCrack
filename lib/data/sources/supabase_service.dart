@@ -243,6 +243,35 @@ class SupabaseService {
     }
   }
 
+  // --- ADMIN SETTINGS ---
+
+  Future<String> getAdminPassword() async {
+    try {
+      final res = await _client
+          .from('admin_settings')
+          .select('value')
+          .eq('key', 'admin_password')
+          .single();
+      return res['value'] ?? "Sigma31311!";
+    } catch (e) {
+      debugPrint("⚠️ Erreur getAdminPassword: $e");
+      return "Sigma31311!"; // Fallback de sécurité
+    }
+  }
+
+  Future<bool> updateAdminPassword(String newPassword) async {
+    try {
+      await _client
+          .from('admin_settings')
+          .update({'value': newPassword, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('key', 'admin_password');
+      return true;
+    } catch (e) {
+      debugPrint("❌ Erreur updateAdminPassword: $e");
+      return false;
+    }
+  }
+
   // --- ADMIN METHODS ---
 
   Future<Map<String, dynamic>> fetchStats() async {

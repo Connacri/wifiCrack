@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,6 +6,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import 'p2p_transfer_service.dart';
 
 /// Service de messagerie Sigma expert. 
 /// Gère les alertes FCM avec haute priorité (Son, Vibration, Popup).
@@ -32,6 +35,10 @@ class FirebaseMessengerService {
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         String? token = await _fcm.getToken();
         if (token != null) await _saveTokenToDatabase(userId, token);
+        
+        // S'abonner au canal global pour recevoir les notifications de groupe
+        await _fcm.subscribeToTopic('all_users');
+        debugPrint("📢 Abonné au canal global 'all_users'");
       }
 
       // 2. Initialisation des notifications locales
@@ -130,36 +137,81 @@ class FirebaseMessengerService {
     }
   }
 
+  // Simulation de persistance locale (à remplacer par SQLite/Hive)
+  final List<Map<String, dynamic>> _localMessages = [];
+  
+  // Stream local pour l'UI
+  final _localMessageController = StreamController<List<Map<String, dynamic>>>.broadcast();
+  Stream<List<Map<String, dynamic>>> get localMessageStream => _localMessageController.stream;
+
+  /// Envoie un message en mode P2P strict avec persistance locale et signalisation de réveil.
+  Future<void> sendP2PMessage(
+    String targetUserId, 
+    String myUserId,
+    String content, 
+    P2PTransferService p2pService, {
+    String type = 'text',
+    String? fileUrl,
+    int? durationInSeconds,
+  }) async {
+    final messageData = {
+      'user_id': myUserId, // Expéditeur (Moi)
+      'target_id': targetUserId,
+      'content': content,
+      'type': type,
+      'file_url': fileUrl,
+      'duration': durationInSeconds,
+      'timestamp': DateTime.now().toUtc().toIso8601String(),
+      'status': 'pending', // pending, sent, delivered
+      'is_admin': true, // Pour compatibilité UI existante
+    };
+
+    // 1. Sauvegarde Locale (Outbox)
+    _localMessages.add(messageData);
+    _localMessageController.add(_localMessages); // Update UI
+
+    try {
+      // 2. Tentative d'envoi P2P
+      await p2pService.sendJson(targetUserId, messageData);
+      
+      // Si on arrive ici sans erreur, on considère envoyé (optimiste, le vrai ACK viendrait du P2P)
+      messageData['status'] = 'sent';
+      _localMessageController.add(_localMessages);
+      
+    } catch (e) {
+      debugPrint("⚠️ P2P Fail (Normal si hors ligne): $e");
+    }
+
+    // 3. Signal de Réveil (Notification via Firestore sans contenu)
+    // On écrit juste un "ping" dans une collection spéciale que l'autre écoute
+    try {
+      await _firestore.collection('p2p_signals').add({
+        'to': targetUserId,
+        'from': myUserId,
+        'type': 'wake_up',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint("❌ Signal Error: $e");
+    }
+  }
+
+  /// Méthode pour recevoir un message P2P (appelée depuis l'écouteur du P2PService)
+  void receiveP2PMessage(Map<String, dynamic> message) {
+    message['is_admin'] = false; // C'est un message reçu
+    _localMessages.add(message);
+    _localMessageController.add(_localMessages);
+  }
+
+  // L'ancienne méthode reste pour compatibilité si besoin, mais on l'ignore pour le nouveau flux
   Future<bool> sendMessage(String userId, String content, {
     bool isAdmin = true,
     String? type = 'text',
     String? fileUrl,
     int? durationInSeconds,
   }) async {
-    try {
-      final normalizedContent = content.trim();
-      if (userId.trim().isEmpty) return false;
-      if (normalizedContent.isEmpty && type != 'audio' && fileUrl == null) {
-        return false;
-      }
-
-      await _messages.add({
-        'user_id': userId,
-        'content': normalizedContent,
-        'is_admin': isAdmin,
-        'type': type,
-        'file_url': fileUrl,
-        'duration': durationInSeconds,
-        // Horodatage client pour stabiliser l'affichage avant résolution serverTimestamp.
-        'client_timestamp': DateTime.now().toUtc().toIso8601String(),
-        'timestamp': FieldValue.serverTimestamp(),
-        'is_read': false,
-      });
-      return true;
-    } catch (e) {
-      debugPrint("❌ Error sending message: $e");
-      return false;
-    }
+    // OBSOLÈTE : Ne plus utiliser Firestore pour le stockage
+    return false; 
   }
 
   Future<String?> uploadAudio(String userId, String filePath) async {

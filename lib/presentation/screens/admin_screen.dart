@@ -23,7 +23,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _usersStream = _supabase.getUsersStream();
   }
 
@@ -66,6 +66,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
             Tab(icon: Icon(Icons.map), text: 'Carte'),
             Tab(icon: Icon(Icons.location_history), text: 'Traces'),
             Tab(icon: Icon(Icons.contacts), text: 'Contacts'),
+            Tab(icon: Icon(Icons.settings), text: 'Config'),
           ],
         ),
       ),
@@ -82,9 +83,74 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
               _AdminMapView(supabase: _supabase, users: users),
               _DataList(fetcher: _supabase.fetchUserActivity, type: 'activity'),
               _DataList(fetcher: _supabase.fetchContacts, type: 'contacts', showSearch: true),
+              _AdminSettingsManager(supabase: _supabase),
             ],
           );
         }
+      ),
+    );
+  }
+}
+
+class _AdminSettingsManager extends StatefulWidget {
+  final SupabaseService supabase;
+  const _AdminSettingsManager({required this.supabase});
+  @override
+  State<_AdminSettingsManager> createState() => _AdminSettingsManagerState();
+}
+
+class _AdminSettingsManagerState extends State<_AdminSettingsManager> {
+  final _newPassCtrl = TextEditingController();
+  bool _isUpdating = false;
+
+  Future<void> _updatePassword() async {
+    final pass = _newPassCtrl.text.trim();
+    if (pass.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Le mot de passe doit faire au moins 6 caractères.")));
+      return;
+    }
+
+    setState(() => _isUpdating = true);
+    final ok = await widget.supabase.updateAdminPassword(pass);
+    setState(() => _isUpdating = false);
+
+    if (ok) {
+      _newPassCtrl.clear();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("✅ Mot de passe Admin mis à jour sur Supabase !")));
+    } else {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("❌ Erreur lors de la mise à jour.")));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("🔐 Sécurité Admin", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          const Text("Changez le mot de passe d'accès au dashboard. Ce changement est immédiat pour tous les appareils.", style: TextStyle(color: Colors.grey, fontSize: 13)),
+          const SizedBox(height: 30),
+          TextField(
+            controller: _newPassCtrl,
+            decoration: const InputDecoration(
+              labelText: "Nouveau mot de passe",
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.lock_outline),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _isUpdating ? null : _updatePassword,
+              icon: _isUpdating ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.save),
+              label: const Text("Enregistrer les modifications"),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -44,6 +45,50 @@ class _MessengerScreenState extends State<MessengerScreen> {
     });
   }
 
+  Future<void> _editPseudo() async {
+    final userData = context.read<UserDataService>();
+    final currentPseudo = userData.getPseudo();
+    final controller = TextEditingController(text: currentPseudo);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Modifier mon Pseudo"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: "Nouveau Pseudo"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Annuler"),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final newPseudo = controller.text.trim();
+              if (newPseudo.isNotEmpty && newPseudo != currentPseudo) {
+                final success = await userData.updatePseudo(newPseudo);
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success 
+                        ? "Pseudo mis à jour !" 
+                        : "Pseudo indisponible ou erreur."),
+                      backgroundColor: success ? Colors.green : Colors.red,
+                    ),
+                  );
+                  if (success) _refreshUsers();
+                }
+              }
+            },
+            child: const Text("Enregistrer"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUserId = context.read<UserDataService>().deviceId;
@@ -53,6 +98,11 @@ class _MessengerScreenState extends State<MessengerScreen> {
         title: const Text('Sigma Messenger Dashboard'),
         backgroundColor: Colors.orange,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: "Changer mon pseudo",
+            onPressed: _editPseudo,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshUsers,
@@ -191,12 +241,12 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   final ScrollController _scrollController = ScrollController();
 
   late FirebaseMessengerService _messenger;
+  late P2PTransferService _p2pService;
+  late StreamSubscription _p2pSubscription;
   bool _servicesReady = false;
 
   bool _isSending = false;
-  bool _isMarkingRead = false;
   bool _hasTypedText = false;
-  int _lastMessageCount = 0;
 
   @override
   void initState() {
@@ -209,12 +259,20 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
     super.didChangeDependencies();
     if (_servicesReady) return;
     _messenger = context.read<FirebaseMessengerService>();
+    _p2pService = context.read<P2PTransferService>();
+    
+    _p2pSubscription = _p2pService.messageStream.listen((data) {
+      if (data['user_id'] == widget.userId) { 
+        _messenger.receiveP2PMessage(data);
+      }
+    });
+
     _servicesReady = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _markAsRead());
   }
 
   @override
   void dispose() {
+    _p2pSubscription.cancel();
     _controller.removeListener(_onInputChanged);
     _controller.dispose();
     _scrollController.dispose();
@@ -225,16 +283,6 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
     final hasText = _controller.text.trim().isNotEmpty;
     if (hasText != _hasTypedText && mounted) {
       setState(() => _hasTypedText = hasText);
-    }
-  }
-
-  Future<void> _markAsRead() async {
-    if (_isMarkingRead) return;
-    _isMarkingRead = true;
-    try {
-      await _messenger.markAsRead(widget.userId, isAdmin: true);
-    } finally {
-      _isMarkingRead = false;
     }
   }
 
@@ -252,47 +300,6 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
     }
   }
 
-  void _handleMessageListChanged(int messageCount) {
-    if (messageCount <= _lastMessageCount) return;
-    _lastMessageCount = messageCount;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _scrollToBottom();
-      _markAsRead();
-    });
-  }
-
-  List<QueryDocumentSnapshot<Map<String, dynamic>>> _sortedDocs(
-    QuerySnapshot<Map<String, dynamic>>? snapshot,
-  ) {
-    final docs = List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(
-      snapshot?.docs ?? const [],
-    );
-
-    docs.sort((a, b) {
-      final aData = a.data();
-      final bData = b.data();
-
-      final aTs = aData['timestamp'] as Timestamp?;
-      final bTs = bData['timestamp'] as Timestamp?;
-
-      final aClient =
-          DateTime.tryParse(aData['client_timestamp']?.toString() ?? '')
-              ?.millisecondsSinceEpoch ??
-          0;
-      final bClient =
-          DateTime.tryParse(bData['client_timestamp']?.toString() ?? '')
-              ?.millisecondsSinceEpoch ??
-          0;
-
-      final aTime = aTs?.millisecondsSinceEpoch ?? aClient;
-      final bTime = bTs?.millisecondsSinceEpoch ?? bClient;
-      return aTime.compareTo(bTime);
-    });
-
-    return docs;
-  }
-
   Future<void> _send({
     String? content,
     String type = 'text',
@@ -305,10 +312,12 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
     }
 
     setState(() => _isSending = true);
-    final sent = await _messenger.sendMessage(
+    
+    await _messenger.sendP2PMessage(
       widget.userId,
+      context.read<UserDataService>().deviceId, 
       msg.isEmpty ? (type == 'audio' ? 'Vocal Sigma' : 'Message') : msg,
-      isAdmin: true,
+      _p2pService,
       type: type,
       fileUrl: fileUrl,
       durationInSeconds: duration,
@@ -316,27 +325,15 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
 
     if (!mounted) return;
     setState(() => _isSending = false);
-
-    if (sent) {
-      _controller.clear();
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    }
+    _controller.clear();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
-
-
   Future<void> _handleAudio(String path, Duration duration) async {
-    final p2p = context.read<P2PTransferService>();
-    // Extraction robuste du nom de fichier (Windows \ ou Android /)
-    final fileName = path.split(RegExp(r'[\\/ ]')).last;
-
-    // 1. Déclenchement du transfert P2P direct via WebRTC
-    await p2p.sendVocalP2P(widget.userId, path);
-
-    // 2. Envoi de la trace dans Firestore pour l'UI avec préfixe p2p:
+    await _p2pService.sendVocalP2P(widget.userId, path);
     await _send(
       type: 'audio', 
-      fileUrl: 'p2p:$fileName', 
+      fileUrl: 'p2p:${path.split(RegExp(r'[\\/ ]')).last}', 
       duration: duration.inSeconds
     );
   }
@@ -391,26 +388,15 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.pseudo,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              widget.userId,
-              style: const TextStyle(fontSize: 9, color: Colors.white70),
-            ),
+            Text(widget.pseudo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text("P2P Secure • ${widget.userId.substring(0,6)}...", style: const TextStyle(fontSize: 10, color: Colors.greenAccent)),
           ],
         ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.monetization_on, color: Colors.orange),
-            tooltip: 'Ajouter des coins',
             onPressed: _showAddCoinsDialog,
           ),
         ],
@@ -418,31 +404,35 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _messenger.getMessagesStream(widget.userId),
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: _messenger.localMessageStream,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting &&
-                    !snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final docs = _sortedDocs(snapshot.data);
-                _handleMessageListChanged(docs.length);
+                final messages = snapshot.data ?? [];
+                
+                final conversationMessages = messages.where((m) => 
+                  (m['user_id'] == widget.userId && !(m['is_admin'] ?? false)) || 
+                  (m['target_id'] == widget.userId && (m['is_admin'] ?? true))
+                ).toList()
+                ..sort((a, b) { // Tri par date
+                  final aTime = DateTime.tryParse(a['timestamp'] ?? '') ?? DateTime.now();
+                  final bTime = DateTime.tryParse(b['timestamp'] ?? '') ?? DateTime.now();
+                  return aTime.compareTo(bTime);
+                });
 
                 return ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(16),
-                  itemCount: docs.length,
+                  itemCount: conversationMessages.length,
                   itemBuilder: (context, index) {
-                    final msg = docs[index].data();
+                    final msg = conversationMessages[index];
                     return _MessageBubble(
                       content: msg['content']?.toString() ?? '',
                       isAdmin: msg['is_admin'] as bool? ?? false,
-                      isRead: msg['is_read'] as bool? ?? false,
+                      isRead: msg['status'] == 'sent',
                       type: msg['type']?.toString() ?? 'text',
                       fileUrl: msg['file_url']?.toString(),
                       duration: msg['duration'] as int?,
-                      timestamp: msg['timestamp'] as Timestamp?,
+                      timestamp: msg['timestamp'] != null ? Timestamp.fromDate(DateTime.parse(msg['timestamp'])) : null,
                     );
                   },
                 );

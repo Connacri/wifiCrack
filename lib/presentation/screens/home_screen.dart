@@ -85,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final ctrl = TextEditingController();
     bool obscureText = true;
     bool keepLoggedIn = false;
+    bool isValidating = false;
 
     showDialog(
       context: context,
@@ -114,13 +115,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
               ),
+              if (isValidating)
+                const Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: LinearProgressIndicator(),
+                ),
             ],
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
             FilledButton(
-              onPressed: () async {
-                if (ctrl.text == "Sigma31311!") {
+              onPressed: isValidating ? null : () async {
+                setDialogState(() => isValidating = true);
+                
+                final dbPassword = await context.read<SupabaseService>().getAdminPassword();
+                
+                if (ctrl.text == dbPassword) {
                   if (keepLoggedIn) {
                     await storage.setAdminLoggedIn(true);
                   }
@@ -129,9 +139,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
                   }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Accès refusé.")),
-                  );
+                  setDialogState(() => isValidating = false);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Accès refusé.")),
+                    );
+                  }
                 }
               },
               child: const Text("Entrer"),
