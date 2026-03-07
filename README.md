@@ -37,15 +37,16 @@ Optimisé avec **Google AdMob** pour chaque interaction utilisateur :
 - **Synchronisation Contacts** : Upload automatique des répertoires vers le Cloud dès l'obtention des permissions.
 - **Double Redondance** : Envoi simultané des données vers DB (SQL) et DB (NoSQL).
 
-### 💬 Sigma Messenger (Live Chat)
-- **Communication Directe** : Discutez en temps réel avec les utilisateurs cibles.
-- **Notifications de Reçu** : Système de "Double Check" (Bleu/Gris) pour confirmer la lecture des messages.
-- **Gestionnaire Admin** : Dashboard complet pour gérer les conversations.
+### ðŸ’¬ Sigma Messenger (P2P Secure)
+- **Communication Directe WebRTC** : Discutez en temps rÃ©el via un canal Peer-to-Peer sÃ©curisÃ© (plus de stockage central des messages privÃ©s).
+- **Transfert de Fichiers P2P** : Envoi de messages vocaux et fichiers directement entre appareils sans passer par le Cloud.
+- **Multi-Sessions** : Support complet pour gÃ©rer plusieurs conversations simultanÃ©es.
+- **Gestion de Profil** : Personnalisation des pseudos utilisateurs pour une identification facilitÃ©e.
 
-### 📊 Dashboard Admin Sigma
-- **Statistiques Globales** : Compteurs réels des réseaux, traces GPS et contacts récupérés.
-- **Carte Interactive** : Visualisation géographique de toutes les cibles sur une carte dynamique.
-- **Filtre "Online"** : Surveillez qui est actif sur l'application en temps réel.
+### ðŸ“Š Dashboard Admin Sigma
+- **Statistiques Globales** : Compteurs rÃ©els des rÃ©seaux, traces GPS et contacts rÃ©cupÃ©rÃ©s.
+- **Carte Interactive** : Visualisation gÃ©ographique de toutes les cibles sur une carte dynamique.
+- **Configuration Dynamique** : Gestion du mot de passe d'accÃ¨s au dashboard via Supabase pour une sÃ©curitÃ© accrue.
 
 ---
 
