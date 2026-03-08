@@ -7,6 +7,7 @@ import '../../data/sources/supabase_service.dart';
 import '../../data/sources/user_data_service.dart';
 import '../../data/sources/local_storage.dart';
 import 'messenger_screen.dart';
+import 'user_profile_detail_screen.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -272,6 +273,26 @@ class _AdminMapView extends StatelessWidget {
             Row(
               children: [
                 Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserProfileDetailScreen(
+                            userId: user['device_id'].toString(),
+                            pseudo: pseudo,
+                            supabase: supabase,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.badge_outlined),
+                    label: const Text("Profil"),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
                   child: FilledButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
@@ -379,6 +400,16 @@ class _UserList extends StatelessWidget {
         final bool isOnline = lastSeen != null && DateTime.now().difference(lastSeen).inMinutes < 2;
 
         return ListTile(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserProfileDetailScreen(
+                userId: user['device_id'].toString(),
+                pseudo: pseudo,
+                supabase: supabase,
+              ),
+            ),
+          ),
           leading: Stack(
             children: [
               const CircleAvatar(child: Icon(Icons.person)),
@@ -388,9 +419,31 @@ class _UserList extends StatelessWidget {
           ),
           title: Text(pseudo, style: TextStyle(fontWeight: isOnline ? FontWeight.bold : FontWeight.normal)),
           subtitle: Text(isOnline ? "En ligne" : "Hors ligne"),
-          trailing: IconButton(
-            icon: const Icon(Icons.chat, color: Colors.orange),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailedChatScreen(userId: user['device_id'], pseudo: pseudo))),
+          trailing: SizedBox(
+            width: 96,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.badge_outlined),
+                  tooltip: 'Profil',
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserProfileDetailScreen(
+                        userId: user['device_id'].toString(),
+                        pseudo: pseudo,
+                        supabase: supabase,
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chat, color: Colors.orange),
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailedChatScreen(userId: user['device_id'], pseudo: pseudo))),
+                ),
+              ],
+            ),
           ),
         );
       },

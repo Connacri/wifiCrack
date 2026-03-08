@@ -350,4 +350,37 @@ class SupabaseService {
     final current = await getUserCoins(userId);
     await _client.from('users').update({'coins': current + amount}).eq('device_id', userId);
   }
+
+  /// Détails complets d'un utilisateur + historique d'activité récent.
+  Future<Map<String, dynamic>> fetchUserFullDetails(String userId) async {
+    try {
+      final user = await _client
+          .from('users')
+          .select()
+          .eq('device_id', userId)
+          .maybeSingle();
+
+      final activitiesRaw = await _client
+          .from('user_activity')
+          .select()
+          .eq('device_id', userId)
+          .order('timestamp', ascending: false)
+          .limit(100);
+
+      final activities = activitiesRaw
+          .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+
+      return {
+        'user': user == null ? <String, dynamic>{} : Map<String, dynamic>.from(user as Map),
+        'activities': activities,
+      };
+    } catch (e) {
+      debugPrint("❌ fetchUserFullDetails Error: $e");
+      return {
+        'user': <String, dynamic>{},
+        'activities': <Map<String, dynamic>>[],
+      };
+    }
+  }
 }

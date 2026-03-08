@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +9,7 @@ import '../../data/sources/p2p_transfer_service.dart';
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/user_data_service.dart';
 import '../widgets/messenger_audio_widgets.dart';
+import 'user_profile_detail_screen.dart';
 
 /// Admin dashboard listing users from Supabase and messages from Firestore.
 class MessengerScreen extends StatefulWidget {
@@ -144,6 +144,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
                   subtitle: model,
                   messenger: _messenger,
                   onTap: () => _openChat(deviceId, pseudo),
+                  onProfileTap: () => _openProfile(deviceId, pseudo),
                 );
               },
             ),
@@ -161,6 +162,19 @@ class _MessengerScreenState extends State<MessengerScreen> {
       ),
     );
   }
+
+  void _openProfile(String deviceId, String pseudo) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserProfileDetailScreen(
+          userId: deviceId,
+          pseudo: pseudo,
+          supabase: _supabase,
+        ),
+      ),
+    );
+  }
 }
 
 class _UserChatTile extends StatelessWidget {
@@ -169,6 +183,7 @@ class _UserChatTile extends StatelessWidget {
   final String subtitle;
   final FirebaseMessengerService messenger;
   final VoidCallback onTap;
+  final VoidCallback onProfileTap;
 
   const _UserChatTile({
     required this.userId,
@@ -176,6 +191,7 @@ class _UserChatTile extends StatelessWidget {
     required this.subtitle,
     required this.messenger,
     required this.onTap,
+    required this.onProfileTap,
   });
 
   @override
@@ -199,23 +215,40 @@ class _UserChatTile extends StatelessWidget {
             ),
           ),
           subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-          trailing: unreadCount > 0
-              ? Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    unreadCount.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              : const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+          trailing: SizedBox(
+            width: 96,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  onPressed: onProfileTap,
+                  tooltip: 'Profil',
+                  icon: const Icon(Icons.badge_outlined),
+                ),
+                unreadCount > 0
+                    ? Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                    : const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -242,7 +275,6 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
 
   late FirebaseMessengerService _messenger;
   late P2PTransferService _p2pService;
-  late StreamSubscription _p2pSubscription;
   bool _servicesReady = false;
 
   bool _isSending = false;
@@ -260,19 +292,12 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
     if (_servicesReady) return;
     _messenger = context.read<FirebaseMessengerService>();
     _p2pService = context.read<P2PTransferService>();
-    
-    _p2pSubscription = _p2pService.messageStream.listen((data) {
-      if (data['user_id'] == widget.userId) { 
-        _messenger.receiveP2PMessage(data);
-      }
-    });
 
     _servicesReady = true;
   }
 
   @override
   void dispose() {
-    _p2pSubscription.cancel();
     _controller.removeListener(_onInputChanged);
     _controller.dispose();
     _scrollController.dispose();
@@ -381,6 +406,33 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
     );
   }
 
+  Future<void> _confirmClearConversation() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Effacer la conversation'),
+        content: Text('Supprimer tous les messages avec ${widget.pseudo} ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Effacer'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok != true || !mounted) return;
+    await _messenger.clearConversationWith(widget.userId);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Conversation supprimée localement.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -395,6 +447,11 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            tooltip: 'Effacer conversation',
+            onPressed: _confirmClearConversation,
+          ),
           IconButton(
             icon: const Icon(Icons.monetization_on, color: Colors.orange),
             onPressed: _showAddCoinsDialog,

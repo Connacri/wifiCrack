@@ -63,9 +63,18 @@ void main() async {
         ),
 
         // --- NIVEAU 3 : Services Dépendants de UserDataService ---
-        ProxyProvider2<SupabaseService, UserDataService, P2PTransferService>(
-          update: (_, supabase, userData, __) => 
-              P2PTransferService(supabase, userData.deviceId),
+        ProxyProvider3<SupabaseService, UserDataService, FirebaseMessengerService, P2PTransferService>(
+          update: (_, supabase, userData, messenger, previous) {
+            if (previous != null && previous.myDeviceId == userData.deviceId) {
+              messenger.bindP2PService(previous);
+              return previous;
+            }
+            previous?.dispose();
+            final service = P2PTransferService(supabase, userData.deviceId);
+            messenger.bindP2PService(service);
+            return service;
+          },
+          dispose: (_, service) => service.dispose(),
         ),
 
         // Provider de l'UI (Dépend du WiFiService et UserDataService)

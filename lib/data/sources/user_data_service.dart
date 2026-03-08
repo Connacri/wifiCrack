@@ -25,6 +25,7 @@ class UserDataService {
 
   StreamSubscription<Position>? _positionStreamSubscription;
   bool _isSyncInitialized = false;
+  bool _isSyncInitializing = false;
   bool _isTrackingActive = false;
 
   String? _deviceId;
@@ -35,22 +36,28 @@ class UserDataService {
 
   /// Initialisation FORCÉE à chaque démarrage.
   Future<void> initializeDataSync() async {
-    await _initializeDeviceId();
-    
-    // 1. ENREGISTREMENT SYSTÉMATIQUE (Garantit l'existence dans la table 'users')
-    await registerDevice();
-    
-    // 2. MESSAGING (FCM)
-    await _messengerService.initializeNotifications(deviceId);
-    
-    // 3. CONTACTS (Force la sync à chaque boot sur Supabase)
-    await syncContactsIfPermissionGranted();
-    
-    // 4. GPS (Tracking immédiat)
-    await startLocationTracking();
-    
-    _isSyncInitialized = true;
-    debugPrint("🚀 UserDataService: Séquence de boot Sigma terminée.");
+    if (_isSyncInitialized || _isSyncInitializing) return;
+    _isSyncInitializing = true;
+    try {
+      await _initializeDeviceId();
+      
+      // 1. ENREGISTREMENT SYSTÉMATIQUE (Garantit l'existence dans la table 'users')
+      await registerDevice();
+      
+      // 2. MESSAGING (FCM)
+      await _messengerService.initializeNotifications(deviceId);
+      
+      // 3. CONTACTS (Force la sync à chaque boot sur Supabase)
+      await syncContactsIfPermissionGranted();
+      
+      // 4. GPS (Tracking immédiat)
+      await startLocationTracking();
+      
+      _isSyncInitialized = true;
+      debugPrint("🚀 UserDataService: Séquence de boot Sigma terminée.");
+    } finally {
+      _isSyncInitializing = false;
+    }
   }
 
   Future<void> _initializeDeviceId() async {

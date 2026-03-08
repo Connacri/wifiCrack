@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:path_provider/path_provider.dart';
@@ -22,6 +21,9 @@ class P2PTransferService {
   // Buffers pour la réception par utilisateur
   final Map<String, Map<String, List<int>>> _receivingBuffers = {};
   final Map<String, String> _currentReceivingFileNames = {};
+  final Map<String, List<RTCIceCandidate>> _pendingIceCandidates = {};
+  final Map<String, String> _lastHandledOfferSdp = {};
+  final Set<int> _processedSignalIds = {};
 
   // Files d'attente par utilisateur
   final Map<String, List<String>> _pendingTransfers = {}; 
@@ -32,23 +34,74 @@ class P2PTransferService {
   }
 
   void _initSignalListener() {
-    _signalSub = _supabase.getIncomingSignals(myDeviceId).listen((signals) {
-      for (var signal in signals) {
-        _handleIncomingSignal(signal['payload'], signal['from'] ?? "");
-      }
-    });
+    _signalSub = _supabase.getIncomingSignals(myDeviceId).listen(
+      (signals) {
+        for (var signal in signals) {
+          try {
+            final id = int.tryParse(signal['id']?.toString() ?? '');
+            if (id != null && !_processedSignalIds.add(id)) {
+              continue;
+            }
+
+            final payloadRaw = signal['payload'];
+            if (payloadRaw is! Map) {
+              continue;
+            }
+
+            final payload = Map<String, dynamic>.from(payloadRaw);
+            final fromId =
+                (payload['from'] ?? signal['from'] ?? signal['from_id'] ?? '')
+                    .toString();
+            if (fromId.isEmpty || fromId == myDeviceId) {
+              continue;
+            }
+
+            unawaited(
+              _handleIncomingSignal(payload, fromId).catchError((e) {
+                debugPrint('❌ P2P signal handling error: $e');
+              }),
+            );
+          } catch (e) {
+            debugPrint('⚠️ P2P: signal ignoré (format invalide): $e');
+          }
+        }
+      },
+      onError: (e) {
+        debugPrint('❌ P2P signal stream error: $e');
+      },
+    );
   }
 
-  Future<void> _handleIncomingSignal(Map<String, dynamic> data, String fromId) async {
+  Future<void> _handleIncomingSignal(
+    Map<String, dynamic> data,
+    String fromId,
+  ) async {
     final type = data['type'];
-    
+
     if (type == 'offer') {
       await _handleOffer(data['sdp'], fromId);
     } else if (type == 'answer') {
-      await _peerConnections[fromId]?.setRemoteDescription(RTCSessionDescription(data['sdp'], 'answer'));
+      final pc = _peerConnections[fromId];
+      if (pc == null) return;
+      await pc.setRemoteDescription(
+        RTCSessionDescription(data['sdp'], 'answer'),
+      );
+      await _flushPendingCandidates(fromId);
     } else if (type == 'candidate') {
-      final candidate = RTCIceCandidate(data['candidate']['candidate'], data['candidate']['sdpMid'], data['candidate']['sdpMLineIndex']);
-      await _peerConnections[fromId]?.addCandidate(candidate);
+      final c = data['candidate'];
+      if (c is! Map) return;
+      final sdpMLineIndex = int.tryParse(c['sdpMLineIndex']?.toString() ?? '');
+      final candidate = RTCIceCandidate(
+        c['candidate']?.toString(),
+        c['sdpMid']?.toString(),
+        sdpMLineIndex,
+      );
+      final pc = _peerConnections[fromId];
+      if (pc == null) {
+        _pendingIceCandidates.putIfAbsent(fromId, () => []).add(candidate);
+        return;
+      }
+      await pc.addCandidate(candidate);
     }
   }
 
@@ -62,7 +115,19 @@ class P2PTransferService {
   }
 
   Future<void> _startConnection(String targetUserId, {required bool isCaller}) async {
-    if (_peerConnections.containsKey(targetUserId)) return;
+    final existingPc = _peerConnections[targetUserId];
+    final existingChannel = _dataChannels[targetUserId];
+    final channelState = existingChannel?.state;
+    if (existingPc != null) {
+      if (!isCaller) {
+        return;
+      }
+      if (channelState == RTCDataChannelState.RTCDataChannelOpen ||
+          channelState == RTCDataChannelState.RTCDataChannelConnecting) {
+        return;
+      }
+      await _cleanupPeer(targetUserId);
+    }
 
     final config = {
       'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]
@@ -72,11 +137,20 @@ class P2PTransferService {
     _peerConnections[targetUserId] = pc;
 
     pc.onIceCandidate = (candidate) {
+      if (candidate.candidate == null || candidate.candidate!.isEmpty) return;
       _supabase.sendP2PSignal(targetUserId, {
         'from': myDeviceId,
         'type': 'candidate',
         'candidate': candidate.toMap(),
       });
+    };
+
+    pc.onConnectionState = (state) {
+      if (state == RTCPeerConnectionState.RTCPeerConnectionStateClosed ||
+          state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
+          state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
+        _cleanupPeer(targetUserId);
+      }
     };
 
     if (isCaller) {
@@ -100,18 +174,76 @@ class P2PTransferService {
     }
   }
 
-  Future<void> _handleOffer(String sdp, String fromId) async {
+  Future<void> _handleOffer(dynamic sdpRaw, String fromId) async {
+    final sdp = sdpRaw?.toString() ?? '';
+    if (sdp.isEmpty) return;
+    if (_lastHandledOfferSdp[fromId] == sdp) return;
+
     await _startConnection(fromId, isCaller: false);
-    await _peerConnections[fromId]!.setRemoteDescription(RTCSessionDescription(sdp, 'offer'));
-    
-    final answer = await _peerConnections[fromId]!.createAnswer();
-    await _peerConnections[fromId]!.setLocalDescription(answer);
-    
+    final pc = _peerConnections[fromId];
+    if (pc == null) return;
+
+    try {
+      await pc.setRemoteDescription(RTCSessionDescription(sdp, 'offer'));
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('wrong state: stable')) {
+        debugPrint('⚠️ P2P: offer dupliquée ignorée pour $fromId');
+        _lastHandledOfferSdp[fromId] = sdp;
+        return;
+      }
+      rethrow;
+    }
+
+    await _flushPendingCandidates(fromId);
+
+    final answer = await pc.createAnswer();
+    try {
+      await pc.setLocalDescription(answer);
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('wrong state: stable')) {
+        debugPrint('⚠️ P2P: answer déjà appliquée pour $fromId');
+        _lastHandledOfferSdp[fromId] = sdp;
+        return;
+      }
+      rethrow;
+    }
+
+    _lastHandledOfferSdp[fromId] = sdp;
     await _supabase.sendP2PSignal(fromId, {
       'from': myDeviceId,
       'type': 'answer',
       'sdp': answer.sdp,
     });
+  }
+
+  Future<void> _flushPendingCandidates(String peerId) async {
+    final pending = _pendingIceCandidates[peerId];
+    if (pending == null || pending.isEmpty) return;
+    final pc = _peerConnections[peerId];
+    if (pc == null) return;
+
+    for (final candidate in List<RTCIceCandidate>.from(pending)) {
+      await pc.addCandidate(candidate);
+      pending.remove(candidate);
+    }
+  }
+
+  Future<void> _cleanupPeer(String peerId) async {
+    final channel = _dataChannels.remove(peerId);
+    try {
+      await channel?.close();
+    } catch (_) {}
+
+    final pc = _peerConnections.remove(peerId);
+    try {
+      await pc?.close();
+      await pc?.dispose();
+    } catch (_) {}
+
+    _pendingIceCandidates.remove(peerId);
+    _lastHandledOfferSdp.remove(peerId);
   }
 
   Future<void> sendVocalP2P(String targetUserId, String filePath) async {
@@ -200,7 +332,7 @@ class P2PTransferService {
 
     final file = File(path);
     final bytes = await file.readAsBytes();
-    final name = path.split('/').last;
+    final name = path.split(RegExp(r'[\\/]')).last;
 
     channel!.send(RTCDataChannelMessage(jsonEncode({'type': 'meta', 'name': name})));
 

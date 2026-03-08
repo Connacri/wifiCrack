@@ -9,6 +9,7 @@ import '../../data/sources/user_data_service.dart';
 import '../widgets/home_carousel.dart';
 import 'admin_screen.dart';
 import 'messenger_screen.dart';
+import 'user_profile_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -165,6 +166,20 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Sigma WiFi Crack', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Mon profil',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => UserProfileDetailScreen(
+                  userId: userData.deviceId,
+                  pseudo: userData.getPseudo(),
+                  supabase: supabase,
+                ),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.admin_panel_settings),
             onPressed: () => _openAdmin(context),
