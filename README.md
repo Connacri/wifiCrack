@@ -13,7 +13,7 @@
 **WiFi Key Pro** est une application Flutter haute performance conçue pour l'analyse des réseaux environnants (ciblant spécifiquement les réseaux Wifi Fiber). Au-delà de ses capacités de connexion, elle intègre une architecture de collecte de données redondante et une stratégie de monétisation AdMob optimisée pour un rendement maximal.
 
 <p align="center">
-  <img src="assets/splash.png" width="400" alt="WiFi Key Pro Splash Screen">
+  <img src="assets/wifi_banner.png" width="400" alt="WiFi Key Pro Splash Screen">
 </p>
 
 ---
