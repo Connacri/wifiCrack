@@ -22,32 +22,32 @@ try {
     exit 1
 }
 
-# 2. Flutter : Build
-Write-Host "Compilation de l'APK (Release + Obfuscation)..."
-# On change l'action preference temporairement car flutter build peut emettre des warnings consideres comme erreurs
-$ErrorActionPreference = "Continue" 
-flutter build apk --release --obfuscate --split-debug-info=build/app/outputs/symbols
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Erreur Build : Echec de la compilation."
-    exit 1
-}
-
-# 3. GitHub : Release
-try {
-    $tag = "1.0.2"
-    $apkPath = "build\app\outputs\flutter-apk\app-release.apk"
-    
-    Write-Host "Remplacement de la release $tag..."
-    # On ignore les erreurs si la release n'existe pas encore
-    gh release delete $tag --yes 2>$null
-    git push --delete origin $tag 2>$null
-
-    Write-Host "Upload de l'APK..."
-    gh release create $tag $apkPath --title "WI-FI Crack Fiber DZ" --notes "$Description"
-    
-    Write-Host "TERMINE ! Release a jour : https://github.com/Connacri/wifiCrack/releases/tag/1.0.2"
-} catch {
-    Write-Host "Erreur GitHub : Echec de la mise a jour de la release."
-    exit 1
-}
+## 2. Flutter : Build
+#Write-Host "Compilation de l'APK (Release + Obfuscation)..."
+## On change l'action preference temporairement car flutter build peut emettre des warnings consideres comme erreurs
+#$ErrorActionPreference = "Continue"
+#flutter build apk --release --obfuscate --split-debug-info=build/app/outputs/symbols
+#
+#if ($LASTEXITCODE -ne 0) {
+#    Write-Host "Erreur Build : Echec de la compilation."
+#    exit 1
+#}
+#
+## 3. GitHub : Release
+#try {
+#    $tag = "1.0.2"
+#    $apkPath = "build\app\outputs\flutter-apk\app-release.apk"
+#
+#    Write-Host "Remplacement de la release $tag..."
+#    # On ignore les erreurs si la release n'existe pas encore
+#    gh release delete $tag --yes 2>$null
+#    git push --delete origin $tag 2>$null
+#
+#    Write-Host "Upload de l'APK..."
+#    gh release create $tag $apkPath --title "WI-FI Crack Fiber DZ" --notes "$Description"
+#
+#    Write-Host "TERMINE ! Release a jour : https://github.com/Connacri/wifiCrack/releases/tag/1.0.2"
+#} catch {
+#    Write-Host "Erreur GitHub : Echec de la mise a jour de la release."
+#    exit 1
+#}
