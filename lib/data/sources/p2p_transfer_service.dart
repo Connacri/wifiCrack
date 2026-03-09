@@ -34,8 +34,10 @@ class P2PTransferService {
   }
 
   void _initSignalListener() {
+    debugPrint("📡 P2P: Initialisation de l'écouteur de signaux pour $myDeviceId");
     _signalSub = _supabase.getIncomingSignals(myDeviceId).listen(
       (signals) {
+        debugPrint("📡 P2P: Flux reçu, nombre de signaux : ${signals.length}");
         for (var signal in signals) {
           try {
             final id = int.tryParse(signal['id']?.toString() ?? '');

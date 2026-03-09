@@ -4,7 +4,7 @@ import 'package:comwificrack/data/sources/supabase_service.dart';
 import 'package:comwificrack/data/sources/user_data_service.dart';
 import 'package:comwificrack/data/sources/wifi_service.dart';
 import 'package:comwificrack/data/sources/firebase_service.dart';
-import 'package:comwificrack/data/sources/firebase_messenger_service.dart';
+import 'package:comwificrack/data/sources/message_service.dart';
 import 'package:comwificrack/data/sources/p2p_transfer_service.dart';
 import 'package:comwificrack/presentation/providers/wifi_provider.dart';
 import 'package:comwificrack/presentation/screens/home_screen.dart';
@@ -23,11 +23,8 @@ class MockAdService extends AdService {
 }
 
 class MockFirebaseService implements FirebaseService {
-  @override
   Future<void> syncContacts(List<Contact> contacts) async {}
-  @override
   Future<void> logUserActivity(Position? location, int contactsCount, String deviceId) async {}
-  @override
   Future<void> updateLocation(Position location, String deviceId) async {}
 }
 
@@ -40,8 +37,8 @@ void main() {
     final storage = LocalStorageDataSource();
     final supabaseService = SupabaseService();
     final firebaseService = MockFirebaseService();
-    final messengerService = FirebaseMessengerService();
-    final userDataService = UserDataService(storage, supabaseService, firebaseService, messengerService);
+    final messengerService = MessageService();
+    final userDataService = UserDataService(storage, supabaseService, messengerService);
     final mockAdService = MockAdService();
     final p2pService = P2PTransferService(supabaseService, "test_device");
 
@@ -54,7 +51,7 @@ void main() {
           Provider<UserDataService>.value(value: userDataService),
           Provider<SupabaseService>.value(value: supabaseService),
           Provider<FirebaseService>.value(value: firebaseService),
-          Provider<FirebaseMessengerService>.value(value: messengerService),
+          Provider<MessageService>.value(value: messengerService),
           Provider<AdService>.value(value: mockAdService),
           Provider<P2PTransferService>.value(value: p2pService),
           ChangeNotifierProvider<WiFiProvider>(

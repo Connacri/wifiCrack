@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../data/sources/ad_service.dart';
 import '../../data/sources/local_storage.dart';
 import '../../data/sources/wifi_service.dart';
 import '../providers/wifi_provider.dart';
@@ -216,20 +218,52 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? _buildEmptyState(wifi)
                   : ListView.builder(
                       padding: const EdgeInsets.only(bottom: 80),
-                      itemCount: wifi.networks.length,
-                      itemBuilder: (context, index) => _NetworkTile(network: wifi.networks[index]),
+                      itemCount: wifi.networks.length + (wifi.networks.length ~/ 5),
+                      itemBuilder: (context, index) {
+                        // Insérer une pub native tous les 5 items
+                        if (index > 0 && index % 6 == 0) {
+                          return _NativeAdItem();
+                        }
+                        
+                        // Calculer l'index réel du réseau
+                        final networkIndex = index - (index ~/ 6);
+                        if (networkIndex >= wifi.networks.length) return const SizedBox.shrink();
+                        
+                        return _NetworkTile(network: wifi.networks[networkIndex]);
+                      },
                     ),
             ),
+            // AJOUT DE LA BANNIÈRE PUBLICITAIRE
+            _buildAdBanner(context),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: wifi.scanStatus == ScanStatus.scanning ? null : () => wifi.startScan(),
+        onPressed: wifi.scanStatus == ScanStatus.scanning 
+          ? null 
+          : () {
+              // AFFICHER UN INTERSTITIEL AVANT LE SCAN
+              context.read<AdService>().showInterstitialAd();
+              wifi.startScan();
+            },
         label: Text(wifi.scanStatus == ScanStatus.scanning ? "Scan en cours..." : "Scanner WiFi"),
         icon: wifi.scanStatus == ScanStatus.scanning 
             ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
             : const Icon(Icons.search),
       ),
+    );
+  }
+
+  Widget _buildAdBanner(BuildContext context) {
+    final adService = context.read<AdService>();
+    final banner = adService.getBannerAd();
+    if (banner == null) return const SizedBox.shrink();
+
+    return Container(
+      alignment: Alignment.center,
+      width: banner.size.width.toDouble(),
+      height: banner.size.height.toDouble(),
+      child: AdWidget(ad: banner),
     );
   }
 
@@ -295,6 +329,48 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(onPressed: wifi.fixPermissions, child: const Text("Donner les permissions")),
         ],
       ),
+    );
+  }
+}
+
+class _NativeAdItem extends StatefulWidget {
+  @override
+  State<_NativeAdItem> createState() => _NativeAdItemState();
+}
+
+class _NativeAdItemState extends State<_NativeAdItem> {
+  NativeAd? _nativeAd;
+  bool _isLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_nativeAd == null) {
+      _nativeAd = context.read<AdService>().getNativeAd(() {
+        if (mounted) setState(() => _isLoaded = true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _nativeAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isLoaded || _nativeAd == null) return const SizedBox.shrink();
+    
+    return Container(
+      height: 300,
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.deepPurple.withValues(alpha: 0.2)),
+      ),
+      child: AdWidget(ad: _nativeAd!),
     );
   }
 }

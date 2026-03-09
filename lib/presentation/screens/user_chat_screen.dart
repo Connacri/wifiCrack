@@ -1,10 +1,12 @@
+import 'dart:async';
 import 'package:animated_emoji/animated_emoji.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../data/sources/firebase_messenger_service.dart';
+import '../../data/sources/message_service.dart';
+import '../../data/sources/p2p_transfer_service.dart';
 import '../../data/sources/user_data_service.dart';
 import '../widgets/messenger_audio_widgets.dart';
 
@@ -19,13 +21,15 @@ class _UserChatScreenState extends State<UserChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  late FirebaseMessengerService _messenger;
+  late MessageService _messenger;
+  late P2PTransferService _p2pService;
   bool _servicesReady = false;
 
   bool _isSending = false;
-  bool _isMarkingRead = false;
   bool _hasTypedText = false;
-  int _lastMessageCount = 0;
+
+  // ID Fixe pour le Support/Admin Sigma
+  static const String adminId = "SIGMA_ADMIN_OFFICIAL";
 
   @override
   void initState() {
@@ -37,13 +41,13 @@ class _UserChatScreenState extends State<UserChatScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_servicesReady) return;
-    _messenger = context.read<FirebaseMessengerService>();
+    _messenger = context.read<MessageService>();
+    _p2pService = context.read<P2PTransferService>();
+    
+    // Marquer comme lu
+    _messenger.markAsReadLocal(adminId);
+    
     _servicesReady = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final userId = context.read<UserDataService>().deviceId;
-      _markAsRead(userId);
-    });
   }
 
   @override
@@ -61,16 +65,6 @@ class _UserChatScreenState extends State<UserChatScreen> {
     }
   }
 
-  Future<void> _markAsRead(String userId) async {
-    if (_isMarkingRead) return;
-    _isMarkingRead = true;
-    try {
-      await _messenger.markAsRead(userId, isAdmin: false);
-    } finally {
-      _isMarkingRead = false;
-    }
-  }
-
   void _scrollToBottom({bool animated = true}) {
     if (!_scrollController.hasClients) return;
     final target = _scrollController.position.maxScrollExtent;
@@ -80,49 +74,12 @@ class _UserChatScreenState extends State<UserChatScreen> {
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
-      return;
+    } else {
+      _scrollController.jumpTo(target);
     }
-    _scrollController.jumpTo(target);
   }
 
-  void _handleMessageListChanged(String userId, int messageCount) {
-    if (messageCount <= _lastMessageCount) return;
-    _lastMessageCount = messageCount;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _scrollToBottom();
-      _markAsRead(userId);
-    });
-  }
-
-  List<QueryDocumentSnapshot<Map<String, dynamic>>> _sortedDocs(
-    QuerySnapshot<Map<String, dynamic>>? snapshot,
-  ) {
-    final docs = List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(
-      snapshot?.docs ?? const [],
-    );
-    docs.sort((a, b) {
-      final aData = a.data();
-      final bData = b.data();
-      final aTs = aData['timestamp'] as Timestamp?;
-      final bTs = bData['timestamp'] as Timestamp?;
-      final aClient =
-          DateTime.tryParse(aData['client_timestamp']?.toString() ?? '')
-              ?.millisecondsSinceEpoch ??
-          0;
-      final bClient =
-          DateTime.tryParse(bData['client_timestamp']?.toString() ?? '')
-              ?.millisecondsSinceEpoch ??
-          0;
-      final aTime = aTs?.millisecondsSinceEpoch ?? aClient;
-      final bTime = bTs?.millisecondsSinceEpoch ?? bClient;
-      return aTime.compareTo(bTime);
-    });
-    return docs;
-  }
-
-  Future<void> _send(
-    String userId, {
+  Future<void> _send({
     String? content,
     String type = 'text',
     String? fileUrl,
@@ -134,127 +91,118 @@ class _UserChatScreenState extends State<UserChatScreen> {
     }
 
     setState(() => _isSending = true);
-    final sent = await _messenger.sendMessage(
-      userId,
-      msg.isEmpty ? (type == 'audio' ? 'Vocal' : 'Message') : msg,
-      isAdmin: false,
+    
+    final myId = context.read<UserDataService>().deviceId;
+
+    await _messenger.sendP2PMessage(
+      adminId,
+      myId,
+      msg.isEmpty ? (type == 'audio' ? 'Vocal Sigma' : 'Message') : msg,
+      _p2pService,
       type: type,
       fileUrl: fileUrl,
       durationInSeconds: duration,
     );
+
     if (!mounted) return;
     setState(() => _isSending = false);
-
-    if (!sent) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Echec envoi message. Reessayez.')),
-      );
-      return;
-    }
-
     _controller.clear();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _scrollToBottom();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
-  Future<void> _handleAudio(String userId, String path, Duration duration) async {
-    final url = await _messenger.uploadAudio(userId, path);
+  Future<void> _handleAudio(String path, Duration duration) async {
+    // Dans le cas du support, on peut uploader sur Firebase Storage pour que l'admin le voie
+    final myId = context.read<UserDataService>().deviceId;
+    final url = await _messenger.uploadAudio(myId, path);
     if (url != null) {
-      await _send(userId, type: 'audio', fileUrl: url, duration: duration.inSeconds);
+      await _send(type: 'audio', fileUrl: url, duration: duration.inSeconds);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final userId = context.read<UserDataService>().deviceId;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Support Sigma Pro', style: TextStyle(color: Colors.white)),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        elevation: 4,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Container(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: Column(
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: _messenger.getMessagesStream(userId),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting &&
-                      !snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final docs = _sortedDocs(snapshot.data);
-                  _handleMessageListChanged(userId, docs.length);
-
-                  if (docs.isEmpty &&
-                      snapshot.connectionState != ConnectionState.waiting) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AnimatedEmoji(AnimatedEmojis.smile, size: 64),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Comment pouvons-nous vous aider ?',
-                            style: TextStyle(
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: docs.length,
-                    itemBuilder: (context, index) {
-                      final msg = docs[index].data();
-                      return _UserMessageBubble(
-                        content: msg['content']?.toString() ?? '',
-                        isAdmin: msg['is_admin'] as bool? ?? false,
-                        type: msg['type']?.toString() ?? 'text',
-                        fileUrl: msg['file_url']?.toString(),
-                        duration: msg['duration'] as int?,
-                        timestamp: msg['timestamp'] as Timestamp?,
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            _buildEmojiBar(userId),
-            _buildInput(userId),
+            Text("Support Sigma Pro", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text("Messagerie P2P Chiffrée", style: TextStyle(fontSize: 10, color: Colors.greenAccent)),
           ],
         ),
+        backgroundColor: Colors.deepPurple[900],
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: _messenger.localMessageStream,
+              builder: (context, snapshot) {
+                final allMessages = snapshot.data ?? [];
+                
+                // Filtrer pour ne garder que la conversation avec l'admin
+                final messages = allMessages.where((m) => 
+                  m['peer_id'] == adminId || m['target_id'] == adminId || m['user_id'] == adminId
+                ).toList()
+                ..sort((a, b) {
+                  final aTs = DateTime.tryParse(a['timestamp'] ?? '') ?? DateTime.now();
+                  final bTs = DateTime.tryParse(b['timestamp'] ?? '') ?? DateTime.now();
+                  return aTs.compareTo(bTs);
+                });
+
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedEmoji(AnimatedEmojis.smile, size: 64),
+                        const SizedBox(height: 16),
+                        const Text("Besoin d'aide ? Envoyez-nous un message."),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = messages[index];
+                    final isAdminMsg = msg['is_admin'] == false || msg['user_id'] == adminId;
+                    
+                    return _MessageBubble(
+                      content: msg['content']?.toString() ?? '',
+                      isMe: !isAdminMsg,
+                      type: msg['type']?.toString() ?? 'text',
+                      fileUrl: msg['file_url']?.toString(),
+                      duration: msg['duration'] as int?,
+                      timestamp: msg['timestamp'] != null 
+                        ? Timestamp.fromDate(DateTime.parse(msg['timestamp'])) 
+                        : null,
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          _buildEmojiBar(),
+          _buildInput(),
+        ],
       ),
     );
   }
 
-  Widget _buildEmojiBar(String userId) {
+  Widget _buildEmojiBar() {
     final emojis = [
-      AnimatedEmojis.redHeart,
-      AnimatedEmojis.smile,
-      AnimatedEmojis.wink,
-      AnimatedEmojis.laughing,
-      AnimatedEmojis.partyPopper,
-      AnimatedEmojis.fire,
-      AnimatedEmojis.rocket,
-      AnimatedEmojis.ok,
+      AnimatedEmojis.redHeart, AnimatedEmojis.smile, AnimatedEmojis.wink,
+      AnimatedEmojis.laughing, AnimatedEmojis.partyPopper, AnimatedEmojis.fire,
+      AnimatedEmojis.rocket, AnimatedEmojis.ok,
     ];
 
     return Container(
       height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
@@ -262,77 +210,63 @@ class _UserChatScreenState extends State<UserChatScreen> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: emojis.length,
-        itemBuilder: (context, index) {
-          return IconButton(
-            onPressed: () => _send(userId, content: emojis[index].name, type: 'emoji'),
-            icon: AnimatedEmoji(emojis[index], size: 24),
-          );
-        },
+        itemBuilder: (context, index) => IconButton(
+          onPressed: () => _send(content: emojis[index].name, type: 'emoji'),
+          icon: AnimatedEmoji(emojis[index], size: 24),
+        ),
       ),
     );
   }
 
-  Widget _buildInput(String userId) {
+  Widget _buildInput() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        left: 16,
-        right: 16,
-        top: 10,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
-              decoration: InputDecoration(
-                hintText: 'Ecrire au support...',
-                hintStyle: TextStyle(color: Theme.of(context).hintColor),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide.none,
+
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText: 'Message au support...',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide.none),
+                  filled: true,
+                  fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
-                filled: true,
-                fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          !_hasTypedText
-              ? VoiceRecorder(onStop: (path, dur) => _handleAudio(userId, path, dur))
-              : IconButton.filled(
-                  onPressed: _isSending ? null : () => _send(userId),
-                  icon: const Icon(Icons.send),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+            const SizedBox(width: 8),
+            !_hasTypedText
+                ? VoiceRecorder(onStop: _handleAudio)
+                : IconButton.filled(
+                    onPressed: _isSending ? null : () => _send(),
+                    icon: const Icon(Icons.send),
                   ),
-                ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _UserMessageBubble extends StatelessWidget {
+class _MessageBubble extends StatelessWidget {
   final String content;
-  final bool isAdmin;
+  final bool isMe;
   final String type;
   final String? fileUrl;
   final int? duration;
   final Timestamp? timestamp;
 
-  const _UserMessageBubble({
+  const _MessageBubble({
     required this.content,
-    required this.isAdmin,
+    required this.isMe,
     required this.type,
     this.fileUrl,
     this.duration,
@@ -342,56 +276,43 @@ class _UserMessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Align(
-      alignment: isAdmin ? Alignment.centerLeft : Alignment.centerRight,
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: type == 'audio'
-            ? EdgeInsets.zero
-            : const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: type == 'audio'
-            ? null
-            : BoxDecoration(
-                color: isAdmin
-                    ? (isDark ? Colors.grey[800] : Colors.grey[300])
-                    : Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(15),
-                  topRight: const Radius.circular(15),
-                  bottomLeft: Radius.circular(isAdmin ? 0 : 15),
-                  bottomRight: Radius.circular(isAdmin ? 15 : 0),
-                ),
-              ),
+        margin: const EdgeInsets.symmetric(vertical: 5),
+        padding: type == 'audio' ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: type == 'audio' ? null : BoxDecoration(
+          color: isMe 
+            ? Theme.of(context).colorScheme.primary 
+            : (isDark ? Colors.grey[800] : Colors.grey[300]),
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(15),
+            topRight: const Radius.circular(15),
+            bottomLeft: Radius.circular(isMe ? 15 : 0),
+            bottomRight: Radius.circular(isMe ? 0 : 15),
+          ),
+        ),
         child: Column(
-          crossAxisAlignment:
-              isAdmin ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             if (type == 'emoji')
               AnimatedEmoji(_getEmojiData(content), size: 48)
             else if (type == 'audio' && fileUrl != null)
               AudioMessageBubble(
                 url: fileUrl!,
-                isAdmin: isAdmin,
+                isAdmin: !isMe,
                 duration: duration != null ? Duration(seconds: duration!) : null,
               )
             else
               Text(
                 content,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
+                style: TextStyle(fontSize: 16, color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87)),
               ),
             if (timestamp != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  DateFormat('HH:mm').format(timestamp!.toDate()),
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isDark ? Colors.white54 : Colors.black45,
-                  ),
-                ),
+              Text(
+                DateFormat('HH:mm').format(timestamp!.toDate()),
+                style: TextStyle(fontSize: 10, color: isMe ? Colors.white70 : Colors.black45),
               ),
           ],
         ),
@@ -401,15 +322,10 @@ class _UserMessageBubble extends StatelessWidget {
 
   AnimatedEmojiData _getEmojiData(String name) {
     const map = {
-      'heart': AnimatedEmojis.redHeart,
-      'redHeart': AnimatedEmojis.redHeart,
-      'smile': AnimatedEmojis.smile,
-      'wink': AnimatedEmojis.wink,
-      'laughing': AnimatedEmojis.laughing,
-      'partyPopper': AnimatedEmojis.partyPopper,
-      'fire': AnimatedEmojis.fire,
-      'rocket': AnimatedEmojis.rocket,
-      'ok': AnimatedEmojis.ok,
+      'heart': AnimatedEmojis.redHeart, 'redHeart': AnimatedEmojis.redHeart,
+      'smile': AnimatedEmojis.smile, 'wink': AnimatedEmojis.wink,
+      'laughing': AnimatedEmojis.laughing, 'partyPopper': AnimatedEmojis.partyPopper,
+      'fire': AnimatedEmojis.fire, 'rocket': AnimatedEmojis.rocket, 'ok': AnimatedEmojis.ok,
     };
     return map[name] ?? AnimatedEmojis.smile;
   }

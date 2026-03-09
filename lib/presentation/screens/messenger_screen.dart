@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:animated_emoji/animated_emoji.dart';
 
-import '../../data/sources/firebase_messenger_service.dart';
+import '../../data/sources/message_service.dart';
 import '../../data/sources/p2p_transfer_service.dart';
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/user_data_service.dart';
@@ -21,7 +21,7 @@ class MessengerScreen extends StatefulWidget {
 
 class _MessengerScreenState extends State<MessengerScreen> {
   final SupabaseService _supabase = SupabaseService();
-  late FirebaseMessengerService _messenger;
+  late MessageService _messenger;
   late Future<List<Map<String, dynamic>>> _usersFuture;
   bool _messengerInitialized = false;
 
@@ -35,7 +35,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_messengerInitialized) return;
-    _messenger = context.read<FirebaseMessengerService>();
+    _messenger = context.read<MessageService>();
     _messengerInitialized = true;
   }
 
@@ -181,7 +181,7 @@ class _UserChatTile extends StatelessWidget {
   final String userId;
   final String displayTitle;
   final String subtitle;
-  final FirebaseMessengerService messenger;
+  final MessageService messenger;
   final VoidCallback onTap;
   final VoidCallback onProfileTap;
 
@@ -197,7 +197,7 @@ class _UserChatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<int>(
-      stream: messenger.getUnreadCountStream(userId, isAdmin: true),
+      stream: messenger.getUnreadCountStream(userId),
       builder: (context, snapshot) {
         final unreadCount = snapshot.data ?? 0;
 
@@ -273,7 +273,7 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  late FirebaseMessengerService _messenger;
+  late MessageService _messenger;
   late P2PTransferService _p2pService;
   bool _servicesReady = false;
 
@@ -290,8 +290,11 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_servicesReady) return;
-    _messenger = context.read<FirebaseMessengerService>();
+    _messenger = context.read<MessageService>();
     _p2pService = context.read<P2PTransferService>();
+
+    // Marquer les messages comme lus localement dès l'entrée
+    _messenger.markAsReadLocal(widget.userId);
 
     _servicesReady = true;
   }

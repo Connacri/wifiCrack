@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/sources/supabase_service.dart';
+import '../../data/sources/ad_service.dart';
 
 /// Carrousel dynamique avec images et liens externes.
 class HomeBanner extends StatelessWidget {
@@ -89,6 +91,7 @@ class _AdSubmissionDialogState extends State<AdSubmissionDialog> {
   final _imgCtrl = TextEditingController();
   final _linkCtrl = TextEditingController();
   bool _loading = false;
+  bool _rewarded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +107,8 @@ class _AdSubmissionDialogState extends State<AdSubmissionDialog> {
             TextField(controller: _imgCtrl, decoration: const InputDecoration(labelText: "Lien de l'image (URL)", border: OutlineInputBorder())),
             const SizedBox(height: 10),
             TextField(controller: _linkCtrl, decoration: const InputDecoration(labelText: "Lien externe", border: OutlineInputBorder())),
+            const SizedBox(height: 20),
+            _buildRewardSection(),
           ],
         ),
       ),
@@ -117,11 +122,44 @@ class _AdSubmissionDialogState extends State<AdSubmissionDialog> {
     );
   }
 
+  Widget _buildRewardSection() {
+    if (_rewarded) {
+      return Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green)),
+        child: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Expanded(child: Text("Bonus de Coins activé ! (Vidéo vue)", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12))),
+          ],
+        ),
+      );
+    }
+
+    return OutlinedButton.icon(
+      onPressed: _showRewardedAd,
+      icon: const Icon(Icons.play_circle_fill, color: Colors.orange),
+      label: const Text("Regarder une vidéo pour +50 Coins bonus", style: TextStyle(fontSize: 11)),
+    );
+  }
+
+  void _showRewardedAd() {
+    context.read<AdService>().showRewardedAd(
+      () => setState(() => _rewarded = true), // Reward earned
+      () {}, // Ad closed
+    );
+  }
+
   Future<void> _submit() async {
     if (_descCtrl.text.isEmpty || _imgCtrl.text.isEmpty) return;
     setState(() => _loading = true);
     try {
       await widget.supabase.submitUserAd(widget.userId, _descCtrl.text, _imgCtrl.text, _linkCtrl.text);
+      if (_rewarded) {
+        await widget.supabase.addCoins(widget.userId, 50);
+      }
+      
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("✅ Soumission envoyée ! Attend la validation de l'admin pour tes coins.")));
@@ -133,3 +171,4 @@ class _AdSubmissionDialogState extends State<AdSubmissionDialog> {
     }
   }
 }
+

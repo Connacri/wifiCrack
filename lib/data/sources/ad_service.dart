@@ -42,6 +42,7 @@ class AdService with WidgetsBindingObserver {
 
     try {
       await MobileAds.instance.initialize();
+      _instance.startListeningToLifecycle(); // Ajout de l'écoute du cycle de vie
       _instance.loadAppOpenAd();
       _instance.loadInterstitialAd();
       _instance.loadRewardedAd();

@@ -9,7 +9,7 @@ import 'data/sources/supabase_service.dart';
 import 'data/sources/user_data_service.dart';
 import 'data/sources/wifi_service.dart';
 import 'data/sources/firebase_service.dart';
-import 'data/sources/firebase_messenger_service.dart';
+import 'data/sources/message_service.dart';
 import 'data/sources/p2p_transfer_service.dart';
 import 'presentation/providers/wifi_provider.dart';
 import 'presentation/screens/home_screen.dart';
@@ -52,18 +52,18 @@ void main() async {
         Provider<LocalStorageDataSource>.value(value: storage),
         Provider<SupabaseService>(create: (_) => SupabaseService()),
         Provider<FirebaseService>(create: (_) => FirebaseService()),
-        Provider<FirebaseMessengerService>(create: (_) => FirebaseMessengerService()),
+        Provider<MessageService>(create: (_) => MessageService()),
         Provider<AdService>(create: (_) => AdService()),
         
         // --- NIVEAU 2 : UserDataService (Dépend du niveau 1) ---
         // Il doit être placé AVANT les services qui l'utilisent.
-        ProxyProvider4<LocalStorageDataSource, SupabaseService, FirebaseService, FirebaseMessengerService, UserDataService>(
-          update: (_, storage, supabase, firebase, messenger, __) => 
-              UserDataService(storage, supabase, firebase, messenger),
+        ProxyProvider3<LocalStorageDataSource, SupabaseService, MessageService, UserDataService>(
+          update: (_, storage, supabase, messenger, __) => 
+              UserDataService(storage, supabase, messenger),
         ),
 
         // --- NIVEAU 3 : Services Dépendants de UserDataService ---
-        ProxyProvider3<SupabaseService, UserDataService, FirebaseMessengerService, P2PTransferService>(
+        ProxyProvider3<SupabaseService, UserDataService, MessageService, P2PTransferService>(
           update: (_, supabase, userData, messenger, previous) {
             if (previous != null && previous.myDeviceId == userData.deviceId) {
               messenger.bindP2PService(previous);

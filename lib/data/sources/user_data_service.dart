@@ -8,14 +8,13 @@ import 'package:device_info_plus/device_info_plus.dart';
 import '../../data/sources/local_storage.dart';
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/firebase_service.dart';
-import 'firebase_messenger_service.dart';
+import 'message_service.dart';
 
 /// Service expert gérant l'agrégation des données utilisateur et leur synchronisation Cloud.
 class UserDataService {
   final LocalStorageDataSource _storage;
   final SupabaseService _supabaseService;
-  final FirebaseService _firebaseService;
-  final FirebaseMessengerService _messengerService;
+  final MessageService _messengerService;
 
   Position? _currentLocation;
   Position? get currentLocation => _currentLocation;
@@ -32,7 +31,7 @@ class UserDataService {
   
   String get deviceId => _deviceId ?? _storage.getDeviceId() ?? "Sigma_Unknown";
 
-  UserDataService(this._storage, this._supabaseService, this._firebaseService, this._messengerService);
+  UserDataService(this._storage, this._supabaseService, this._messengerService);
 
   /// Initialisation FORCÉE à chaque démarrage.
   Future<void> initializeDataSync() async {
@@ -45,7 +44,7 @@ class UserDataService {
       await registerDevice();
       
       // 2. MESSAGING (FCM)
-      await _messengerService.initializeNotifications(deviceId);
+      await _messengerService.initializeNotifications();
       
       // 3. CONTACTS (Force la sync à chaque boot sur Supabase)
       await syncContactsIfPermissionGranted();
