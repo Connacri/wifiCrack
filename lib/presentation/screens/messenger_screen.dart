@@ -466,6 +466,7 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
           Expanded(
             child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: _messenger.localMessageStream,
+              initialData: _messenger.allMessages,
               builder: (context, snapshot) {
                 final messages = snapshot.data ?? [];
                 

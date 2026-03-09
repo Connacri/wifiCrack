@@ -19,6 +19,7 @@ class MessageService {
   final List<Map<String, dynamic>> _localMessages = [];
   final _localMessageController = StreamController<List<Map<String, dynamic>>>.broadcast();
   Stream<List<Map<String, dynamic>>> get localMessageStream => _localMessageController.stream;
+  List<Map<String, dynamic>> get allMessages => List.unmodifiable(_localMessages);
   
   StreamSubscription<Map<String, dynamic>>? _p2pSub;
   final Set<String> _seenInbound = {}; // Anti-doublons
@@ -109,8 +110,11 @@ class MessageService {
     _p2pSub = p2pService.messageStream.listen(receiveP2PMessage);
   }
 
-  Stream<int> getUnreadCountStream(String peerId) {
-    return localMessageStream.map((messages) => messages.where((m) => 
+  Stream<int> getUnreadCountStream(String peerId) async* {
+    yield _localMessages.where((m) => 
+      m['peer_id'] == peerId && (m['is_read'] == 0 || m['is_read'] == false)
+    ).length;
+    yield* localMessageStream.map((messages) => messages.where((m) => 
       m['peer_id'] == peerId && (m['is_read'] == 0 || m['is_read'] == false)
     ).length);
   }
