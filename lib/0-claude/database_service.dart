@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:objectbox/objectbox.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -7,7 +6,6 @@ import 'message.dart';
 import 'conversation.dart';
 import '../objectbox.g.dart';
 import 'dart:convert';
-import 'dart:io';
 
 /// Service de base de données ObjectBox avec cache de 100 derniers messages
 class DatabaseService {
@@ -22,33 +20,18 @@ class DatabaseService {
 
   bool _isInitialized = false;
 
-  /// Initialise ObjectBox
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     final dir = await getApplicationDocumentsDirectory();
     final storePath = p.join(dir.path, 'objectbox');
 
-    try {
-      _store = await openStore(directory: storePath);
-    } catch (e) {
-      debugPrint('❌ Erreur critique ObjectBox: $e');
-      // Si l'erreur persiste, on tente une dernière fois sans spécifier le dossier
-      // (ObjectBox utilisera son dossier par défaut)
-      if (e.toString().contains('ObjectBoxException')) {
-         _store = await openStore();
-      } else {
-        rethrow;
-      }
-    }
-
+    _store = await openStore(directory: storePath);
     _contactBox = _store.box<Contact>();
     _messageBox = _store.box<Message>();
     _conversationBox = _store.box<Conversation>();
 
     _isInitialized = true;
-
-    // Nettoyer les vieux messages au démarrage
     await _cleanOldMessages();
   }
 
@@ -56,6 +39,22 @@ class DatabaseService {
 
   Future<void> saveContact(Contact contact) async {
     _contactBox.put(contact);
+
+    // FIX BUG 1 : créer immédiatement une Conversation vide dès qu'un contact
+    // est ajouté. Sans ça, ConversationsScreen ne peut jamais afficher le
+    // contact car il affiche provider.conversations, pas provider.contacts.
+    await ensureConversationExists(contact.deviceId);
+  }
+
+  /// Garantit qu'une entrée Conversation existe pour ce deviceId.
+  /// Idempotent : ne crée rien si elle existe déjà.
+  Future<Conversation> ensureConversationExists(String conversationId) async {
+    var conversation = await getConversation(conversationId);
+    if (conversation == null) {
+      conversation = Conversation(conversationId: conversationId);
+      _conversationBox.put(conversation);
+    }
+    return conversation;
   }
 
   Future<Contact?> getContact(String deviceId) async {
@@ -75,8 +74,6 @@ class DatabaseService {
     final contact = await getContact(deviceId);
     if (contact != null) {
       _contactBox.remove(contact.id);
-      
-      // Supprimer aussi la conversation et les messages
       await deleteConversation(deviceId);
     }
   }
@@ -100,8 +97,7 @@ class DatabaseService {
 
   Future<void> updateMessage(Message message) async {
     _messageBox.put(message);
-    
-    // Mettre à jour la conversation si c'est le dernier message
+
     final conversation = await getConversation(message.conversationId);
     if (conversation != null &&
         (conversation.lastMessageTime == null ||
@@ -119,7 +115,10 @@ class DatabaseService {
     return result;
   }
 
-  Future<List<Message>> getMessages(String conversationId, {int limit = 100}) async {
+  Future<List<Message>> getMessages(
+      String conversationId, {
+        int limit = 100,
+      }) async {
     final query = _messageBox
         .query(Message_.conversationId.equals(conversationId))
         .order(Message_.timestamp, flags: Order.descending)
@@ -132,8 +131,11 @@ class DatabaseService {
 
   Future<List<Message>> getFailedMessages(String conversationId) async {
     final query = _messageBox
-        .query(Message_.conversationId.equals(conversationId)
-            .and(Message_.statusIndex.equals(MessageStatus.failed.index)))
+        .query(
+      Message_.conversationId.equals(conversationId).and(
+        Message_.statusIndex.equals(MessageStatus.failed.index),
+      ),
+    )
         .build();
     final results = query.find();
     query.close();
@@ -142,9 +144,11 @@ class DatabaseService {
 
   Future<int> getUnreadCount(String conversationId) async {
     final query = _messageBox
-        .query(Message_.conversationId.equals(conversationId)
-            .and(Message_.isSentByMe.equals(false))
-            .and(Message_.isRead.equals(false)))
+        .query(
+      Message_.conversationId.equals(conversationId)
+          .and(Message_.isSentByMe.equals(false))
+          .and(Message_.isRead.equals(false)),
+    )
         .build();
     final count = query.count();
     query.close();
@@ -153,11 +157,13 @@ class DatabaseService {
 
   Future<void> markConversationAsRead(String conversationId) async {
     final query = _messageBox
-        .query(Message_.conversationId.equals(conversationId)
-            .and(Message_.isSentByMe.equals(false))
-            .and(Message_.isRead.equals(false)))
+        .query(
+      Message_.conversationId.equals(conversationId)
+          .and(Message_.isSentByMe.equals(false))
+          .and(Message_.isRead.equals(false)),
+    )
         .build();
-    
+
     final messages = query.find();
     for (final message in messages) {
       message.isRead = true;
@@ -165,7 +171,6 @@ class DatabaseService {
     _messageBox.putMany(messages);
     query.close();
 
-    // Mettre à jour la conversation
     final conversation = await getConversation(conversationId);
     if (conversation != null) {
       conversation.unreadCount = 0;
@@ -173,33 +178,34 @@ class DatabaseService {
     }
   }
 
-  /// Limite à 100 messages par conversation
   Future<void> _enforceMessageLimit(String conversationId) async {
     const maxMessages = 100;
-    
+
     final query = _messageBox
         .query(Message_.conversationId.equals(conversationId))
         .order(Message_.timestamp, flags: Order.descending)
         .build();
-    
+
     final allMessages = query.find();
     query.close();
 
     if (allMessages.length > maxMessages) {
-      // Garder les 100 plus récents, supprimer les autres
       final toDelete = allMessages.skip(maxMessages).toList();
       _messageBox.removeMany(toDelete.map((m) => m.id).toList());
     }
   }
 
-  /// Nettoie les messages de plus de 30 jours
   Future<void> _cleanOldMessages() async {
-    final threshold = DateTime.now().subtract(const Duration(days: 30));
-    
+    final threshold =
+    DateTime.now().subtract(const Duration(days: 30));
+
     final query = _messageBox
-        .query(Message_.timestamp.lessThan(threshold.millisecondsSinceEpoch))
+        .query(
+      Message_.timestamp
+          .lessThan(threshold.millisecondsSinceEpoch),
+    )
         .build();
-    
+
     final oldMessages = query.find();
     _messageBox.removeMany(oldMessages.map((m) => m.id).toList());
     query.close();
@@ -217,34 +223,44 @@ class DatabaseService {
   }
 
   Future<List<Conversation>> getAllConversations() async {
-    final query = _conversationBox
-        .query()
-        .order(Conversation_.lastMessageTime, flags: Order.descending)
-        .build();
-    final results = query.find();
-    query.close();
-    return results;
+    // FIX BUG 3 : tri null-safe — les conversations sans message (lastMessageTime
+    // == null, valeur 0 en ms) remontent en tête car elles sont "nouvelles".
+    // On récupère tout puis on trie en Dart avec les épinglées en premier,
+    // puis les conversations avec message (les plus récentes), puis les vides.
+    final allConversations = _conversationBox.getAll();
+
+    allConversations.sort((a, b) {
+      // Épinglées en premier
+      if (a.isPinned != b.isPinned) return a.isPinned ? -1 : 1;
+
+      final aTime = a.lastMessageTime;
+      final bTime = b.lastMessageTime;
+
+      if (aTime == null && bTime == null) return 0;
+      // Conversations sans message : en tête (contact fraîchement ajouté)
+      if (aTime == null) return -1;
+      if (bTime == null) return 1;
+
+      return bTime.compareTo(aTime); // plus récent d'abord
+    });
+
+    return allConversations;
   }
 
   Future<void> _updateConversation(Message message) async {
-    var conversation = await getConversation(message.conversationId);
-    
-    if (conversation == null) {
-      conversation = Conversation(
-        conversationId: message.conversationId,
-      );
-    }
+    // FIX : ensureConversationExists remplace la création inline
+    final conversation =
+    await ensureConversationExists(message.conversationId);
 
-    // Mettre à jour avec le dernier message
     if (message.type == MessageType.text) {
       try {
-        final encryptedData = jsonDecode(message.encryptedContent);
-        // Pour l'aperçu, on ne peut pas déchiffrer ici, donc on montre juste un indicateur
-        conversation.lastMessagePreview = message.isSentByMe 
-            ? 'Vous: [Message chiffré]' 
+        jsonDecode(message.encryptedContent);
+        conversation.lastMessagePreview = message.isSentByMe
+            ? 'Vous: [Message chiffré]'
             : '[Message chiffré]';
       } catch (e) {
-        conversation.lastMessagePreview = message.encryptedContent.length > 50
+        conversation.lastMessagePreview =
+        message.encryptedContent.length > 50
             ? '${message.encryptedContent.substring(0, 50)}...'
             : message.encryptedContent;
       }
@@ -276,7 +292,10 @@ class DatabaseService {
     }
   }
 
-  Future<void> updateConversationTyping(String conversationId, bool isTyping) async {
+  Future<void> updateConversationTyping(
+      String conversationId,
+      bool isTyping,
+      ) async {
     final conversation = await getConversation(conversationId);
     if (conversation != null) {
       conversation.isTyping = isTyping;
@@ -286,13 +305,11 @@ class DatabaseService {
   }
 
   Future<void> deleteConversation(String conversationId) async {
-    // Supprimer la conversation
     final conversation = await getConversation(conversationId);
     if (conversation != null) {
       _conversationBox.remove(conversation.id);
     }
 
-    // Supprimer tous les messages
     final query = _messageBox
         .query(Message_.conversationId.equals(conversationId))
         .build();
@@ -311,10 +328,7 @@ class DatabaseService {
     return _contactBox.count();
   }
 
-  /// Ferme le store
   void close() {
     _store.close();
   }
 }
-
-

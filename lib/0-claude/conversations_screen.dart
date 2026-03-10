@@ -13,6 +13,14 @@ class ConversationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
+    final conversations = provider.conversations;
+    final contacts = provider.contacts;
+
+    // FIX BUG 2 : on construit un Map<deviceId, Contact> à partir de
+    // provider.contacts (déjà en mémoire) pour éviter un FutureBuilder
+    // par ListTile — ce qui causait des rebuilds non contrôlés et rendait
+    // impossible l'affichage d'une conversation fraîchement créée.
+    final contactMap = {for (final c in contacts) c.deviceId: c};
 
     return Scaffold(
       appBar: AppBar(
@@ -20,6 +28,7 @@ class ConversationsScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.person_add),
+            tooltip: 'Ajouter un contact',
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AddContactScreen()),
@@ -27,48 +36,87 @@ class ConversationsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: provider.conversations.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Aucune conversation',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Ajoutez un contact pour commencer',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-                  ),
-                ],
-              ),
-            )
+      body: conversations.isEmpty
+          ? _EmptyState(onAddContact: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddContactScreen()),
+        );
+      })
           : ListView.builder(
-              itemCount: provider.conversations.length,
-              itemBuilder: (context, index) {
-                final conversation = provider.conversations[index];
-                return FutureBuilder<Contact?>(
-                  future: provider.database.getContact(conversation.conversationId),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const SizedBox.shrink();
-                    final contact = snapshot.data!;
-                    return _ConversationTile(conversation: conversation, contact: contact);
-                  },
-                );
-              },
-            ),
+        itemCount: conversations.length,
+        itemBuilder: (context, index) {
+          final conversation = conversations[index];
+          final contact = contactMap[conversation.conversationId];
+
+          // Contact introuvable en mémoire (ne devrait pas arriver
+          // avec ensureConversationExists, mais défense en profondeur)
+          if (contact == null) return const SizedBox.shrink();
+
+          return _ConversationTile(
+            conversation: conversation,
+            contact: contact,
+          );
+        },
+      ),
     );
   }
 }
+
+// ── Écran vide ────────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  final VoidCallback onAddContact;
+
+  const _EmptyState({required this.onAddContact});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.chat_bubble_outline,
+            size: 72,
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Aucune conversation',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: Theme.of(context).colorScheme.outline,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Ajoutez un contact pour commencer',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.outline,
+            ),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: onAddContact,
+            icon: const Icon(Icons.qr_code_scanner),
+            label: const Text('Scanner un QR code'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Tuile de conversation ─────────────────────────────────────────────────────
 
 class _ConversationTile extends StatelessWidget {
   final Conversation conversation;
   final Contact contact;
 
-  const _ConversationTile({required this.conversation, required this.contact});
+  const _ConversationTile({
+    required this.conversation,
+    required this.contact,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -76,32 +124,28 @@ class _ConversationTile extends StatelessWidget {
     final isOnline = provider.isContactOnline(contact.deviceId);
     final isTyping = provider.isContactTyping(contact.deviceId);
 
+    // Sous-titre : état de la conversation
+    final String subtitle;
+    final Color subtitleColor;
+    final FontStyle subtitleStyle;
+
+    if (isTyping) {
+      subtitle = 'en train d\'écrire…';
+      subtitleColor = Theme.of(context).colorScheme.primary;
+      subtitleStyle = FontStyle.italic;
+    } else if (conversation.lastMessagePreview != null) {
+      subtitle = conversation.lastMessagePreview!;
+      subtitleColor = Theme.of(context).colorScheme.outline;
+      subtitleStyle = FontStyle.normal;
+    } else {
+      // FIX : conversation vide (contact fraîchement ajouté)
+      subtitle = 'Dites bonjour 👋';
+      subtitleColor = Theme.of(context).colorScheme.outlineVariant;
+      subtitleStyle = FontStyle.italic;
+    }
+
     return ListTile(
-      leading: Stack(
-        children: [
-          CircleAvatar(
-            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-            child: Text(
-              contact.pseudo[0].toUpperCase(),
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
-            ),
-          ),
-          if (isOnline)
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-              ),
-            ),
-        ],
-      ),
+      leading: _Avatar(contact: contact, isOnline: isOnline),
       title: Row(
         children: [
           Expanded(
@@ -116,43 +160,31 @@ class _ConversationTile extends StatelessWidget {
               _formatTime(conversation.lastMessageTime!),
               style: TextStyle(
                 fontSize: 12,
-                color: conversation.unreadCount > 0 ? Theme.of(context).colorScheme.primary : Colors.grey,
+                color: conversation.unreadCount > 0
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.outline,
               ),
             ),
         ],
       ),
       subtitle: Text(
-        isTyping
-            ? 'en train d\'écrire...'
-            : conversation.lastMessagePreview ?? '',
+        subtitle,
         style: TextStyle(
-          color: isTyping ? Colors.green : Colors.grey,
-          fontStyle: isTyping ? FontStyle.italic : FontStyle.normal,
+          color: subtitleColor,
+          fontStyle: subtitleStyle,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       trailing: conversation.unreadCount > 0
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${conversation.unreadCount}',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            )
+          ? _UnreadBadge(count: conversation.unreadCount)
           : null,
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => ChatScreen(contact: contact)),
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(contact: contact),
+          ),
         );
       },
     );
@@ -171,5 +203,75 @@ class _ConversationTile extends StatelessWidget {
     } else {
       return DateFormat('dd/MM/yy').format(time);
     }
+  }
+}
+
+// ── Composants réutilisables ──────────────────────────────────────────────────
+
+class _Avatar extends StatelessWidget {
+  final Contact contact;
+  final bool isOnline;
+
+  const _Avatar({required this.contact, required this.isOnline});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: Text(
+            contact.pseudo[0].toUpperCase(),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        if (isOnline)
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: Container(
+              width: 13,
+              height: 13,
+              decoration: BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.surface,
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _UnreadBadge extends StatelessWidget {
+  final int count;
+
+  const _UnreadBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 }
