@@ -76,7 +76,7 @@ dependencies:
   flutter_svg: ^2.2.4
 #----------------------------------------
   http: ^1.1.0             # Requêtes HTTP (si besoin)
-  workmanager: ^0.5.1      # Tâches en arrière-plan (polling)
+  workmanager: ^0.9.0+3      # Tâches en arrière-plan (polling)
   share_plus: ^12.0.1
 
 dev_dependencies:
