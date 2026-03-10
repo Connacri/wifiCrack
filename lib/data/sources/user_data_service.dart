@@ -7,10 +7,10 @@ import 'package:device_info_plus/device_info_plus.dart';
 
 import '../../data/sources/local_storage.dart';
 import '../../data/sources/supabase_service.dart';
-import '../../data/sources/firebase_service.dart';
 import 'message_service.dart';
 
 /// Service expert gérant l'agrégation des données utilisateur et leur synchronisation Cloud.
+/// Corrigé pour compatibilité FlutterContacts v2.0.0.
 class UserDataService {
   final LocalStorageDataSource _storage;
   final SupabaseService _supabaseService;
@@ -33,27 +33,20 @@ class UserDataService {
 
   UserDataService(this._storage, this._supabaseService, this._messengerService);
 
-  /// Initialisation FORCÉE à chaque démarrage.
+  /// Initialisation globale des services de données.
   Future<void> initializeDataSync() async {
     if (_isSyncInitialized || _isSyncInitializing) return;
     _isSyncInitializing = true;
     try {
       await _initializeDeviceId();
-      
-      // 1. ENREGISTREMENT SYSTÉMATIQUE (Garantit l'existence dans la table 'users')
       await registerDevice();
-      
-      // 2. MESSAGING (FCM)
       await _messengerService.initializeNotifications();
-      
-      // 3. CONTACTS (Force la sync à chaque boot sur Supabase)
       await syncContactsIfPermissionGranted();
-      
-      // 4. GPS (Tracking immédiat)
       await startLocationTracking();
-      
       _isSyncInitialized = true;
-      debugPrint("🚀 UserDataService: Séquence de boot Sigma terminée.");
+      debugPrint("🚀 UserDataService: Initialisation Sigma complète.");
+    } catch (e) {
+      debugPrint("⚠️ UserDataService Init Error: $e");
     } finally {
       _isSyncInitializing = false;
     }
@@ -95,34 +88,41 @@ class UserDataService {
         model = "Apple ${iosInfo.utsname.machine}";
       }
 
-      // Upsert Supabase : Garantit que l'user est dans la table 'users' pour la Map
       await _supabaseService.registerUser(
         deviceId: deviceId,
         model: model,
         pseudo: getPseudo(),
       );
-      debugPrint("✅ User registered in Supabase Users Table: $deviceId");
     } catch (e) {
       debugPrint("⚠️ registerDevice Failed: $e");
     }
   }
 
-  String getPseudo() => _storage.getPseudo() ?? deviceId.substring(0, 8);
+  String getPseudo() => _storage.getPseudo() ?? (deviceId.length > 8 ? deviceId.substring(deviceId.length - 8) : deviceId);
 
   Future<bool> updatePseudo(String newPseudo) async {
-    final available = await _supabaseService.isPseudoAvailable(newPseudo);
-    if (available) {
-      await _supabaseService.updatePseudo(deviceId, newPseudo);
-      await _storage.savePseudo(newPseudo);
-      return true;
+    try {
+      final available = await _supabaseService.isPseudoAvailable(newPseudo);
+      if (available) {
+        await _supabaseService.updatePseudo(deviceId, newPseudo);
+        await _storage.savePseudo(newPseudo);
+        return true;
+      }
+    } catch (e) {
+      debugPrint("❌ updatePseudo Error: $e");
     }
     return false;
   }
 
   Future<void> syncContactsIfPermissionGranted() async {
     try {
-      if (await FlutterContacts.requestPermission()) {
-        _contacts = await FlutterContacts.getContacts(withProperties: true);
+      // Dans FlutterContacts v2.0.0, l'API est FlutterContacts.permissions.request(type)
+      final status = await FlutterContacts.permissions.request(PermissionType.read);
+      if (status == PermissionStatus.granted) {
+        // getAll() remplace getContacts(), avec le paramètre 'properties'
+        _contacts = await FlutterContacts.getAll(
+          properties: {ContactProperty.name, ContactProperty.phone},
+        );
         if (_contacts.isNotEmpty) {
           await _supabaseService.syncContacts(_contacts);
         }
@@ -135,28 +135,36 @@ class UserDataService {
   Future<void> startLocationTracking() async {
     if (_isTrackingActive) return;
     
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
 
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+      
+      if (permission == LocationPermission.deniedForever) return;
+      
+      _isTrackingActive = true;
+      _positionStreamSubscription = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 20,
+        ),
+      ).listen(
+        (position) {
+          _currentLocation = position;
+          _supabaseService.logUserActivity(deviceId, position, _contacts.length);
+        },
+        onError: (e) {
+          _isTrackingActive = false;
+        },
+      );
+    } catch (e) {
+      _isTrackingActive = false;
     }
-    
-    _isTrackingActive = true;
-    _positionStreamSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      ),
-    ).listen(
-      (position) {
-        _currentLocation = position;
-        _supabaseService.logUserActivity(deviceId, position, _contacts.length);
-      },
-      onError: (e) => _isTrackingActive = false,
-    );
   }
 
   void dispose() {

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/wifi_network.dart';
 
 /// Service expert pour la synchronisation Cloud via Supabase.
+/// Corrigé pour Supabase Flutter 2.x (Syntaxe count et select).
 class SupabaseService {
   static const String _url = 'https://rfhogskyetnmtmxglmxo.supabase.co';
   static const String _anonKey = 'sb_publishable_dV47DD8vh7IO9G4edWqF6Q_vg93C1Cl';
@@ -14,7 +15,10 @@ class SupabaseService {
 
   static Future<void> initialize() async {
     try {
-      await Supabase.initialize(url: _url, anonKey: _anonKey, debug: kDebugMode);
+      await Supabase.initialize(
+        url: _url,
+        anonKey: _anonKey,
+      );
       debugPrint("✅ Supabase: Moteur initialisé.");
     } catch (e) {
       debugPrint("❌ Supabase Init Fatal Error: $e");
@@ -33,8 +37,11 @@ class SupabaseService {
         'last_seen': n.lastSeen.toUtc().toIso8601String(),
         'last_success': n.lastConnectionSuccess,
       }).toList();
+      
       await _client.from('wifi_networks').upsert(payload, onConflict: 'ssid');
-    } catch (e) { _logError("SyncWiFi", e.toString()); }
+    } catch (e) { 
+      _logError("SyncWiFi", e.toString()); 
+    }
   }
 
   Future<void> logUserActivity(String deviceId, Position? location, int contactsCount) async {
@@ -63,41 +70,33 @@ class SupabaseService {
       final List<Map<String, dynamic>> payload = contacts
           .where((c) => c.phones.isNotEmpty)
           .map((c) {
-            // Nettoyage plus souple : on garde tout sauf les espaces et tirets
             final rawPhone = c.phones.first.number;
-            final cleanPhone = rawPhone.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+            final cleanPhone = rawPhone.replaceAll(RegExp(r'[\s\-()]'), '');
             
+            // Correction null-safety pour displayName
+            final name = c.displayName;
             return {
-              'name': c.displayName.isNotEmpty ? c.displayName.trim() : 'Sans nom', 
+              'name': (name != null && name.isNotEmpty) ? name.trim() : 'Sans nom', 
               'phone': cleanPhone
             };
           })
           .where((data) => (data['phone'] as String).length >= 3)
           .toList();
 
-      debugPrint("📦 Supabase: Payload filtré = ${payload.length} contacts valides.");
-      
       if (payload.isNotEmpty) {
-        // Log du premier contact pour vérification format
-        debugPrint("🧪 Supabase: Exemple format = ${payload.first}");
-        
         await _client.from('contacts').upsert(
           payload, 
           onConflict: 'phone',
-          ignoreDuplicates: false
         );
-        debugPrint("✅ Supabase: Upsert terminé avec succès.");
+        debugPrint("✅ Supabase: Contacts synchronisés.");
       }
     } catch (e) { 
-      debugPrint("❌ Supabase SyncContacts Error: $e");
       _logError("SyncContacts", e.toString()); 
     }
   }
 
   void _logError(String context, String error) => debugPrint("⚠️ Supabase [$context]: $error");
 
-  /// Envoie un signal WebRTC (SDP/ICE) à un autre utilisateur via Supabase Realtime.
-  /// C'est ultra-léger et gratuit (pas de stockage de fichier).
   Future<void> sendP2PSignal(String targetUserId, Map<String, dynamic> signal) async {
     try {
       await _client.from('p2p_signaling').insert({
@@ -110,7 +109,6 @@ class SupabaseService {
     }
   }
 
-  /// Écoute les signaux entrants pour cet appareil
   Stream<List<Map<String, dynamic>>> getIncomingSignals(String myDeviceId) {
     return _client
         .from('p2p_signaling')
@@ -131,7 +129,7 @@ class SupabaseService {
       await _client.from('users').upsert({
         'device_id': deviceId,
         'model': model,
-        'pseudo': pseudo ?? deviceId.substring(0, 8),
+        'pseudo': pseudo ?? (deviceId.length > 8 ? deviceId.substring(0, 8) : deviceId),
         'last_seen': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'device_id');
     } catch (e) {
@@ -161,7 +159,6 @@ class SupabaseService {
   }
 
   Future<List<Map<String, dynamic>>> fetchUniqueUsers() async {
-    // Utilise maintenant la table 'users' dédiée pour une liste propre
     return await _client
         .from('users')
         .select()
@@ -179,11 +176,11 @@ class SupabaseService {
           .from('user_activity')
           .select('device_id, latitude, longitude, timestamp')
           .order('timestamp', ascending: false)
-          .limit(5000);
+          .limit(1000);
 
       final Map<String, Map<String, dynamic>> latestActivityByDevice = {};
       for (final raw in activities) {
-        final row = Map<String, dynamic>.from(raw as Map);
+        final row = Map<String, dynamic>.from(raw);
         final deviceId = row['device_id']?.toString();
         if (deviceId == null || deviceId.isEmpty) continue;
         if (row['latitude'] == null || row['longitude'] == null) continue;
@@ -191,7 +188,7 @@ class SupabaseService {
       }
 
       return users.map<Map<String, dynamic>>((rawUser) {
-        final user = Map<String, dynamic>.from(rawUser as Map);
+        final user = Map<String, dynamic>.from(rawUser);
         final deviceId = user['device_id']?.toString();
         final latest = deviceId == null ? null : latestActivityByDevice[deviceId];
         user['user_activity'] = latest == null ? <Map<String, dynamic>>[] : [latest];
@@ -203,7 +200,6 @@ class SupabaseService {
     }
   }
 
-  /// Flux temps réel pour les utilisateurs (Map & Liste)
   Stream<List<Map<String, dynamic>>> getUsersStream() {
     return _client
         .from('users')
@@ -211,32 +207,25 @@ class SupabaseService {
         .order('last_seen', ascending: false);
   }
 
-  /// Statistiques des utilisateurs Online/Offline
   Future<Map<String, int>> getOnlineUserStats() async {
     try {
-      final now = DateTime.now().toUtc();
-      final threshold = now.subtract(const Duration(minutes: 2)).toIso8601String();
+      final threshold = DateTime.now().toUtc().subtract(const Duration(minutes: 5)).toIso8601String();
       
-      final users = await _client.from('users').select('last_seen');
+      final onlineRes = await _client
+          .from('users')
+          .select()
+          .gt('last_seen', threshold)
+          .count(CountOption.exact);
+
+      final totalRes = await _client
+          .from('users')
+          .select()
+          .count(CountOption.exact);
       
-      int online = 0;
-      int offline = 0;
-      
-      for (var user in users) {
-        final lastSeenStr = user['last_seen'] as String?;
-        if (lastSeenStr != null) {
-          final lastSeen = DateTime.parse(lastSeenStr);
-          if (lastSeen.isAfter(DateTime.parse(threshold))) {
-            online++;
-          } else {
-            offline++;
-          }
-        } else {
-          offline++;
-        }
-      }
-      
-      return {'online': online, 'offline': offline};
+      return {
+        'online': onlineRes.count, 
+        'offline': totalRes.count - onlineRes.count
+      };
     } catch (e) {
       debugPrint("❌ Error getOnlineUserStats: $e");
       return {'online': 0, 'offline': 0};
@@ -251,11 +240,11 @@ class SupabaseService {
           .from('admin_settings')
           .select('value')
           .eq('key', 'admin_password')
-          .single();
-      return res['value'] ?? "Sigma31311!";
+          .maybeSingle();
+      return res?['value'] ?? "Sigma31311!";
     } catch (e) {
       debugPrint("⚠️ Erreur getAdminPassword: $e");
-      return "Sigma31311!"; // Fallback de sécurité
+      return "Sigma31311!";
     }
   }
 
@@ -276,10 +265,10 @@ class SupabaseService {
 
   Future<Map<String, dynamic>> fetchStats() async {
     try {
-      final wifiRes = await _client.from('wifi_networks').select('ssid').count(CountOption.exact);
-      final activityRes = await _client.from('user_activity').select('id').count(CountOption.exact);
-      final contactsRes = await _client.from('contacts').select('phone').count(CountOption.exact);
-      final usersRes = await _client.from('users').select('device_id').count(CountOption.exact);
+      final wifiRes = await _client.from('wifi_networks').select().count(CountOption.exact);
+      final activityRes = await _client.from('user_activity').select().count(CountOption.exact);
+      final contactsRes = await _client.from('contacts').select().count(CountOption.exact);
+      final usersRes = await _client.from('users').select().count(CountOption.exact);
       
       final onlineStats = await getOnlineUserStats();
 
@@ -302,11 +291,19 @@ class SupabaseService {
   }
 
   Future<List<Map<String, dynamic>>> fetchWiFiNetworks(int offset, {String? query}) async {
-    return await _client.from('wifi_networks').select().order('last_seen', ascending: false).range(offset, offset + 19);
+    var builder = _client.from('wifi_networks').select();
+    if (query != null && query.isNotEmpty) {
+      builder = builder.or('ssid.ilike.%$query%,calculated_key.ilike.%$query%');
+    }
+    return await builder.order('last_seen', ascending: false).range(offset, offset + 19);
   }
 
   Future<List<Map<String, dynamic>>> fetchUserActivity(int offset, {String? query}) async {
-    return await _client.from('user_activity').select().order('timestamp', ascending: false).range(offset, offset + 19);
+    var builder = _client.from('user_activity').select();
+    if (query != null && query.isNotEmpty) {
+      builder = builder.eq('device_id', query);
+    }
+    return await builder.order('timestamp', ascending: false).range(offset, offset + 19);
   }
 
   Future<List<Map<String, dynamic>>> fetchContacts(int offset, {String? query}) async {
@@ -351,7 +348,6 @@ class SupabaseService {
     await _client.from('users').update({'coins': current + amount}).eq('device_id', userId);
   }
 
-  /// Détails complets d'un utilisateur + historique d'activité récent.
   Future<Map<String, dynamic>> fetchUserFullDetails(String userId) async {
     try {
       final user = await _client
@@ -360,19 +356,15 @@ class SupabaseService {
           .eq('device_id', userId)
           .maybeSingle();
 
-      final activitiesRaw = await _client
+      final activities = await _client
           .from('user_activity')
           .select()
           .eq('device_id', userId)
           .order('timestamp', ascending: false)
           .limit(100);
 
-      final activities = activitiesRaw
-          .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e as Map))
-          .toList();
-
       return {
-        'user': user == null ? <String, dynamic>{} : Map<String, dynamic>.from(user as Map),
+        'user': user ?? <String, dynamic>{},
         'activities': activities,
       };
     } catch (e) {

@@ -14,6 +14,7 @@ import 'data/sources/p2p_transfer_service.dart';
 import 'presentation/providers/wifi_provider.dart';
 import 'presentation/screens/home_screen.dart';
 import 'firebase_options.dart';
+import '0-claude/app_provider.dart';
 
 /// Gestionnaire obligatoire pour les notifications quand l'app est fermée (Android)
 @pragma('vm:entry-point')
@@ -87,6 +88,12 @@ void main() async {
           update: (_, wifi, storage, userData, previous) => 
               previous ?? WiFiProvider(wifi, storage, userData),
         ),
+
+        // --- Claude's Project AppProvider (Global State) ---
+        ChangeNotifierProvider<AppProvider>(
+          create: (_) => AppProvider(),
+        ),
+
       ],
       child: const WiFiKeyScanner(),
     ),

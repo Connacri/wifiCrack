@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../0-claude/main.dart' as claude;
 import '../../data/sources/ad_service.dart';
 import '../../data/sources/local_storage.dart';
 import '../../data/sources/wifi_service.dart';
@@ -166,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sigma WiFi Crack', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('DZ WiFi hack', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),
@@ -189,6 +190,14 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.chat),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessengerScreen())),
+          ),
+          IconButton(
+            icon: const Icon(Icons.rocket_launch, color: Colors.deepOrange,),
+            tooltip: 'Claude Project',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const claude.InitializationScreen()),
+            ),
           ),
         ],
       ),
