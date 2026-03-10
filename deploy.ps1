@@ -42,6 +42,7 @@ try {
     # On ignore les erreurs si la release n'existe pas encore
     gh release delete $tag --yes 2>$null
     git push --delete origin $tag 2>$null
+    git tag -d $tag 2>$null
 
     Write-Host "Upload de l'APK..."
     gh release create $tag $apkPath --title "WI-FI Crack Fiber DZ" --notes "$Description"
