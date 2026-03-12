@@ -8,7 +8,6 @@ import 'database_service.dart';
 import 'qrcode_service.dart';
 import 'webrtc_service.dart';
 import 'messaging_service.dart';
-import 'signaling_service.dart';
 
 /// Façade de messagerie pour les écrans [AddFriendScreen] et [MyQRCodeScreen].
 ///

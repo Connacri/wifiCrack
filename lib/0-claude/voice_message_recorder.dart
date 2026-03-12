@@ -23,7 +23,6 @@ class _VoiceMessageRecorderState extends State<VoiceMessageRecorder>
   late AnimationController _pulseController;
   Duration _duration = Duration.zero;
   double _amplitude = 0.0;
-  bool _isRecording = false;
 
   @override
   void initState() {
@@ -40,7 +39,6 @@ class _VoiceMessageRecorderState extends State<VoiceMessageRecorder>
 
     try {
       await audioService.startRecording();
-      setState(() => _isRecording = true);
 
       audioService.onDurationUpdate.listen((duration) {
         if (!mounted) return;

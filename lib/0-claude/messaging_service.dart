@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'message.dart';
-import 'contact.dart';
 import 'crypto_service.dart';
 import 'webrtc_service.dart';
 import 'database_service.dart';
@@ -352,6 +351,5 @@ class MessagingService {
     }
   }
 }
-
 
 

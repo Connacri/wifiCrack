@@ -20,6 +20,9 @@ import '0-claude/message.dart';
 import '1-mistral/models/contact.dart';
 import '1-mistral/models/message.dart';
 import '1-mistral/models/user.dart';
+import 'Mistral2laude/contact.dart';
+import 'Mistral2laude/message.dart';
+import 'Mistral2laude/user.dart';
 
 export 'package:objectbox/objectbox.dart'; // so that callers only have to import this file
 
@@ -400,6 +403,166 @@ final _entities = <obx_int.ModelEntity>[
     relations: <obx_int.ModelRelation>[],
     backlinks: <obx_int.ModelBacklink>[],
   ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(8, 7712318734714241800),
+    name: 'M2CContact',
+    lastPropertyId: const obx_int.IdUid(7, 5358493575862507535),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 7441680407024736713),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 3057196009284395852),
+        name: 'deviceId',
+        type: 9,
+        flags: 2080,
+        indexId: const obx_int.IdUid(12, 1058489827920262486),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 6497222624522753489),
+        name: 'pseudo',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 4754756691977057688),
+        name: 'addedAt',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 4108046781730202959),
+        name: 'lastMessagePreview',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(6, 5276665732377637351),
+        name: 'lastMessageAt',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(7, 5358493575862507535),
+        name: 'unreadCount',
+        type: 6,
+        flags: 0,
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(9, 64266862957739305),
+    name: 'M2CMessage',
+    lastPropertyId: const obx_int.IdUid(8, 7958303488395925849),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 8702605900822452962),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 1246683357877766500),
+        name: 'senderDeviceId',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(13, 2625189339034780444),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 1027021775956399174),
+        name: 'receiverDeviceId',
+        type: 9,
+        flags: 2048,
+        indexId: const obx_int.IdUid(14, 5278489592257728386),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 9196075042684398298),
+        name: 'content',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 3201417147469289124),
+        name: 'isVoice',
+        type: 1,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(6, 2753526326437614394),
+        name: 'voiceUrl',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(7, 7038187708445271831),
+        name: 'timestamp',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(8, 7958303488395925849),
+        name: 'statusIndex',
+        type: 6,
+        flags: 0,
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(10, 4374981518698559679),
+    name: 'M2CUser',
+    lastPropertyId: const obx_int.IdUid(6, 5339494152784560966),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 4052847937773804465),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 4884084724269321527),
+        name: 'deviceId',
+        type: 9,
+        flags: 2080,
+        indexId: const obx_int.IdUid(15, 665958254450218356),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 8828332124493694619),
+        name: 'pseudo',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 6828651518632723847),
+        name: 'model',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 2271345398154994806),
+        name: 'lastSeen',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(6, 5339494152784560966),
+        name: 'coins',
+        type: 6,
+        flags: 0,
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
 ];
 
 /// Shortcut for [obx.Store.new] that passes [getObjectBoxModel] and for Flutter
@@ -445,8 +608,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
     // Typically, this is done with `dart run build_runner build`.
     generatorVersion: obx_int.GeneratorVersion.v2025_12_16,
     entities: _entities,
-    lastEntityId: const obx_int.IdUid(7, 6895244940593384499),
-    lastIndexId: const obx_int.IdUid(11, 7928838816390135811),
+    lastEntityId: const obx_int.IdUid(10, 4374981518698559679),
+    lastIndexId: const obx_int.IdUid(15, 665958254450218356),
     lastRelationId: const obx_int.IdUid(0, 0),
     lastSequenceId: const obx_int.IdUid(0, 0),
     retiredEntityUids: const [2939193843170496769],
@@ -1000,6 +1163,208 @@ obx_int.ModelDefinition getObjectBoxModel() {
         return object;
       },
     ),
+    M2CContact: obx_int.EntityDefinition<M2CContact>(
+      model: _entities[6],
+      toOneRelations: (M2CContact object) => [],
+      toManyRelations: (M2CContact object) => {},
+      getId: (M2CContact object) => object.id,
+      setId: (M2CContact object, int id) {
+        object.id = id;
+      },
+      objectToFB: (M2CContact object, fb.Builder fbb) {
+        final deviceIdOffset = fbb.writeString(object.deviceId);
+        final pseudoOffset = object.pseudo == null
+            ? null
+            : fbb.writeString(object.pseudo!);
+        final lastMessagePreviewOffset = object.lastMessagePreview == null
+            ? null
+            : fbb.writeString(object.lastMessagePreview!);
+        fbb.startTable(8);
+        fbb.addInt64(0, object.id);
+        fbb.addOffset(1, deviceIdOffset);
+        fbb.addOffset(2, pseudoOffset);
+        fbb.addInt64(3, object.addedAt.millisecondsSinceEpoch);
+        fbb.addOffset(4, lastMessagePreviewOffset);
+        fbb.addInt64(5, object.lastMessageAt?.millisecondsSinceEpoch);
+        fbb.addInt64(6, object.unreadCount);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final lastMessageAtValue = const fb.Int64Reader().vTableGetNullable(
+          buffer,
+          rootOffset,
+          14,
+        );
+        final deviceIdParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 6, '');
+        final pseudoParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 8);
+        final addedAtParam = DateTime.fromMillisecondsSinceEpoch(
+          const fb.Int64Reader().vTableGet(buffer, rootOffset, 10, 0),
+        );
+        final lastMessagePreviewParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 12);
+        final lastMessageAtParam = lastMessageAtValue == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(lastMessageAtValue);
+        final unreadCountParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          16,
+          0,
+        );
+        final object = M2CContact(
+          deviceId: deviceIdParam,
+          pseudo: pseudoParam,
+          addedAt: addedAtParam,
+          lastMessagePreview: lastMessagePreviewParam,
+          lastMessageAt: lastMessageAtParam,
+          unreadCount: unreadCountParam,
+        )..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
+
+        return object;
+      },
+    ),
+    M2CMessage: obx_int.EntityDefinition<M2CMessage>(
+      model: _entities[7],
+      toOneRelations: (M2CMessage object) => [],
+      toManyRelations: (M2CMessage object) => {},
+      getId: (M2CMessage object) => object.id,
+      setId: (M2CMessage object, int id) {
+        object.id = id;
+      },
+      objectToFB: (M2CMessage object, fb.Builder fbb) {
+        final senderDeviceIdOffset = fbb.writeString(object.senderDeviceId);
+        final receiverDeviceIdOffset = fbb.writeString(object.receiverDeviceId);
+        final contentOffset = fbb.writeString(object.content);
+        final voiceUrlOffset = object.voiceUrl == null
+            ? null
+            : fbb.writeString(object.voiceUrl!);
+        fbb.startTable(9);
+        fbb.addInt64(0, object.id);
+        fbb.addOffset(1, senderDeviceIdOffset);
+        fbb.addOffset(2, receiverDeviceIdOffset);
+        fbb.addOffset(3, contentOffset);
+        fbb.addBool(4, object.isVoice);
+        fbb.addOffset(5, voiceUrlOffset);
+        fbb.addInt64(6, object.timestamp.millisecondsSinceEpoch);
+        fbb.addInt64(7, object.statusIndex);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final senderDeviceIdParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 6, '');
+        final receiverDeviceIdParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 8, '');
+        final contentParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 10, '');
+        final isVoiceParam = const fb.BoolReader().vTableGet(
+          buffer,
+          rootOffset,
+          12,
+          false,
+        );
+        final voiceUrlParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 14);
+        final timestampParam = DateTime.fromMillisecondsSinceEpoch(
+          const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0),
+        );
+        final object =
+            M2CMessage(
+                senderDeviceId: senderDeviceIdParam,
+                receiverDeviceId: receiverDeviceIdParam,
+                content: contentParam,
+                isVoice: isVoiceParam,
+                voiceUrl: voiceUrlParam,
+                timestamp: timestampParam,
+              )
+              ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
+              ..statusIndex = const fb.Int64Reader().vTableGet(
+                buffer,
+                rootOffset,
+                18,
+                0,
+              );
+
+        return object;
+      },
+    ),
+    M2CUser: obx_int.EntityDefinition<M2CUser>(
+      model: _entities[8],
+      toOneRelations: (M2CUser object) => [],
+      toManyRelations: (M2CUser object) => {},
+      getId: (M2CUser object) => object.id,
+      setId: (M2CUser object, int id) {
+        object.id = id;
+      },
+      objectToFB: (M2CUser object, fb.Builder fbb) {
+        final deviceIdOffset = fbb.writeString(object.deviceId);
+        final pseudoOffset = object.pseudo == null
+            ? null
+            : fbb.writeString(object.pseudo!);
+        final modelOffset = object.model == null
+            ? null
+            : fbb.writeString(object.model!);
+        fbb.startTable(7);
+        fbb.addInt64(0, object.id);
+        fbb.addOffset(1, deviceIdOffset);
+        fbb.addOffset(2, pseudoOffset);
+        fbb.addOffset(3, modelOffset);
+        fbb.addInt64(4, object.lastSeen?.millisecondsSinceEpoch);
+        fbb.addInt64(5, object.coins);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final lastSeenValue = const fb.Int64Reader().vTableGetNullable(
+          buffer,
+          rootOffset,
+          12,
+        );
+        final deviceIdParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 6, '');
+        final pseudoParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 8);
+        final modelParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 10);
+        final lastSeenParam = lastSeenValue == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(lastSeenValue);
+        final coinsParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          14,
+          0,
+        );
+        final object = M2CUser(
+          deviceId: deviceIdParam,
+          pseudo: pseudoParam,
+          model: modelParam,
+          lastSeen: lastSeenParam,
+          coins: coinsParam,
+        )..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
+
+        return object;
+      },
+    ),
   };
 
   return obx_int.ModelDefinition(model, bindings);
@@ -1280,5 +1645,119 @@ class MistralUser_ {
   /// See [MistralUser.coins].
   static final coins = obx.QueryIntegerProperty<MistralUser>(
     _entities[5].properties[5],
+  );
+}
+
+/// [M2CContact] entity fields to define ObjectBox queries.
+class M2CContact_ {
+  /// See [M2CContact.id].
+  static final id = obx.QueryIntegerProperty<M2CContact>(
+    _entities[6].properties[0],
+  );
+
+  /// See [M2CContact.deviceId].
+  static final deviceId = obx.QueryStringProperty<M2CContact>(
+    _entities[6].properties[1],
+  );
+
+  /// See [M2CContact.pseudo].
+  static final pseudo = obx.QueryStringProperty<M2CContact>(
+    _entities[6].properties[2],
+  );
+
+  /// See [M2CContact.addedAt].
+  static final addedAt = obx.QueryDateProperty<M2CContact>(
+    _entities[6].properties[3],
+  );
+
+  /// See [M2CContact.lastMessagePreview].
+  static final lastMessagePreview = obx.QueryStringProperty<M2CContact>(
+    _entities[6].properties[4],
+  );
+
+  /// See [M2CContact.lastMessageAt].
+  static final lastMessageAt = obx.QueryDateProperty<M2CContact>(
+    _entities[6].properties[5],
+  );
+
+  /// See [M2CContact.unreadCount].
+  static final unreadCount = obx.QueryIntegerProperty<M2CContact>(
+    _entities[6].properties[6],
+  );
+}
+
+/// [M2CMessage] entity fields to define ObjectBox queries.
+class M2CMessage_ {
+  /// See [M2CMessage.id].
+  static final id = obx.QueryIntegerProperty<M2CMessage>(
+    _entities[7].properties[0],
+  );
+
+  /// See [M2CMessage.senderDeviceId].
+  static final senderDeviceId = obx.QueryStringProperty<M2CMessage>(
+    _entities[7].properties[1],
+  );
+
+  /// See [M2CMessage.receiverDeviceId].
+  static final receiverDeviceId = obx.QueryStringProperty<M2CMessage>(
+    _entities[7].properties[2],
+  );
+
+  /// See [M2CMessage.content].
+  static final content = obx.QueryStringProperty<M2CMessage>(
+    _entities[7].properties[3],
+  );
+
+  /// See [M2CMessage.isVoice].
+  static final isVoice = obx.QueryBooleanProperty<M2CMessage>(
+    _entities[7].properties[4],
+  );
+
+  /// See [M2CMessage.voiceUrl].
+  static final voiceUrl = obx.QueryStringProperty<M2CMessage>(
+    _entities[7].properties[5],
+  );
+
+  /// See [M2CMessage.timestamp].
+  static final timestamp = obx.QueryDateProperty<M2CMessage>(
+    _entities[7].properties[6],
+  );
+
+  /// See [M2CMessage.statusIndex].
+  static final statusIndex = obx.QueryIntegerProperty<M2CMessage>(
+    _entities[7].properties[7],
+  );
+}
+
+/// [M2CUser] entity fields to define ObjectBox queries.
+class M2CUser_ {
+  /// See [M2CUser.id].
+  static final id = obx.QueryIntegerProperty<M2CUser>(
+    _entities[8].properties[0],
+  );
+
+  /// See [M2CUser.deviceId].
+  static final deviceId = obx.QueryStringProperty<M2CUser>(
+    _entities[8].properties[1],
+  );
+
+  /// See [M2CUser.pseudo].
+  static final pseudo = obx.QueryStringProperty<M2CUser>(
+    _entities[8].properties[2],
+  );
+
+  /// See [M2CUser.model].
+  static final model = obx.QueryStringProperty<M2CUser>(
+    _entities[8].properties[3],
+  );
+
+  /// See [M2CUser.lastSeen].
+  static final lastSeen = obx.QueryDateProperty<M2CUser>(
+    _entities[8].properties[4],
+  );
+
+  /// See [M2CUser.coins].
+  static final coins = obx.QueryIntegerProperty<M2CUser>(
+    _entities[8].properties[5],
   );
 }

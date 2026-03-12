@@ -324,10 +324,150 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "8:7712318734714241800",
+      "lastPropertyId": "7:5358493575862507535",
+      "name": "M2CContact",
+      "properties": [
+        {
+          "id": "1:7441680407024736713",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3057196009284395852",
+          "name": "deviceId",
+          "indexId": "12:1058489827920262486",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:6497222624522753489",
+          "name": "pseudo",
+          "type": 9
+        },
+        {
+          "id": "4:4754756691977057688",
+          "name": "addedAt",
+          "type": 10
+        },
+        {
+          "id": "5:4108046781730202959",
+          "name": "lastMessagePreview",
+          "type": 9
+        },
+        {
+          "id": "6:5276665732377637351",
+          "name": "lastMessageAt",
+          "type": 10
+        },
+        {
+          "id": "7:5358493575862507535",
+          "name": "unreadCount",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "9:64266862957739305",
+      "lastPropertyId": "8:7958303488395925849",
+      "name": "M2CMessage",
+      "properties": [
+        {
+          "id": "1:8702605900822452962",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1246683357877766500",
+          "name": "senderDeviceId",
+          "indexId": "13:2625189339034780444",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:1027021775956399174",
+          "name": "receiverDeviceId",
+          "indexId": "14:5278489592257728386",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "4:9196075042684398298",
+          "name": "content",
+          "type": 9
+        },
+        {
+          "id": "5:3201417147469289124",
+          "name": "isVoice",
+          "type": 1
+        },
+        {
+          "id": "6:2753526326437614394",
+          "name": "voiceUrl",
+          "type": 9
+        },
+        {
+          "id": "7:7038187708445271831",
+          "name": "timestamp",
+          "type": 10
+        },
+        {
+          "id": "8:7958303488395925849",
+          "name": "statusIndex",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "10:4374981518698559679",
+      "lastPropertyId": "6:5339494152784560966",
+      "name": "M2CUser",
+      "properties": [
+        {
+          "id": "1:4052847937773804465",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4884084724269321527",
+          "name": "deviceId",
+          "indexId": "15:665958254450218356",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:8828332124493694619",
+          "name": "pseudo",
+          "type": 9
+        },
+        {
+          "id": "4:6828651518632723847",
+          "name": "model",
+          "type": 9
+        },
+        {
+          "id": "5:2271345398154994806",
+          "name": "lastSeen",
+          "type": 10
+        },
+        {
+          "id": "6:5339494152784560966",
+          "name": "coins",
+          "type": 6
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "7:6895244940593384499",
-  "lastIndexId": "11:7928838816390135811",
+  "lastEntityId": "10:4374981518698559679",
+  "lastIndexId": "15:665958254450218356",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
