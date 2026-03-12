@@ -1,7 +1,7 @@
 # Stopper le script en cas d'erreur
 $ErrorActionPreference = "Stop"
 
-$Description = "Mise en place de l'automatisation du deploiement : script PowerShell integrant le build Flutter avec obfuscation, le commit/push Git et la mise a jour automatique de la release GitHub 1.0.2."
+$Description = "Mise en place de l'automatisation du deploiement : script PowerShell integrant le build Flutter avec obfuscation, le commit/push Git et la mise a jour automatique de la release GitHub v1.0.4."
 
 Write-Host "--- DEBUT DU DEPLOIEMENT ---"
 
@@ -35,7 +35,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # 3. GitHub : Release
 try {
-    $tag = "1.0.2"
+    $tag = "v1.0.4"
     $apkPath = "build\app\outputs\flutter-apk\app-release.apk"
 
     Write-Host "Remplacement de la release $tag..."
@@ -47,7 +47,7 @@ try {
     Write-Host "Upload de l'APK..."
     gh release create $tag $apkPath --title "WI-FI Crack Fiber DZ" --notes "$Description"
 
-    Write-Host "TERMINE ! Release a jour : https://github.com/Connacri/wifiCrack/releases/tag/1.0.2"
+    Write-Host "TERMINE ! Release a jour : https://github.com/Connacri/wifiCrack/releases/tag/v1.0.4"
 } catch {
     Write-Host "Erreur GitHub : Echec de la mise a jour de la release."
     exit 1
