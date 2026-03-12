@@ -32,6 +32,22 @@ class CctvProduct {
     );
   }
 
+  Map<String, dynamic> toMap({bool includeId = false}) {
+    final data = <String, dynamic>{
+      'name': name,
+      'description': description,
+      'price': price,
+      'image_url': imageUrl,
+      'category': category,
+      'stock': stock,
+      'is_active': isActive,
+    };
+    if (includeId && id.isNotEmpty) {
+      data['id'] = id;
+    }
+    return data;
+  }
+
   static double _toDouble(dynamic value) {
     if (value == null) return 0;
     if (value is num) return value.toDouble();

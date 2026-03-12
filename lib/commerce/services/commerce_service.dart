@@ -13,9 +13,14 @@ class CommerceService {
   Future<List<CctvProduct>> fetchProducts({
     String? query,
     String? category,
+    bool includeInactive = false,
   }) async {
     try {
-      var builder = _client.from('cctv_products').select().eq('is_active', true);
+      var builder = _client.from('cctv_products').select();
+
+      if (!includeInactive) {
+        builder = builder.eq('is_active', true);
+      }
 
       if (category != null && category.trim().isNotEmpty) {
         builder = builder.eq('category', category.trim());
@@ -33,6 +38,48 @@ class CommerceService {
       return list.map(CctvProduct.fromMap).toList();
     } catch (e) {
       debugPrint('[Commerce] fetchProducts error: $e');
+      rethrow;
+    }
+  }
+
+  Future<CctvProduct?> createProduct(CctvProduct product) async {
+    try {
+      final res = await _client
+          .from('cctv_products')
+          .insert(product.toMap())
+          .select()
+          .maybeSingle();
+      if (res == null) return null;
+      return CctvProduct.fromMap(res);
+    } catch (e) {
+      debugPrint('[Commerce] createProduct error: $e');
+      rethrow;
+    }
+  }
+
+  Future<CctvProduct?> updateProduct(CctvProduct product) async {
+    if (product.id.isEmpty) return null;
+    try {
+      final res = await _client
+          .from('cctv_products')
+          .update(product.toMap())
+          .eq('id', product.id)
+          .select()
+          .maybeSingle();
+      if (res == null) return null;
+      return CctvProduct.fromMap(res);
+    } catch (e) {
+      debugPrint('[Commerce] updateProduct error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteProduct(String productId) async {
+    if (productId.isEmpty) return;
+    try {
+      await _client.from('cctv_products').delete().eq('id', productId);
+    } catch (e) {
+      debugPrint('[Commerce] deleteProduct error: $e');
       rethrow;
     }
   }

@@ -11,12 +11,16 @@ class CommerceProvider extends ChangeNotifier {
 
   List<CctvProduct> _products = [];
   bool _loading = false;
+  bool _includeInactive = true;
+  String? _lastQuery;
+  String? _lastCategory;
   String? _error;
 
   final Map<String, CartItem> _cart = {};
 
   List<CctvProduct> get products => _products;
   bool get isLoading => _loading;
+  bool get includeInactive => _includeInactive;
   String? get error => _error;
 
   List<CartItem> get cartItems {
@@ -31,7 +35,16 @@ class CommerceProvider extends ChangeNotifier {
   double get total =>
       _cart.values.fold(0, (sum, item) => sum + item.subtotal);
 
-  Future<void> loadProducts({String? query, String? category}) async {
+  Future<void> loadProducts({
+    String? query,
+    String? category,
+    bool? includeInactive,
+  }) async {
+    _lastQuery = query;
+    _lastCategory = category;
+    if (includeInactive != null) {
+      _includeInactive = includeInactive;
+    }
     _loading = true;
     _error = null;
     notifyListeners();
@@ -39,12 +52,49 @@ class CommerceProvider extends ChangeNotifier {
       _products = await _service.fetchProducts(
         query: query,
         category: category,
+        includeInactive: _includeInactive,
       );
     } catch (e) {
       _error = e.toString();
     } finally {
       _loading = false;
       notifyListeners();
+    }
+  }
+
+  void setIncludeInactive(bool value) {
+    if (_includeInactive == value) return;
+    _includeInactive = value;
+    loadProducts(query: _lastQuery, category: _lastCategory);
+  }
+
+  Future<bool> saveProduct(CctvProduct product) async {
+    try {
+      final isNew = product.id.isEmpty;
+      final saved = isNew
+          ? await _service.createProduct(product)
+          : await _service.updateProduct(product);
+      if (saved == null) return false;
+      await loadProducts(query: _lastQuery, category: _lastCategory);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteProduct(String productId) async {
+    try {
+      await _service.deleteProduct(productId);
+      _products.removeWhere((p) => p.id == productId);
+      _cart.remove(productId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 

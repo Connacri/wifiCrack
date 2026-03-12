@@ -35,6 +35,7 @@ class _CommerceViewState extends State<_CommerceView> {
   final _addressCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
   bool _placingOrder = false;
+  bool _openingProductForm = false;
 
   @override
   void dispose() {
@@ -92,6 +93,215 @@ class _CommerceViewState extends State<_CommerceView> {
     }
   }
 
+  Future<void> _openProductForm({
+    required CommerceProvider provider,
+    CctvProduct? product,
+  }) async {
+    if (_openingProductForm) return;
+    _openingProductForm = true;
+    final nameCtrl = TextEditingController(text: product?.name ?? '');
+    final descCtrl = TextEditingController(text: product?.description ?? '');
+    final priceCtrl = TextEditingController(
+      text: product != null ? product.price.toStringAsFixed(2) : '',
+    );
+    final imageCtrl = TextEditingController(text: product?.imageUrl ?? '');
+    final categoryCtrl = TextEditingController(text: product?.category ?? '');
+    final stockCtrl =
+        TextEditingController(text: product?.stock?.toString() ?? '');
+    bool isActive = product?.isActive ?? true;
+    bool saving = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          Future<void> onSave() async {
+            final name = nameCtrl.text.trim();
+            final price =
+                double.tryParse(priceCtrl.text.trim().replaceAll(',', '.'));
+
+            if (name.isEmpty || price == null) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Name and price are required.')),
+              );
+              return;
+            }
+
+            setSheetState(() => saving = true);
+            final newProduct = CctvProduct(
+              id: product?.id ?? '',
+              name: name,
+              description: descCtrl.text.trim().isEmpty
+                  ? null
+                  : descCtrl.text.trim(),
+              price: price,
+              imageUrl:
+                  imageCtrl.text.trim().isEmpty ? null : imageCtrl.text.trim(),
+              category: categoryCtrl.text.trim().isEmpty
+                  ? null
+                  : categoryCtrl.text.trim(),
+              stock: stockCtrl.text.trim().isEmpty
+                  ? null
+                  : int.tryParse(stockCtrl.text.trim()),
+              isActive: isActive,
+            );
+
+            final ok = await provider.saveProduct(newProduct);
+            if (!mounted) return;
+
+            setSheetState(() => saving = false);
+            if (ok) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(product == null
+                      ? 'Product created.'
+                      : 'Product updated.'),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Save failed.')),
+              );
+            }
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product == null ? 'Add product' : 'Edit product',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descCtrl,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: priceCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Price (DZD)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: imageCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Image URL',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: categoryCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: stockCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Stock',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: isActive,
+                    title: const Text('Active'),
+                    onChanged: (value) => setSheetState(() {
+                      isActive = value;
+                    }),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: saving ? null : onSave,
+                      child: Text(saving ? 'Saving...' : 'Save'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    nameCtrl.dispose();
+    descCtrl.dispose();
+    priceCtrl.dispose();
+    imageCtrl.dispose();
+    categoryCtrl.dispose();
+    stockCtrl.dispose();
+    _openingProductForm = false;
+  }
+
+  Future<void> _confirmDelete(
+    CommerceProvider provider,
+    CctvProduct product,
+  ) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete product'),
+        content: Text('Delete "${product.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok != true) return;
+    final deleted = await provider.deleteProduct(product.id);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(deleted ? 'Product deleted.' : 'Delete failed.'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CommerceProvider>();
@@ -108,6 +318,11 @@ class _CommerceViewState extends State<_CommerceView> {
                   : () => provider.loadProducts(query: _searchCtrl.text),
               icon: const Icon(Icons.refresh),
             ),
+            IconButton(
+              tooltip: 'Add product',
+              onPressed: () => _openProductForm(provider: provider),
+              icon: const Icon(Icons.add),
+            ),
           ],
           bottom: TabBar(
             tabs: [
@@ -121,6 +336,12 @@ class _CommerceViewState extends State<_CommerceView> {
             _ProductsTab(
               provider: provider,
               searchCtrl: _searchCtrl,
+              includeInactive: provider.includeInactive,
+              onToggleInactive: provider.setIncludeInactive,
+              onAddProduct: () => _openProductForm(provider: provider),
+              onEditProduct: (product) =>
+                  _openProductForm(provider: provider, product: product),
+              onDeleteProduct: (product) => _confirmDelete(provider, product),
             ),
             _CartTab(
               provider: provider,
@@ -140,10 +361,20 @@ class _CommerceViewState extends State<_CommerceView> {
 class _ProductsTab extends StatelessWidget {
   final CommerceProvider provider;
   final TextEditingController searchCtrl;
+  final bool includeInactive;
+  final ValueChanged<bool> onToggleInactive;
+  final VoidCallback onAddProduct;
+  final ValueChanged<CctvProduct> onEditProduct;
+  final ValueChanged<CctvProduct> onDeleteProduct;
 
   const _ProductsTab({
     required this.provider,
     required this.searchCtrl,
+    required this.includeInactive,
+    required this.onToggleInactive,
+    required this.onAddProduct,
+    required this.onEditProduct,
+    required this.onDeleteProduct,
   });
 
   @override
@@ -169,6 +400,26 @@ class _ProductsTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: includeInactive,
+                  title: const Text('Show inactive'),
+                  onChanged: onToggleInactive,
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: onAddProduct,
+                icon: const Icon(Icons.add),
+                label: const Text('Add'),
+              ),
+            ],
           ),
         ),
         if (provider.isLoading)
@@ -215,6 +466,8 @@ class _ProductsTab extends StatelessWidget {
                 return _ProductCard(
                   product: product,
                   onAdd: () => provider.addToCart(product),
+                  onEdit: () => onEditProduct(product),
+                  onDelete: () => onDeleteProduct(product),
                 );
               },
             ),
@@ -227,10 +480,14 @@ class _ProductsTab extends StatelessWidget {
 class _ProductCard extends StatelessWidget {
   final CctvProduct product;
   final VoidCallback onAdd;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   const _ProductCard({
     required this.product,
     required this.onAdd,
+    required this.onEdit,
+    required this.onDelete,
   });
 
   @override
@@ -302,10 +559,27 @@ class _ProductCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            FilledButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add_shopping_cart),
-              label: const Text('Add'),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FilledButton.icon(
+                  onPressed: onAdd,
+                  icon: const Icon(Icons.add_shopping_cart),
+                  label: const Text('Add'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Edit'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Delete'),
+                ),
+              ],
             ),
           ],
         ),
@@ -363,6 +637,14 @@ class _CartTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: provider.clearCart,
+              icon: const Icon(Icons.delete_sweep),
+              label: const Text('Clear cart'),
+            ),
+          ),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
