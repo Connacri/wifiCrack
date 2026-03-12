@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../0-claude/main.dart' as claude;
 import '../../Mistral2laude/entry_screen.dart';
+import '../../commerce/screens/commerce_screen.dart';
 import '../../data/sources/ad_service.dart';
 import '../../data/sources/local_storage.dart';
 import '../../data/sources/wifi_service.dart';
@@ -209,6 +210,24 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildStatusHeader(wifi, userData, supabase),
             const SizedBox(height: 10),
             HomeBanner(supabase: supabase),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CommerceScreen(
+                        userId: userData.deviceId,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.storefront),
+                  label: const Text("Commerce CCTV"),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: SizedBox(
