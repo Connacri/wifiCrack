@@ -2,7 +2,7 @@ name: comwificrack
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.5+1
+version: 1.0.6+2
 
 environment:
   sdk: ^3.10.4
@@ -75,9 +75,10 @@ dependencies:
   shimmer: ^3.0.0
   flutter_svg: ^2.2.4
 #----------------------------------------
-  http: ^1.1.0             # Requêtes HTTP (si besoin)
+  http: ^1.1.0
   workmanager: ^0.9.0+3      # Tâches en arrière-plan (polling)
   share_plus: ^12.0.1
+  file_picker: ^10.3.10
 
 dev_dependencies:
   flutter_test:
@@ -116,3 +117,4 @@ flutter:
     - assets/
     - assets/splash.png
     - assets/sounds/
+

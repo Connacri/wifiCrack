@@ -3,19 +3,25 @@ class CctvProduct {
   final String name;
   final String? description;
   final double price;
+  final double? promoPrice;
+  final String? sku;
   final String? imageUrl;
   final String? category;
   final int? stock;
+  final int popularity;
   final bool isActive;
 
   const CctvProduct({
     required this.id,
     required this.name,
     required this.price,
+    this.promoPrice,
+    this.sku,
     this.description,
     this.imageUrl,
     this.category,
     this.stock,
+    this.popularity = 0,
     this.isActive = true,
   });
 
@@ -25,9 +31,12 @@ class CctvProduct {
       name: map['name']?.toString() ?? 'Unknown',
       description: map['description']?.toString(),
       price: _toDouble(map['price']),
+      promoPrice: _toNullableDouble(map['promo_price']),
+      sku: map['sku']?.toString(),
       imageUrl: map['image_url']?.toString(),
       category: map['category']?.toString(),
       stock: _toInt(map['stock']),
+      popularity: _toInt(map['popularity']) ?? 0,
       isActive: _toBool(map['is_active'], defaultValue: true),
     );
   }
@@ -37,9 +46,12 @@ class CctvProduct {
       'name': name,
       'description': description,
       'price': price,
+      'promo_price': promoPrice,
+      'sku': sku,
       'image_url': imageUrl,
       'category': category,
       'stock': stock,
+      'popularity': popularity,
       'is_active': isActive,
     };
     if (includeId && id.isNotEmpty) {
@@ -52,6 +64,12 @@ class CctvProduct {
     if (value == null) return 0;
     if (value is num) return value.toDouble();
     return double.tryParse(value.toString()) ?? 0;
+  }
+
+  static double? _toNullableDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 
   static int? _toInt(dynamic value) {
@@ -69,4 +87,14 @@ class CctvProduct {
     if (str == 'false' || str == '0' || str == 'no') return false;
     return defaultValue;
   }
+
+  double get effectivePrice {
+    final promo = promoPrice;
+    if (promo != null && promo > 0 && promo < price) {
+      return promo;
+    }
+    return price;
+  }
+
+  bool get isOnPromo => promoPrice != null && promoPrice! > 0 && promoPrice! < price;
 }

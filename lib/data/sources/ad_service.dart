@@ -35,7 +35,7 @@ class AdService with WidgetsBindingObserver {
 
   /// Initialise le SDK Google Ads et prépare les pubs
   static Future<void> initialize() async {
-    if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+    if (!isSupportedPlatform) {
       debugPrint("ℹ️ AdMob non supporté sur cette plateforme.");
       return;
     }
@@ -126,6 +126,7 @@ class AdService with WidgetsBindingObserver {
 
   /// --- INTERSTITIAL AD (Scan) ---
   void loadInterstitialAd() {
+    if (!isSupportedPlatform) return;
     if (_isInterstitialLoading || _interstitialAd != null) return;
     _isInterstitialLoading = true;
     
@@ -147,6 +148,7 @@ class AdService with WidgetsBindingObserver {
   }
 
   void showInterstitialAd() {
+    if (!isSupportedPlatform) return;
     if (_interstitialAd == null) {
       loadInterstitialAd();
       return;
@@ -170,6 +172,7 @@ class AdService with WidgetsBindingObserver {
 
   /// --- REWARDED AD ---
   void loadRewardedAd() {
+    if (!isSupportedPlatform) return;
     if (_isRewardedLoading || _rewardedAd != null) return;
     _isRewardedLoading = true;
 
@@ -191,6 +194,10 @@ class AdService with WidgetsBindingObserver {
   }
 
   void showRewardedAd(Function onRewardEarned, Function onAdClosed) {
+    if (!isSupportedPlatform) {
+      onAdClosed();
+      return;
+    }
     if (_rewardedAd == null) {
       loadRewardedAd();
       onAdClosed();
@@ -220,6 +227,7 @@ class AdService with WidgetsBindingObserver {
 
   /// --- BANNER AD ---
   BannerAd? getBannerAd() {
+    if (!isSupportedPlatform) return null;
     return BannerAd(
       adUnitId: bannerId,
       size: AdSize.banner,
@@ -235,6 +243,10 @@ class AdService with WidgetsBindingObserver {
 
   /// --- REWARDED INTERSTITIAL ---
   void showRewardedInterstitialAd(Function onRewardEarned) {
+    if (!isSupportedPlatform) {
+      onRewardEarned();
+      return;
+    }
     RewardedInterstitialAd.load(
       adUnitId: rewardedInterstitialId,
       request: const AdRequest(),
@@ -255,7 +267,8 @@ class AdService with WidgetsBindingObserver {
   }
 
   /// --- NATIVE AD ---
-  NativeAd getNativeAd(VoidCallback onLoaded) {
+  NativeAd? getNativeAd(VoidCallback onLoaded) {
+    if (!isSupportedPlatform) return null;
     return NativeAd(
       adUnitId: nativeId,
       factoryId: 'adFactoryExample',
@@ -269,4 +282,7 @@ class AdService with WidgetsBindingObserver {
       ),
     )..load();
   }
+
+  static bool get isSupportedPlatform =>
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 }

@@ -16,5 +16,5 @@ class CartItem {
     );
   }
 
-  double get subtotal => product.price * quantity;
+  double get subtotal => product.effectivePrice * quantity;
 }

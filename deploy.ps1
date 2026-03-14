@@ -1,54 +1,115 @@
 # Stopper le script en cas d'erreur
 $ErrorActionPreference = "Stop"
 
-$Description = "Mise en place de l'automatisation du deploiement : script PowerShell integrant le build Flutter avec obfuscation, le commit/push Git et la mise a jour automatique de la release GitHub v1.0.5."
+Write-Host "--- DEBUT DU DEPLOIEMENT AUTOMATISE ---"
 
-Write-Host "--- DEBUT DU DEPLOIEMENT ---"
-
-# 1. Git : Synchronisation et Sauvegarde
+# 1. Recuperation de la version actuelle depuis GitHub
+Write-Host "Recuperation de la derniere version sur GitHub..."
 try {
-    Write-Host "Sauvegarde du code..."
-    git add .
-    # On tente le commit, on ignore s'il n'y a rien de nouveau
-    git commit -m "$Description" 2>$null 
-    
-    Write-Host "Synchronisation avec GitHub (Pull)..."
-    git pull --rebase origin main
-    
-    Write-Host "Envoi vers GitHub (Push)..."
-    git push origin main
+    # On recupere la derniere release via l'API GitHub CLI
+    $latestTag = gh release list --limit 1 --json tagName --jq ".[0].tagName"
+    if ($latestTag) {
+        Write-Host "Dernier tag detecte : $latestTag"
+        
+        # Extraction des composants (v1.0.5 -> 1, 0, 5)
+        $versionStr = $latestTag.TrimStart('v')
+        $parts = $versionStr.Split('.')
+        $major = [int]$parts[0]
+        $minor = [int]$parts[1]
+        $patch = [int]$parts[2]
+        
+        # Increment du patch pour la nouvelle version
+        $patch++
+        $newVersion = "$major.$minor.$patch"
+    } else {
+        $newVersion = "1.0.0"
+        Write-Host "Aucune release trouvee. Initialisation a v1.0.0"
+    }
 } catch {
-    Write-Host "Erreur Git : Le script s'arrete pour securite."
-    exit 1
+    Write-Host "Erreur gh cli ou aucune release. On lit pubspec.yaml..."
+    $pubspec = Get-Content "pubspec.yaml" -Raw
+    if ($pubspec -match "version: (\d+\.\d+\.\d+)\+(\d+)") {
+        $newVersion = $matches[1]
+        Write-Host "Version lue depuis pubspec : $newVersion"
+    } else {
+        $newVersion = "1.0.0"
+    }
 }
 
-# 2. Flutter : Build
-Write-Host "Compilation de l'APK (Release + Obfuscation)..."
-# On change l'action preference temporairement car flutter build peut emettre des warnings consideres comme erreurs
+$newTag = "v$newVersion"
+Write-Host ">>> Nouvelle version cible : $newTag <<<"
+
+# 2. Mise a jour des fichiers (Versionnage)
+Write-Host "Mise a jour de pubspec.yaml..."
+$pubspecPath = "pubspec.yaml"
+$pubspecContent = Get-Content $pubspecPath -Raw
+if ($pubspecContent -match "version: (\d+\.\d+\.\d+)\+(\d+)") {
+    $oldBuildNumber = [int]$matches[2]
+    $newBuildNumber = $oldBuildNumber + 1
+    $newFullVersion = "$newVersion+$newBuildNumber"
+    $pubspecContent = $pubspecContent -replace "version: \d+\.\d+\.\d+\+\d+", "version: $newFullVersion"
+    Set-Content $pubspecPath $pubspecContent
+    Write-Host "   -> pubspec.yaml : $newFullVersion"
+}
+
+Write-Host "Mise a jour de pubspec.lock..."
+$lockPath = "pubspec.lock"
+if (Test-Path $lockPath) {
+    $lockContent = Get-Content $lockPath -Raw
+    # Remplacement spécifique pour le package principal si possible, sinon global pour la version '1.0.x'
+    $lockContent = $lockContent -replace 'version: "\d+\.\d+\.\d+"', "version: `"$newVersion`""
+    Set-Content $lockPath $lockContent
+    Write-Host "   -> pubspec.lock mis a jour."
+}
+
+Write-Host "Mise a jour de index.html..."
+$indexPath = "index.html"
+if (Test-Path $indexPath) {
+    $indexContent = Get-Content $indexPath -Raw
+    # On remplace toutes les occurrences de v1.0.x par le nouveau tag
+    $indexContent = [regex]::Replace($indexContent, "v\d+\.\d+\.\d+", $newTag)
+    # On remplace aussi les mentions "Version 1.0.x"
+    $indexContent = [regex]::Replace($indexContent, "Version \d+\.\d+\.\d+", "Version $newVersion")
+    # Mise a jour du lien de telechargement APK specifique
+    $indexContent = [regex]::Replace($indexContent, "/download/v\d+\.\d+\.\d+/", "/download/$newTag/")
+    
+    Set-Content $indexPath $indexContent
+    Write-Host "   -> index.html mis a jour."
+}
+
+# 3. Generation de la description basee sur l'historique
+$history = git log -n 5 --pretty=format:"- %s" | Out-String
+$description = "Release $newTag`n`nModifications recentes :`n$history"
+Write-Host "Description preparee."
+
+# 4. Git : Commit & Push
+Write-Host "Synchronisation Git..."
+git add .
+$commitMsg = "chore: bump version to $newTag and update metadata"
+# On ignore l'erreur si rien a committer
+git commit -m "$commitMsg" 2>$null
+git push origin main
+
+# 5. Flutter : Build
+Write-Host "Compilation Flutter APK (Obfuscated)..."
 $ErrorActionPreference = "Continue"
 flutter build apk --release --obfuscate --split-debug-info=build/app/outputs/symbols
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Erreur Build : Echec de la compilation."
+    Write-Host "ERREUR : La compilation a echoue."
     exit 1
 }
 
-# 3. GitHub : Release
+# 6. GitHub Release
+Write-Host "Publication de la release sur GitHub..."
+$apkPath = "build\app\outputs\flutter-apk\app-release.apk"
 try {
-    $tag = "v1.0.5"
-    $apkPath = "build\app\outputs\flutter-apk\app-release.apk"
-
-    Write-Host "Remplacement de la release $tag..."
-    # On ignore les erreurs si la release n'existe pas encore
-    gh release delete $tag --yes 2>$null
-    git push --delete origin $tag 2>$null
-    git tag -d $tag 2>$null
-
-    Write-Host "Upload de l'APK..."
-    gh release create $tag $apkPath --title "WI-FI Crack Fiber DZ" --notes "$Description"
-
-    Write-Host "TERMINE ! Release a jour : https://github.com/Connacri/wifiCrack/releases/tag/v1.0.5"
+    # On supprime si tag deja localement ou erreur de tag pre-existant
+    gh release create $newTag $apkPath --title "WI-FI Crack Fiber DZ $newTag" --notes "$description"
+    Write-Host "SUCCES ! Release $newTag est en ligne."
 } catch {
-    Write-Host "Erreur GitHub : Echec de la mise a jour de la release."
+    Write-Host "ERREUR : Impossible de creer la release GitHub (peut-etre que le tag existe deja ?)."
     exit 1
 }
+
+Write-Host "--- DEPLOIEMENT TERMINE ---"

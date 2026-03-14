@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/cart_item.dart';
+import '../models/cctv_order.dart';
 import '../models/cctv_product.dart';
 
 class CommerceService {
@@ -14,6 +15,8 @@ class CommerceService {
     String? query,
     String? category,
     bool includeInactive = false,
+    int offset = 0,
+    int limit = 30,
   }) async {
     try {
       var builder = _client.from('cctv_products').select();
@@ -29,11 +32,13 @@ class CommerceService {
       if (query != null && query.trim().isNotEmpty) {
         final q = query.trim();
         builder = builder.or(
-          'name.ilike.%$q%,description.ilike.%$q%',
+          'name.ilike.%$q%,description.ilike.%$q%,sku.ilike.%$q%',
         );
       }
 
-      final data = await builder.order('name');
+      final data = await builder
+          .order('name')
+          .range(offset, offset + limit - 1);
       final list = List<Map<String, dynamic>>.from(data as List);
       return list.map(CctvProduct.fromMap).toList();
     } catch (e) {
@@ -106,7 +111,7 @@ class CommerceService {
               (item) => {
                 'product_id': item.product.id,
                 'name': item.product.name,
-                'price': item.product.price,
+                'price': item.product.effectivePrice,
                 'quantity': item.quantity,
                 'subtotal': item.subtotal,
               },
@@ -114,15 +119,45 @@ class CommerceService {
             .toList(),
       };
 
-      final res = await _client
-          .from('cctv_orders')
-          .insert(payload)
-          .select('id')
-          .maybeSingle();
-
-      return res?['id']?.toString();
+      await _client.from('cctv_orders').insert(payload);
+      return '';
     } catch (e) {
       debugPrint('[Commerce] createOrder error: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<CctvOrder>> fetchOrders({
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    try {
+      final data = await _client
+          .from('cctv_orders')
+          .select()
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+      final list = List<Map<String, dynamic>>.from(data as List);
+      return list.map(CctvOrder.fromMap).toList();
+    } catch (e) {
+      debugPrint('[Commerce] fetchOrders error: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> updateOrderStatus({
+    required String orderId,
+    required String status,
+  }) async {
+    if (orderId.trim().isEmpty) return false;
+    try {
+      await _client
+          .from('cctv_orders')
+          .update({'status': status})
+          .eq('id', orderId);
+      return true;
+    } catch (e) {
+      debugPrint('[Commerce] updateOrderStatus error: $e');
       rethrow;
     }
   }
