@@ -37,6 +37,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
   Future<void> _logout(BuildContext context) async {
     final storage = context.read<LocalStorageDataSource>();
     await storage.setAdminLoggedIn(false);
+    await storage.setAdminRole(null);
     if (context.mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(

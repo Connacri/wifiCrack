@@ -66,15 +66,15 @@ Write-Host "Mise a jour de index.html..."
 $indexPath = "index.html"
 if (Test-Path $indexPath) {
     $indexContent = Get-Content $indexPath -Raw
-    # On remplace toutes les occurrences de v1.0.x par le nouveau tag
-    $indexContent = [regex]::Replace($indexContent, "v\d+\.\d+\.\d+", $newTag)
+    # On remplace toutes les occurrences de v1.0.x ou V1.0.x par le nouveau tag (insensible à la casse)
+    $indexContent = [regex]::Replace($indexContent, "(?i)v\d+\.\d+\.\d+", $newTag)
     # On remplace aussi les mentions "Version 1.0.x"
     $indexContent = [regex]::Replace($indexContent, "Version \d+\.\d+\.\d+", "Version $newVersion")
     # Mise a jour du lien de telechargement APK specifique
     $indexContent = [regex]::Replace($indexContent, "/download/v\d+\.\d+\.\d+/", "/download/$newTag/")
     
     Set-Content $indexPath $indexContent
-    Write-Host "   -> index.html mis a jour."
+    Write-Host "   -> index.html mis a jour avec $newTag."
 }
 
 # 3. Generation de la description basee sur l'historique

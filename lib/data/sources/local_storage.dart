@@ -122,6 +122,21 @@ class LocalStorageDataSource {
     await _prefs?.setBool('sigma_admin_logged_in', value);
   }
 
+  String? getAdminRole() {
+    return _prefs?.getString('sigma_admin_role');
+  }
+
+  Future<void> setAdminRole(String? role) async {
+    if (!_isInitialized || _prefs == null) {
+      await initialize();
+    }
+    if (role == null) {
+      await _prefs?.remove('sigma_admin_role');
+    } else {
+      await _prefs?.setString('sigma_admin_role', role);
+    }
+  }
+
   String? getPseudo() {
     return _prefs?.getString('sigma_user_pseudo');
   }

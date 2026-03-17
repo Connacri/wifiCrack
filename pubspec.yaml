@@ -2,7 +2,7 @@ name: comwificrack
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.7+3
+version: 1.0.8+4
 
 environment:
   sdk: ^3.10.4
@@ -38,7 +38,7 @@ dependencies:
   # --- DEPENDANCES EXPERTES AUDIO & P2P ---
   record: ^6.2.0
   audioplayers: ^6.6.0
-  flutter_webrtc: ^1.3.1
+  flutter_webrtc: ^1.4.0
   path_provider: ^2.1.5
   sqflite: ^2.4.2
   flutter_local_notifications: ^21.0.0
@@ -75,10 +75,13 @@ dependencies:
   shimmer: ^3.0.0
   flutter_svg: ^2.2.4
 #----------------------------------------
-  http: ^1.1.0
+  http: ^1.6.0
   workmanager: ^0.9.0+3      # Tâches en arrière-plan (polling)
   share_plus: ^12.0.1
   file_picker: ^10.3.10
+  flutter_localizations:
+    sdk: flutter
+#  flutter_localization: ^0.3.3
 
 dev_dependencies:
   flutter_test:
@@ -112,10 +115,12 @@ flutter_native_splash:
   web_image_mode: cover
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/
     - assets/splash.png
     - assets/sounds/
+
 
 

@@ -9,12 +9,13 @@ import 'package:uuid/uuid.dart';
 
 import '../commerce_config.dart';
 import '../models/cart_item.dart';
+import '../models/commerce_enums.dart';
 import '../models/order.dart';
 import '../models/product.dart';
-import '../models/commerce_enums.dart';
 import '../providers/commerce_provider.dart';
 import '../services/commerce_service.dart';
 import 'order_details_screen.dart';
+import 'product_detail_screen.dart';
 
 enum ProductSort {
   nameAsc,
@@ -26,6 +27,12 @@ enum ProductSort {
 }
 
 enum OrderSort { dateDesc, dateAsc, totalDesc, totalAsc }
+
+void _openDetail(BuildContext context, Product product) {
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+  );
+}
 
 class CommerceScreen extends StatelessWidget {
   final String? userId;
@@ -413,10 +420,7 @@ class _ProductsTabState extends State<_ProductsTab> {
     return ['All', ...list];
   }
 
-  List<Product> _applyFilters(
-    List<Product> products,
-    String activeCategory,
-  ) {
+  List<Product> _applyFilters(List<Product> products, String activeCategory) {
     var filtered = products;
 
     if (activeCategory != 'All') {
@@ -898,7 +902,9 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
         : int.tryParse(popularityText) ?? 0;
 
     setState(() => _saving = true);
-    debugPrint('[Commerce] Attempting to save product: ${name} (ID: ${widget.product?.id ?? "new"})');
+    debugPrint(
+      '[Commerce] Attempting to save product: ${name} (ID: ${widget.product?.id ?? "new"})',
+    );
     final product = Product(
       id: widget.product?.id ?? '',
       name: name,
@@ -917,7 +923,9 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       isActive: _isActive,
     );
 
-    debugPrint('[Commerce] Product data to map: ${product.toMap(includeId: true)}');
+    debugPrint(
+      '[Commerce] Product data to map: ${product.toMap(includeId: true)}',
+    );
     final ok = await widget.provider.saveProduct(product);
     if (!mounted) return;
 
@@ -937,7 +945,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
     if (_uploadingImage) return;
     final bucket = CommerceConfig.supabaseImagesBucket.trim();
     debugPrint('[Commerce] Starting image pick. Bucket: "$bucket"');
-    
+
     if (bucket.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -969,8 +977,10 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       final safeExt = extension.isEmpty ? 'jpg' : extension;
       final fileName = '${Uuid().v4()}.$safeExt';
       final contentType = _contentTypeForExtension(safeExt);
-      
-      debugPrint('[Commerce] Prepared upload: fileName=$fileName, contentType=$contentType, size=${bytes.length} bytes');
+
+      debugPrint(
+        '[Commerce] Prepared upload: fileName=$fileName, contentType=$contentType, size=${bytes.length} bytes',
+      );
 
       await Supabase.instance.client.storage
           .from(bucket)
@@ -1284,6 +1294,7 @@ class _ProductCard extends StatelessWidget {
     final showPopularity = popularity > 0;
     final sku = product.sku?.trim();
     final hasSku = sku != null && sku.isNotEmpty;
+    final heroTag = 'product-hero-${product.id}';
     final originalPriceStyle = (theme.textTheme.labelSmall ?? const TextStyle())
         .copyWith(
           decoration: TextDecoration.lineThrough,
@@ -1291,145 +1302,153 @@ class _ProductCard extends StatelessWidget {
         );
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (hasImage)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  resolvedImageUrl!,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _openDetail(context, product),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (hasImage)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Hero(
+                    tag: heroTag,
+                    child: Image.network(
+                      resolvedImageUrl!,
+                      width: 86,
+                      height: 86,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                )
+              else
+                Container(
                   width: 86,
                   height: 86,
-                  fit: BoxFit.cover,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceVariant,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Hero(tag: heroTag, child: const Icon(Icons.videocam)),
                 ),
-              )
-            else
-              Container(
-                width: 86,
-                height: 86,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.videocam),
-              ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            product.name,
+                            style: theme.textTheme.titleMedium,
+                          ),
+                        ),
+                        if (isAdmin && (onEdit != null || onDelete != null))
+                          PopupMenuButton<String>(
+                            onSelected: (value) {
+                              if (value == 'edit') {
+                                onEdit?.call();
+                              } else if (value == 'delete') {
+                                onDelete?.call();
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              if (onEdit != null)
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text('Edit'),
+                                ),
+                              if (onDelete != null)
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text('Delete'),
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                    if (product.description != null &&
+                        product.description!.trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          product.name,
-                          style: theme.textTheme.titleMedium,
+                          product.description!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall,
                         ),
                       ),
-                      if (isAdmin && (onEdit != null || onDelete != null))
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'edit') {
-                              onEdit?.call();
-                            } else if (value == 'delete') {
-                              onDelete?.call();
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            if (onEdit != null)
-                              const PopupMenuItem(
-                                value: 'edit',
-                                child: Text('Edit'),
-                              ),
-                            if (onDelete != null)
-                              const PopupMenuItem(
-                                value: 'delete',
-                                child: Text('Delete'),
-                              ),
-                          ],
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        _Tag(
+                          text:
+                              '${product.effectivePrice.toStringAsFixed(2)} DZD',
                         ),
-                    ],
+                        if (isOnPromo)
+                          _Tag(
+                            text: '${product.price.toStringAsFixed(2)} DZD',
+                            style: originalPriceStyle,
+                          ),
+                        if (isOnPromo)
+                          const _StatusBadge(text: 'Promo', color: Colors.pink),
+                        if (showPopularity)
+                          _Tag(text: 'Popularity: $popularity'),
+                        if (isAdmin && hasSku) _Tag(text: 'SKU: $sku'),
+                        if (product.category != null &&
+                            product.category!.trim().isNotEmpty)
+                          _Tag(text: product.category!),
+                        if (product.stock != null)
+                          _Tag(text: 'Stock: ${product.stock}'),
+                        if (!product.isActive)
+                          const _StatusBadge(
+                            text: 'Inactive',
+                            color: Colors.grey,
+                          ),
+                        if (isOutOfStock)
+                          const _StatusBadge(
+                            text: 'Out of stock',
+                            color: Colors.red,
+                          )
+                        else if (isLowStock)
+                          const _StatusBadge(
+                            text: 'Low stock',
+                            color: Colors.orange,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FilledButton.icon(
+                    onPressed: canAdd ? onAdd : null,
+                    icon: const Icon(Icons.add_shopping_cart),
+                    label: const Text('Add'),
                   ),
-                  if (product.description != null &&
-                      product.description!.trim().isNotEmpty)
+                  if (isOutOfStock)
                     Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.only(top: 6),
                       child: Text(
-                        product.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall,
+                        'Unavailable',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: Colors.red,
+                        ),
                       ),
                     ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      _Tag(
-                        text:
-                            '${product.effectivePrice.toStringAsFixed(2)} DZD',
-                      ),
-                      if (isOnPromo)
-                        _Tag(
-                          text: '${product.price.toStringAsFixed(2)} DZD',
-                          style: originalPriceStyle,
-                        ),
-                      if (isOnPromo)
-                        const _StatusBadge(text: 'Promo', color: Colors.pink),
-                      if (showPopularity) _Tag(text: 'Popularity: $popularity'),
-                      if (isAdmin && hasSku) _Tag(text: 'SKU: $sku'),
-                      if (product.category != null &&
-                          product.category!.trim().isNotEmpty)
-                        _Tag(text: product.category!),
-                      if (product.stock != null)
-                        _Tag(text: 'Stock: ${product.stock}'),
-                      if (!product.isActive)
-                        const _StatusBadge(
-                          text: 'Inactive',
-                          color: Colors.grey,
-                        ),
-                      if (isOutOfStock)
-                        const _StatusBadge(
-                          text: 'Out of stock',
-                          color: Colors.red,
-                        )
-                      else if (isLowStock)
-                        const _StatusBadge(
-                          text: 'Low stock',
-                          color: Colors.orange,
-                        ),
-                    ],
-                  ),
                 ],
               ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FilledButton.icon(
-                  onPressed: canAdd ? onAdd : null,
-                  icon: const Icon(Icons.add_shopping_cart),
-                  label: const Text('Add'),
-                ),
-                if (isOutOfStock)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      'Unavailable',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.red,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1469,127 +1488,141 @@ class _ProductGridCard extends StatelessWidget {
           decoration: TextDecoration.lineThrough,
           color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
         );
+    final heroTag = 'product-hero-${product.id}';
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (resolvedImageUrl != null)
-            AspectRatio(
-              aspectRatio: 4 / 3,
-              child: Image.network(resolvedImageUrl, fit: BoxFit.cover),
-            )
-          else
-            Container(
-              height: 120,
-              color: theme.colorScheme.surfaceVariant,
-              alignment: Alignment.center,
-              child: const Icon(Icons.videocam, size: 40),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        product.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall,
-                      ),
-                    ),
-                    if (isAdmin && (onEdit != null || onDelete != null))
-                      PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            onEdit?.call();
-                          } else if (value == 'delete') {
-                            onDelete?.call();
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          if (onEdit != null)
-                            const PopupMenuItem(
-                              value: 'edit',
-                              child: Text('Edit'),
-                            ),
-                          if (onDelete != null)
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Text('Delete'),
-                            ),
-                        ],
-                      ),
-                  ],
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _openDetail(context, product),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (resolvedImageUrl != null)
+              AspectRatio(
+                aspectRatio: 4 / 3,
+                child: Hero(
+                  tag: heroTag,
+                  child: Image.network(resolvedImageUrl, fit: BoxFit.cover),
                 ),
-                const SizedBox(height: 6),
-                if (isOnPromo)
-                  Column(
+              )
+            else
+              Container(
+                height: 120,
+                color: theme.colorScheme.surfaceVariant,
+                alignment: Alignment.center,
+                child: Hero(
+                  tag: heroTag,
+                  child: const Icon(Icons.videocam, size: 40),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '${product.effectivePrice.toStringAsFixed(2)} DZD',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.primary,
+                      Expanded(
+                        child: Text(
+                          product.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall,
                         ),
                       ),
-                      Text(
-                        '${product.price.toStringAsFixed(2)} DZD',
-                        style: originalPriceStyle,
-                      ),
+                      if (isAdmin && (onEdit != null || onDelete != null))
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              onEdit?.call();
+                            } else if (value == 'delete') {
+                              onDelete?.call();
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            if (onEdit != null)
+                              const PopupMenuItem(
+                                value: 'edit',
+                                child: Text('Edit'),
+                              ),
+                            if (onDelete != null)
+                              const PopupMenuItem(
+                                value: 'delete',
+                                child: Text('Delete'),
+                              ),
+                          ],
+                        ),
                     ],
-                  )
-                else
-                  Text(
-                    '${product.price.toStringAsFixed(2)} DZD',
-                    style: theme.textTheme.titleMedium,
                   ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: [
-                    if (isOnPromo)
-                      const _StatusBadge(text: 'Promo', color: Colors.pink),
-                    if (showPopularity) _Tag(text: 'Popularity: $popularity'),
-                    if (isAdmin && hasSku) _Tag(text: 'SKU: $sku'),
-                    if (product.category != null &&
-                        product.category!.trim().isNotEmpty)
-                      _Tag(text: product.category!),
-                    if (product.stock != null)
-                      _Tag(text: 'Stock: ${product.stock}'),
-                    if (!product.isActive)
-                      const _StatusBadge(text: 'Inactive', color: Colors.grey),
-                    if (isOutOfStock)
-                      const _StatusBadge(
-                        text: 'Out of stock',
-                        color: Colors.red,
-                      )
-                    else if (isLowStock)
-                      const _StatusBadge(
-                        text: 'Low stock',
-                        color: Colors.orange,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: canAdd ? onAdd : null,
-                    icon: const Icon(Icons.add_shopping_cart),
-                    label: const Text('Add'),
+                  const SizedBox(height: 6),
+                  if (isOnPromo)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${product.effectivePrice.toStringAsFixed(2)} DZD',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        Text(
+                          '${product.price.toStringAsFixed(2)} DZD',
+                          style: originalPriceStyle,
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      '${product.price.toStringAsFixed(2)} DZD',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      if (isOnPromo)
+                        const _StatusBadge(text: 'Promo', color: Colors.pink),
+                      if (showPopularity) _Tag(text: 'Popularity: $popularity'),
+                      if (isAdmin && hasSku) _Tag(text: 'SKU: $sku'),
+                      if (product.category != null &&
+                          product.category!.trim().isNotEmpty)
+                        _Tag(text: product.category!),
+                      if (product.stock != null)
+                        _Tag(text: 'Stock: ${product.stock}'),
+                      if (!product.isActive)
+                        const _StatusBadge(
+                          text: 'Inactive',
+                          color: Colors.grey,
+                        ),
+                      if (isOutOfStock)
+                        const _StatusBadge(
+                          text: 'Out of stock',
+                          color: Colors.red,
+                        )
+                      else if (isLowStock)
+                        const _StatusBadge(
+                          text: 'Low stock',
+                          color: Colors.orange,
+                        ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: canAdd ? onAdd : null,
+                      icon: const Icon(Icons.add_shopping_cart),
+                      label: const Text('Add'),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2183,4 +2216,3 @@ class _OrderCard extends StatelessWidget {
     }
   }
 }
-

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart';
+
 import '../../0-claude/main.dart' as claude;
 import '../../Mistral2laude/entry_screen.dart';
 import '../../commerce/screens/commerce_screen.dart';
 import '../../data/sources/ad_service.dart';
 import '../../data/sources/local_storage.dart';
-import '../../data/sources/wifi_service.dart';
-import '../providers/wifi_provider.dart';
-import '../../domain/entities/wifi_network.dart';
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/user_data_service.dart';
+import '../../data/sources/wifi_service.dart';
+import '../../domain/entities/wifi_network.dart';
+import '../../l10n/app_localizations.dart';
+import '../providers/wifi_provider.dart';
 import '../widgets/home_carousel.dart';
 import 'admin_screen.dart';
 import 'messenger_screen.dart';
@@ -25,6 +27,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isAdmin = false;
+  String? _adminRole;
 
   @override
   void initState() {
@@ -33,26 +36,55 @@ class _HomeScreenState extends State<HomeScreen> {
       final userData = context.read<UserDataService>();
       final wifiService = context.read<WiFiService>();
       final storage = context.read<LocalStorageDataSource>();
-      
+
       if (mounted) {
         setState(() {
           _isAdmin = storage.isAdminLoggedIn();
+          _adminRole = storage.getAdminRole();
         });
       }
-      
-      // 1. Initialisation forcée (User Registration, Contacts Sync, Messaging)
-      await userData.initializeDataSync();
-      
-      // 2. Vérification matérielle forcée
-      if (mounted) {
-        await _checkHardware(context, wifiService);
-      }
-      
-      // 3. Init WiFi scan
-      if (mounted) {
-        context.read<WiFiProvider>().initialize();
-      }
+
+      // ... existing code ...
     });
+  }
+
+  void _selectRole() {
+    final storage = context.read<LocalStorageDataSource>();
+    final roles = [
+      'wholesaler_admin',
+      'wholesaler_ops',
+      'delivery_admin',
+      'delivery_driver',
+      'customer_service',
+      'admin',
+    ];
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Choisissez votre rôle Admin"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: roles
+              .map(
+                (role) => ListTile(
+                  title: Text(role.replaceAll('_', ' ').toUpperCase()),
+                  onTap: () async {
+                    await storage.setAdminRole(role);
+                    if (mounted) {
+                      setState(() {
+                        _adminRole = role;
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
   }
 
   Future<void> _checkHardware(BuildContext context, WiFiService service) async {
@@ -63,13 +95,16 @@ class _HomeScreenState extends State<HomeScreen> {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: const Text("Configuration Requise", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+            title: const Text(
+              "Configuration Requise",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            ),
             content: const Text(
               "Pour fonctionner, Sigma a besoin de : \n"
               "• WiFi Activé\n"
               "• GPS Activé\n"
               "• Permissions de Localisation\n\n"
-              "Sans cela, vous ne serez pas visible sur la carte Sigma."
+              "Sans cela, vous ne serez pas visible sur la carte Sigma.",
             ),
             actions: [
               FilledButton(
@@ -93,7 +128,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openAdmin(BuildContext context) {
     final storage = context.read<LocalStorageDataSource>();
     if (storage.isAdminLoggedIn()) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminScreen()),
+      );
       return;
     }
 
@@ -116,17 +154,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: InputDecoration(
                   labelText: "Mot de passe Sigma",
                   suffixIcon: IconButton(
-                    icon: Icon(obscureText ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () => setDialogState(() => obscureText = !obscureText),
+                    icon: Icon(
+                      obscureText ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () =>
+                        setDialogState(() => obscureText = !obscureText),
                   ),
                 ),
                 autofocus: true,
               ),
               const SizedBox(height: 10),
               CheckboxListTile(
-                title: const Text("Rester connecté", style: TextStyle(fontSize: 14)),
+                title: const Text(
+                  "Rester connecté",
+                  style: TextStyle(fontSize: 14),
+                ),
                 value: keepLoggedIn,
-                onChanged: (v) => setDialogState(() => keepLoggedIn = v ?? false),
+                onChanged: (v) =>
+                    setDialogState(() => keepLoggedIn = v ?? false),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
               ),
@@ -138,33 +183,45 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Annuler"),
+            ),
             FilledButton(
-              onPressed: isValidating ? null : () async {
-                setDialogState(() => isValidating = true);
-                
-                final dbPassword = await context.read<SupabaseService>().getAdminPassword();
-                
-                if (ctrl.text == dbPassword) {
-                  if (keepLoggedIn) {
-                    await storage.setAdminLoggedIn(true);
-                  }
-                  if (context.mounted) {
-                    setState(() {
-                      _isAdmin = true;
-                    });
-                    Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
-                  }
-                } else {
-                  setDialogState(() => isValidating = false);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Accès refusé.")),
-                    );
-                  }
-                }
-              },
+              onPressed: isValidating
+                  ? null
+                  : () async {
+                      setDialogState(() => isValidating = true);
+
+                      final dbPassword = await context
+                          .read<SupabaseService>()
+                          .getAdminPassword();
+
+                      if (ctrl.text == dbPassword) {
+                        if (keepLoggedIn) {
+                          await storage.setAdminLoggedIn(true);
+                        }
+                        if (context.mounted) {
+                          setState(() {
+                            _isAdmin = true;
+                          });
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AdminScreen(),
+                            ),
+                          );
+                        }
+                      } else {
+                        setDialogState(() => isValidating = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Accès refusé.")),
+                          );
+                        }
+                      }
+                    },
               child: const Text("Entrer"),
             ),
           ],
@@ -178,10 +235,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final wifi = context.watch<WiFiProvider>();
     final supabase = context.read<SupabaseService>();
     final userData = context.read<UserDataService>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('DZ WiFi hack', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          l10n.appTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),
@@ -203,14 +264,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.chat),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessengerScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MessengerScreen()),
+            ),
           ),
           IconButton(
-            icon: const Icon(Icons.rocket_launch, color: Colors.deepOrange,),
+            icon: const Icon(Icons.rocket_launch, color: Colors.deepOrange),
             tooltip: 'Claude Project',
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const claude.InitializationScreen()),
+              MaterialPageRoute(
+                builder: (_) => const claude.InitializationScreen(),
+              ),
             ),
           ),
         ],
@@ -223,42 +289,83 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 10),
             HomeBanner(supabase: supabase),
             if (_isAdmin) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CommerceScreen(
-                          userId: userData.deviceId,
-                        ),
+              if (_adminRole == null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _selectRole,
+                      icon: const Icon(Icons.admin_panel_settings),
+                      label: const Text("Choisir mon rôle Admin"),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.orange,
                       ),
                     ),
-                    icon: const Icon(Icons.storefront),
-                    label: const Text("Commerce"),
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => Mistral2laudeEntryScreen(
-                          deviceIdOverride: userData.deviceId,
+                )
+              else ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Mode Admin: ${_adminRole!.replaceAll('_', ' ').toUpperCase()}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
                         ),
                       ),
-                    ),
-                    icon: const Icon(Icons.forum),
-                    label: const Text("Mistral2laude P2P"),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CommerceScreen(userId: userData.deviceId),
+                            ),
+                          ),
+                          icon: const Icon(Icons.storefront),
+                          label: Text("${l10n.commerce} (${_adminRole})"),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => Mistral2laudeEntryScreen(
+                            deviceIdOverride: userData.deviceId,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.forum),
+                      label: const Text("Mistral2laude P2P"),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _selectRole,
+                  child: const Text("Changer de rôle"),
+                ),
+              ],
             ],
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -267,7 +374,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () => showDialog(
                     context: context,
-                    builder: (_) => AdSubmissionDialog(userId: userData.deviceId, supabase: supabase),
+                    builder: (_) => AdSubmissionDialog(
+                      userId: userData.deviceId,
+                      supabase: supabase,
+                    ),
                   ),
                   icon: const Icon(Icons.add_photo_alternate),
                   label: const Text("Publier une annonce & Gagner des Coins"),
@@ -279,18 +389,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? _buildEmptyState(wifi)
                   : ListView.builder(
                       padding: const EdgeInsets.only(bottom: 80),
-                      itemCount: wifi.networks.length + (wifi.networks.length ~/ 5),
+                      itemCount:
+                          wifi.networks.length + (wifi.networks.length ~/ 5),
                       itemBuilder: (context, index) {
                         // Insérer une pub native tous les 5 items
                         if (index > 0 && index % 6 == 0) {
                           return _NativeAdItem();
                         }
-                        
+
                         // Calculer l'index réel du réseau
                         final networkIndex = index - (index ~/ 6);
-                        if (networkIndex >= wifi.networks.length) return const SizedBox.shrink();
-                        
-                        return _NetworkTile(network: wifi.networks[networkIndex]);
+                        if (networkIndex >= wifi.networks.length)
+                          return const SizedBox.shrink();
+
+                        return _NetworkTile(
+                          network: wifi.networks[networkIndex],
+                        );
                       },
                     ),
             ),
@@ -300,16 +414,27 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: wifi.scanStatus == ScanStatus.scanning 
-          ? null 
-          : () {
-              // AFFICHER UN INTERSTITIEL AVANT LE SCAN
-              context.read<AdService>().showInterstitialAd();
-              wifi.startScan();
-            },
-        label: Text(wifi.scanStatus == ScanStatus.scanning ? "Scan en cours..." : "Scanner WiFi"),
-        icon: wifi.scanStatus == ScanStatus.scanning 
-            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+        onPressed: wifi.scanStatus == ScanStatus.scanning
+            ? null
+            : () {
+                // AFFICHER UN INTERSTITIEL AVANT LE SCAN
+                context.read<AdService>().showInterstitialAd();
+                wifi.startScan();
+              },
+        label: Text(
+          wifi.scanStatus == ScanStatus.scanning
+              ? "Scan en cours..."
+              : "Scanner WiFi",
+        ),
+        icon: wifi.scanStatus == ScanStatus.scanning
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
             : const Icon(Icons.search),
       ),
     );
@@ -328,7 +453,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatusHeader(WiFiProvider wifi, UserDataService userData, SupabaseService supabase) {
+  Widget _buildStatusHeader(
+    WiFiProvider wifi,
+    UserDataService userData,
+    SupabaseService supabase,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.deepPurple.withValues(alpha: 0.1),
@@ -343,9 +472,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   final coins = snapshot.data ?? 0;
                   return Row(
                     children: [
-                      const Icon(Icons.monetization_on, color: Colors.orange, size: 24),
+                      const Icon(
+                        Icons.monetization_on,
+                        color: Colors.orange,
+                        size: 24,
+                      ),
                       const SizedBox(width: 8),
-                      Text("$coins Coins", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        "$coins Coins",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   );
                 },
@@ -358,7 +497,11 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _statItem("${wifi.networks.length}", "Détectés", Colors.blue),
-              _statItem("${wifi.getStats()['successful']}", "Connectés", Colors.green),
+              _statItem(
+                "${wifi.getStats()['successful']}",
+                "Connectés",
+                Colors.green,
+              ),
               _statItem("${wifi.getStats()['failed']}", "Échecs", Colors.red),
             ],
           ),
@@ -368,10 +511,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _statItem(String val, String label, Color color) {
-    return Column(children: [
-      Text(val, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
-      Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-    ]);
+    return Column(
+      children: [
+        Text(
+          val,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+      ],
+    );
   }
 
   Widget _buildEmptyState(WiFiProvider wifi) {
@@ -387,7 +539,10 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(color: Colors.grey),
           ),
           if (wifi.scanStatus == ScanStatus.permissionDenied)
-            TextButton(onPressed: wifi.fixPermissions, child: const Text("Donner les permissions")),
+            TextButton(
+              onPressed: wifi.fixPermissions,
+              child: const Text("Donner les permissions"),
+            ),
         ],
       ),
     );
@@ -422,7 +577,7 @@ class _NativeAdItemState extends State<_NativeAdItem> {
   @override
   Widget build(BuildContext context) {
     if (!_isLoaded || _nativeAd == null) return const SizedBox.shrink();
-    
+
     return Container(
       height: 300,
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
@@ -450,20 +605,42 @@ class _NetworkTile extends StatelessWidget {
       child: ListTile(
         leading: Icon(
           Icons.wifi,
-          color: network.signalStrength > -60 ? Colors.green : (network.signalStrength > -80 ? Colors.orange : Colors.red),
+          color: network.signalStrength > -60
+              ? Colors.green
+              : (network.signalStrength > -80 ? Colors.orange : Colors.red),
         ),
-        title: Text(network.ssid, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          network.ssid,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Clé Sigma: ${network.calculatedKey}", style: const TextStyle(color: Colors.deepPurple, fontSize: 12, fontWeight: FontWeight.bold)),
-            Text("${network.signalStrength} dBm | ${network.frequency}", style: const TextStyle(fontSize: 10)),
+            Text(
+              "Clé Sigma: ${network.calculatedKey}",
+              style: const TextStyle(
+                color: Colors.deepPurple,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              "${network.signalStrength} dBm | ${network.frequency}",
+              style: const TextStyle(fontSize: 10),
+            ),
           ],
         ),
         trailing: isConnecting
-            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             : IconButton(
-                icon: Icon(isConnected ? Icons.check_circle : Icons.link, color: isConnected ? Colors.green : null),
+                icon: Icon(
+                  isConnected ? Icons.check_circle : Icons.link,
+                  color: isConnected ? Colors.green : null,
+                ),
                 onPressed: () => wifi.connect(network),
               ),
       ),
