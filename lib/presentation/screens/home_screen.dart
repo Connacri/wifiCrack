@@ -14,6 +14,7 @@ import '../../domain/entities/wifi_network.dart';
 import '../../l10n/app_localizations.dart';
 import '../providers/wifi_provider.dart';
 import '../widgets/home_carousel.dart';
+import '../widgets/language_selector_dialog.dart';
 import 'admin_screen.dart';
 import 'messenger_screen.dart';
 import 'user_profile_detail_screen.dart';
@@ -244,6 +245,14 @@ class _HomeScreenState extends State<HomeScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.language),
+            tooltip: 'Change language',
+            onPressed: () => showDialog(
+              context: context,
+              builder: (_) => const LanguageSelectorDialog(),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: 'Mon profil',

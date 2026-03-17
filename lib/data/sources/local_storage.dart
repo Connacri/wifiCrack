@@ -148,6 +148,17 @@ class LocalStorageDataSource {
     await _prefs?.setString('sigma_user_pseudo', pseudo);
   }
 
+  String? getLocale() {
+    return _prefs?.getString('sigma_app_locale');
+  }
+
+  Future<void> setLocale(String languageCode) async {
+    if (!_isInitialized || _prefs == null) {
+      await initialize();
+    }
+    await _prefs?.setString('sigma_app_locale', languageCode);
+  }
+
   Future<void> _persist() async {
     try {
       if (!_isInitialized || _prefs == null) {

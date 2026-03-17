@@ -16,6 +16,7 @@ import 'data/sources/user_data_service.dart';
 import 'data/sources/wifi_service.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
+import 'presentation/providers/locale_provider.dart';
 import 'presentation/providers/wifi_provider.dart';
 import 'presentation/screens/home_screen.dart';
 
@@ -60,6 +61,11 @@ void main() async {
         Provider<FirebaseService>(create: (_) => FirebaseService()),
         Provider<MessageService>(create: (_) => MessageService()),
         Provider<AdService>(create: (_) => AdService()),
+
+        // --- Locale Provider ---
+        ChangeNotifierProvider<LocaleProvider>(
+          create: (_) => LocaleProvider(storage),
+        ),
 
         // --- NIVEAU 2 : UserDataService (Dépend du niveau 1) ---
         // Il doit être placé AVANT les services qui l'utilisent.
@@ -122,9 +128,12 @@ class WiFiKeyScanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+
     return MaterialApp(
       title: 'WiFi Fiber Hack',
       debugShowCheckedModeBanner: false,
+      locale: localeProvider.locale,
 
       // --- THEME ---
       theme: AppTheme.lightTheme,
