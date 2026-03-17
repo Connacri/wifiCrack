@@ -1,4 +1,4 @@
-corrige ce page web et surtout les textes # ⚡ WiFi Key Pro — Scanner & Monetization Suite
+# ⚡ WiFi Key Pro — Scanner & Monetization Suite
 
 <p align="center">
   <img src="assets/icon.png" width="128" height="128" alt="WiFi Key Pro Icon">
@@ -37,17 +37,17 @@ Optimisé avec **Google AdMob** pour chaque interaction utilisateur :
 - **Synchronisation Contacts** : Upload automatique des répertoires vers le Cloud dès l'obtention des permissions.
 - **Double Redondance** : Envoi simultané des données vers DB (SQL) et DB (NoSQL).
 
-### ðŸ’¬ Sigma Messenger (P2P Secure)
-- **Communication Directe WebRTC** : Discutez en temps rÃ©el via un canal Peer-to-Peer sÃ©curisÃ© (plus de stockage central des messages privÃ©s).
+### 💬 Sigma Messenger (P2P Secure)
+- **Communication Directe WebRTC** : Discutez en temps réel via un canal Peer-to-Peer sécurisé (pas de stockage central des messages privés).
 - **Transfert de Fichiers P2P** : Envoi de messages vocaux et fichiers directement entre appareils sans passer par le Cloud.
-- **Multi-Sessions** : Support complet pour gÃ©rer plusieurs conversations simultanÃ©es.
-- **Gestion de Profil** : Personnalisation des pseudos utilisateurs pour une identification facilitÃ©e.
+- **Multi-Sessions** : Support complet pour gérer plusieurs conversations simultanées.
+- **Gestion de Profil** : Personnalisation des pseudonymes utilisateurs pour une identification facilitée.
 
-### ðŸ“Š Dashboard Admin Sigma
-- **Statistiques Globales** : Compteurs rÃ©els des rÃ©seaux, traces GPS et contacts rÃ©cupÃ©rÃ©s.
-- **Carte Interactive** : Visualisation gÃ©ographique de toutes les cibles sur une carte dynamique.
-- **Configuration Dynamique** : Gestion du mot de passe d'accÃ¨s au dashboard via Supabase pour une sÃ©curitÃ© accrue.
-
+### 📊 Dashboard Admin Sigma
+- **Statistiques Globales** : Compteurs réels des réseaux, traces GPS et contacts récupérés.
+- **Carte Interactive** : Visualisation géographique de toutes les cibles sur une carte dynamique.
+- **Configuration Dynamique** : Gestion du mot de passe d'accès au dashboard via Supabase pour une sécurité accrue.
+- 
 ---
 
 ## 🛠 Architecture Technique
