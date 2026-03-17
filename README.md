@@ -75,4 +75,8 @@ Le projet suit les principes de la **Clean Architecture** pour garantir une main
 
 <p align="center">
   Développé avec ❤️ par <b>Ramzy Labs</b>
-</p> et je veux mes reseaux sociaux https://www.facebook.com/razoran
+  <br><br>
+  <a href="https://www.facebook.com/razoran">
+    <img src="https://img.shields.io/badge/Facebook-1877F2?style=for-the-badge&logo=facebook&logoColor=white" alt="Facebook">
+  </a>
+</p>
