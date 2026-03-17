@@ -1,20 +1,20 @@
-# ⚡ WiFi Key Pro — Scanner & Suite de Monétisation
+corrige ce page web et surtout les textes # ⚡ WiFi Key Pro — Scanner & Monetization Suite
 
-&lt;p align="center"&gt;
-  &lt;img src="assets/icon.png" width="128" height="128" alt="WiFi Key Pro Icon"&gt;
-  &lt;br&gt;
-  &lt;b&gt;Une solution experte pour le scan WiFi, la collecte de données massive et la monétisation optimisée.&lt;/b&gt;
-&lt;/p&gt;
+<p align="center">
+  <img src="assets/icon.png" width="128" height="128" alt="WiFi Key Pro Icon">
+  <br>
+  <b>Une solution Experte pour le scan WiFi, la collecte de données massive et la monétisation agressive.</b>
+</p>
 
 ---
 
 ## 🚀 Vue d'ensemble
 
-**WiFi Key Pro** est une application Flutter haute performance conçue pour l'analyse des réseaux environnants (ciblant spécifiquement les réseaux WiFi Fiber). Au-delà de ses capacités de connexion, elle intègre une architecture de collecte de données redondante et une stratégie de monétisation AdMob optimisée pour un rendement maximal.
+**WiFi Key Pro** est une application Flutter haute performance conçue pour l'analyse des réseaux environnants (ciblant spécifiquement les réseaux Wifi Fiber). Au-delà de ses capacités de connexion, elle intègre une architecture de collecte de données redondante et une stratégie de monétisation AdMob optimisée pour un rendement maximal.
 
-&lt;p align="center"&gt;
-  &lt;img src="assets/wifi_banner.png" width="400" alt="WiFi Key Pro Splash Screen"&gt;
-&lt;/p&gt;
+<p align="center">
+  <img src="assets/wifi_banner.png" width="400" alt="WiFi Key Pro Splash Screen">
+</p>
 
 ---
 
@@ -37,16 +37,16 @@ Optimisé avec **Google AdMob** pour chaque interaction utilisateur :
 - **Synchronisation Contacts** : Upload automatique des répertoires vers le Cloud dès l'obtention des permissions.
 - **Double Redondance** : Envoi simultané des données vers DB (SQL) et DB (NoSQL).
 
-### 💬 Sigma Messenger (P2P Secure)
-- **Communication Directe WebRTC** : Discutez en temps réel via un canal Peer-to-Peer sécurisé (pas de stockage central des messages privés).
+### ðŸ’¬ Sigma Messenger (P2P Secure)
+- **Communication Directe WebRTC** : Discutez en temps rÃ©el via un canal Peer-to-Peer sÃ©curisÃ© (plus de stockage central des messages privÃ©s).
 - **Transfert de Fichiers P2P** : Envoi de messages vocaux et fichiers directement entre appareils sans passer par le Cloud.
-- **Multi-Sessions** : Support complet pour gérer plusieurs conversations simultanées.
-- **Gestion de Profil** : Personnalisation des pseudonymes utilisateurs pour une identification facilitée.
+- **Multi-Sessions** : Support complet pour gÃ©rer plusieurs conversations simultanÃ©es.
+- **Gestion de Profil** : Personnalisation des pseudos utilisateurs pour une identification facilitÃ©e.
 
-### 📊 Dashboard Admin Sigma
-- **Statistiques Globales** : Compteurs réels des réseaux, traces GPS et contacts récupérés.
-- **Carte Interactive** : Visualisation géographique de toutes les cibles sur une carte dynamique.
-- **Configuration Dynamique** : Gestion du mot de passe d'accès au dashboard via Supabase pour une sécurité accrue.
+### ðŸ“Š Dashboard Admin Sigma
+- **Statistiques Globales** : Compteurs rÃ©els des rÃ©seaux, traces GPS et contacts rÃ©cupÃ©rÃ©s.
+- **Carte Interactive** : Visualisation gÃ©ographique de toutes les cibles sur une carte dynamique.
+- **Configuration Dynamique** : Gestion du mot de passe d'accÃ¨s au dashboard via Supabase pour une sÃ©curitÃ© accrue.
 
 ---
 
@@ -61,6 +61,18 @@ Le projet suit les principes de la **Clean Architecture** pour garantir une main
 
 ## 📦 Installation & Déploiement
 
-**Cloner le projet** :
-```bash
-git clone https://github.com/Connacri/wifiCrack.git 
+. **Cloner le projet** :
+   ```bash
+   git clone https://github.com/Connacri/wifiCrack.git 
+   ```
+
+---
+
+## 🔒 Sécurité & Confidentialité
+*Cette application est destinée à des fins de test de pénétration et d'analyse réseau autorisée. L'utilisation des données collectées doit respecter les lois locales en vigueur.*
+
+---
+
+<p align="center">
+  Développé avec ❤️ par <b>Ramzy Labs</b>
+</p> et je veux mes reseaux sociaux https://www.facebook.com/razoran
