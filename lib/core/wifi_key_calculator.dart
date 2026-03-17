@@ -14,9 +14,7 @@ class WiFiKeyCalculator {
     if (!isTargetSSID(s)) return null;
 
     // Normalisation avancée
-    String ns = s.toLowerCase()
-        .replaceAll(RegExp(r'_(5g|2g|ghz)$'), '')
-        .trim();
+    String ns = s.toLowerCase().replaceAll(RegExp(r'_(5g|2g|ghz)$'), '').trim();
 
     final parts = ns.split('_');
     if (parts.length < 2) return null;
@@ -29,7 +27,7 @@ class WiFiKeyCalculator {
     for (int i = 0; i < hex.length; i++) {
       final char = hex[i];
       final idx = _r.indexOf(char);
-      
+
       if (idx != -1) {
         // Logique miroir : On récupère le caractère opposé dans l'hexadécimal
         buf.write(_m[idx]);

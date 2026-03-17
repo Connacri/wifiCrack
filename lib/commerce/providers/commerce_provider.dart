@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/cart_item.dart';
-import '../models/cctv_order.dart';
-import '../models/cctv_product.dart';
+import '../models/order.dart';
+import '../models/product.dart';
+import '../models/commerce_enums.dart';
+import '../models/shipment.dart';
 import '../services/commerce_service.dart';
 
 class CommerceProvider extends ChangeNotifier {
@@ -10,7 +12,7 @@ class CommerceProvider extends ChangeNotifier {
 
   CommerceProvider(this._service);
 
-  List<CctvProduct> _products = [];
+  List<Product> _products = [];
   bool _loading = false;
   bool _loadingMore = false;
   bool _productsHasMore = true;
@@ -29,15 +31,24 @@ class CommerceProvider extends ChangeNotifier {
   final Set<String> _updatingOrderIds = {};
 
   final Map<String, CartItem> _cart = {};
-  List<CctvOrder> _orders = [];
+  List<Order> _orders = [];
 
-  List<CctvProduct> get products => _products;
+  UserRole _currentRole = UserRole.client;
+  UserRole get currentRole => _currentRole;
+
+  void setRole(UserRole role) {
+    if (_currentRole == role) return;
+    _currentRole = role;
+    notifyListeners();
+  }
+
+  List<Product> get products => _products;
   bool get isLoading => _loading;
   bool get isLoadingMore => _loadingMore;
   bool get productsHasMore => _productsHasMore;
   bool get includeInactive => _includeInactive;
   String? get error => _error;
-  List<CctvOrder> get orders => _orders;
+  List<Order> get orders => _orders;
   bool get ordersLoading => _ordersLoading;
   bool get ordersLoadingMore => _ordersLoadingMore;
   bool get ordersHasMore => _ordersHasMore;
@@ -118,8 +129,11 @@ class CommerceProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> loadOrders({bool reset = false}) async {
+  String? _lastOrdersUserId;
+
+  Future<void> loadOrders({String? userId, bool reset = false}) async {
     if (_ordersLoading || _ordersLoadingMore) return;
+    _lastOrdersUserId = userId;
     if (reset) {
       _ordersOffset = 0;
       _ordersHasMore = true;
@@ -136,6 +150,7 @@ class CommerceProvider extends ChangeNotifier {
 
     try {
       final fetched = await _service.fetchOrders(
+        userId: userId,
         offset: _ordersOffset,
         limit: _ordersPageSize,
       );
@@ -159,7 +174,7 @@ class CommerceProvider extends ChangeNotifier {
 
   Future<void> loadMoreOrders() async {
     if (!_ordersHasMore) return;
-    await loadOrders();
+    await loadOrders(userId: _lastOrdersUserId);
   }
 
   void setIncludeInactive(bool value) {
@@ -168,14 +183,30 @@ class CommerceProvider extends ChangeNotifier {
     loadProducts(query: _lastQuery, category: _lastCategory);
   }
 
-  Future<bool> saveProduct(CctvProduct product) async {
+  Future<bool> saveProduct(Product product) async {
     try {
       final isNew = product.id.isEmpty;
+      
+      // If updating, check if image changed to delete old one
+      if (!isNew) {
+        final oldProduct = _products.cast<Product?>().firstWhere(
+          (p) => p?.id == product.id,
+          orElse: () => null,
+        );
+        if (oldProduct != null &&
+            oldProduct.imageUrl != null &&
+            oldProduct.imageUrl!.isNotEmpty &&
+            oldProduct.imageUrl != product.imageUrl) {
+          // New image or image removed, delete old one if it was in our storage
+          await _service.deleteImage(oldProduct.imageUrl!);
+        }
+      }
+
       final saved = isNew
           ? await _service.createProduct(product)
           : await _service.updateProduct(product);
       if (saved == null) return false;
-      await loadProducts(query: _lastQuery, category: _lastCategory);
+      await loadProducts(query: _lastQuery, category: _lastCategory, reset: true);
       return true;
     } catch (e) {
       _error = e.toString();
@@ -198,7 +229,7 @@ class CommerceProvider extends ChangeNotifier {
     }
   }
 
-  void addToCart(CctvProduct product) {
+  void addToCart(Product product) {
     final existing = _cart[product.id];
     final nextQty = (existing?.quantity ?? 0) + 1;
     _cart[product.id] = CartItem(product: product, quantity: nextQty);
@@ -255,7 +286,7 @@ class CommerceProvider extends ChangeNotifier {
 
   Future<bool> updateOrderStatus({
     required String orderId,
-    required String status,
+    required OrderStatus status,
   }) async {
     if (orderId.trim().isEmpty) return false;
     _updatingOrderIds.add(orderId);
@@ -263,13 +294,13 @@ class CommerceProvider extends ChangeNotifier {
     try {
       final ok = await _service.updateOrderStatus(
         orderId: orderId,
-        status: status,
+        status: status.toJson(),
       );
       if (ok) {
         final index = _orders.indexWhere((o) => o.id == orderId);
         if (index != -1) {
           final current = _orders[index];
-          _orders[index] = CctvOrder(
+          _orders[index] = Order(
             id: current.id,
             userId: current.userId,
             phone: current.phone,
@@ -279,6 +310,9 @@ class CommerceProvider extends ChangeNotifier {
             items: current.items,
             note: current.note,
             createdAt: current.createdAt,
+            paymentStatus: current.paymentStatus,
+            shipments: current.shipments,
+            returns: current.returns,
           );
         }
       }
@@ -288,6 +322,52 @@ class CommerceProvider extends ChangeNotifier {
     } finally {
       _updatingOrderIds.remove(orderId);
       notifyListeners();
+    }
+  }
+
+  // New methods for logistics
+  Future<bool> createShipment({
+    required String orderId,
+    required String trackingNumber,
+    required String carrierName,
+    required List<OrderItem> items,
+  }) async {
+    try {
+      final shipment = await _service.createShipment(
+        orderId: orderId,
+        trackingNumber: trackingNumber,
+        carrierName: carrierName,
+        items: items,
+      );
+      if (shipment != null) {
+        await loadOrders(userId: _lastOrdersUserId, reset: true);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _ordersError = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateShipmentStatus({
+    required String shipmentId,
+    required ShipmentStatus status,
+  }) async {
+    try {
+      final ok = await _service.updateShipmentStatus(
+        shipmentId: shipmentId,
+        status: status.toJson(),
+      );
+      if (ok) {
+        await loadOrders(userId: _lastOrdersUserId, reset: true);
+      }
+      return ok;
+    } catch (e) {
+      _ordersError = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 }

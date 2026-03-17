@@ -1,11 +1,18 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CommerceConfig {
+  // Supabase table for products.
+  // Override with: --dart-define=SUPABASE_PRODUCTS_TABLE=...
+  static const String productsTable = String.fromEnvironment(
+    'SUPABASE_PRODUCTS_TABLE',
+    defaultValue: 'cctv_products',
+  );
+
   // Supabase Storage bucket for product images.
   // Override with: --dart-define=SUPABASE_IMAGES_BUCKET=...
   static const String supabaseImagesBucket = String.fromEnvironment(
     'SUPABASE_IMAGES_BUCKET',
-    defaultValue: 'cctv-images',
+    defaultValue: 'product-images',
   );
 
   // Optional folder prefix inside the bucket (e.g. "products").
@@ -34,9 +41,13 @@ class CommerceConfig {
   }
 
   static String buildStoragePath(String rawPath) {
-    final path = rawPath.startsWith('/') ? rawPath.substring(1) : rawPath;
+    var path = rawPath.startsWith('/') ? rawPath.substring(1) : rawPath;
+    path = path.trim();
     final prefix = _trimSlashes(supabaseImagesPrefix.trim());
-    return prefix.isEmpty ? path : '$prefix/$path';
+    if (prefix.isEmpty) return path;
+    if (path.isEmpty) return prefix;
+    if (path.startsWith('$prefix/')) return path;
+    return '$prefix/$path';
   }
 
   static String _trimSlashes(String value) {

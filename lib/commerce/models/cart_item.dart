@@ -1,7 +1,7 @@
-import 'cctv_product.dart';
+import 'product.dart';
 
 class CartItem {
-  final CctvProduct product;
+  final Product product;
   final int quantity;
 
   const CartItem({

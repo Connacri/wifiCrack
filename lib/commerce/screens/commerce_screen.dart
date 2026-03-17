@@ -1,19 +1,20 @@
+﻿import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 import '../commerce_config.dart';
 import '../models/cart_item.dart';
-import '../models/cctv_order.dart';
-import '../models/cctv_product.dart';
+import '../models/order.dart';
+import '../models/product.dart';
+import '../models/commerce_enums.dart';
 import '../providers/commerce_provider.dart';
 import '../services/commerce_service.dart';
+import 'order_details_screen.dart';
 
 enum ProductSort {
   nameAsc,
@@ -63,8 +64,15 @@ class _CommerceViewState extends State<_CommerceView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<CommerceProvider>().loadOrders(reset: true);
+      _refreshOrders();
     });
+  }
+
+  void _refreshOrders() {
+    final provider = context.read<CommerceProvider>();
+    // If not admin, only load orders for current userId
+    final filterUserId = _isAdminMode ? null : widget.userId;
+    provider.loadOrders(userId: filterUserId, reset: true);
   }
 
   @override
@@ -100,9 +108,9 @@ class _CommerceViewState extends State<_CommerceView> {
 
       if (!mounted) return;
       if (orderId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order failed.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Order failed.')));
         return;
       }
 
@@ -113,14 +121,14 @@ class _CommerceViewState extends State<_CommerceView> {
       final message = orderId.trim().isEmpty
           ? 'Order created.'
           : 'Order created: $orderId';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order failed.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Order failed.')));
     } finally {
       if (mounted) setState(() => _placingOrder = false);
     }
@@ -128,7 +136,7 @@ class _CommerceViewState extends State<_CommerceView> {
 
   Future<void> _openProductForm({
     required CommerceProvider provider,
-    CctvProduct? product,
+    Product? product,
   }) async {
     if (_openingProductForm) return;
     _openingProductForm = true;
@@ -137,10 +145,8 @@ class _CommerceViewState extends State<_CommerceView> {
       final saved = await showModalBottomSheet<bool>(
         context: context,
         isScrollControlled: true,
-        builder: (context) => _ProductFormSheet(
-          provider: provider,
-          product: product,
-        ),
+        builder: (context) =>
+            _ProductFormSheet(provider: provider, product: product),
       );
 
       if (!mounted) return;
@@ -158,7 +164,7 @@ class _CommerceViewState extends State<_CommerceView> {
 
   Future<void> _confirmDelete(
     CommerceProvider provider,
-    CctvProduct product,
+    Product product,
   ) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -182,17 +188,13 @@ class _CommerceViewState extends State<_CommerceView> {
     final deleted = await provider.deleteProduct(product.id);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(deleted ? 'Product deleted.' : 'Delete failed.'),
-      ),
+      SnackBar(content: Text(deleted ? 'Product deleted.' : 'Delete failed.')),
     );
   }
 
   void _toggleAdminMode(CommerceProvider provider) {
     setState(() => _isAdminMode = !_isAdminMode);
-    if (_isAdminMode) {
-      provider.loadOrders(reset: true);
-    }
+    _refreshOrders();
   }
 
   @override
@@ -212,18 +214,16 @@ class _CommerceViewState extends State<_CommerceView> {
           final tabController = DefaultTabController.of(context);
           return Scaffold(
             appBar: AppBar(
-              title: const Text('CCTV Commerce'),
+              title: const Text('Commerce'),
               actions: [
                 IconButton(
                   onPressed: provider.isLoading
                       ? null
-                      : () =>
-                          provider.loadProducts(query: _searchCtrl.text),
+                      : () => provider.loadProducts(query: _searchCtrl.text),
                   icon: const Icon(Icons.refresh),
                 ),
                 IconButton(
-                  tooltip:
-                      _isAdminMode ? 'Client mode' : 'Admin mode',
+                  tooltip: _isAdminMode ? 'Client mode' : 'Admin mode',
                   icon: Icon(
                     _isAdminMode
                         ? Icons.admin_panel_settings
@@ -234,8 +234,7 @@ class _CommerceViewState extends State<_CommerceView> {
                 if (_isAdminMode)
                   IconButton(
                     tooltip: 'Add product',
-                    onPressed: () =>
-                        _openProductForm(provider: provider),
+                    onPressed: () => _openProductForm(provider: provider),
                     icon: const Icon(Icons.add),
                   ),
               ],
@@ -253,9 +252,9 @@ class _CommerceViewState extends State<_CommerceView> {
                       : null,
                   onEditProduct: _isAdminMode
                       ? (product) => _openProductForm(
-                            provider: provider,
-                            product: product,
-                          )
+                          provider: provider,
+                          product: product,
+                        )
                       : null,
                   onDeleteProduct: _isAdminMode
                       ? (product) => _confirmDelete(provider, product)
@@ -354,8 +353,8 @@ class _ProductsTab extends StatefulWidget {
   final bool includeInactive;
   final ValueChanged<bool> onToggleInactive;
   final VoidCallback? onAddProduct;
-  final ValueChanged<CctvProduct>? onEditProduct;
-  final ValueChanged<CctvProduct>? onDeleteProduct;
+  final ValueChanged<Product>? onEditProduct;
+  final ValueChanged<Product>? onDeleteProduct;
   final bool isAdmin;
 
   const _ProductsTab({
@@ -402,7 +401,7 @@ class _ProductsTabState extends State<_ProductsTab> {
     }
   }
 
-  List<String> _extractCategories(List<CctvProduct> products) {
+  List<String> _extractCategories(List<Product> products) {
     final categories = <String>{};
     for (final product in products) {
       final category = product.category?.trim();
@@ -414,8 +413,8 @@ class _ProductsTabState extends State<_ProductsTab> {
     return ['All', ...list];
   }
 
-  List<CctvProduct> _applyFilters(
-    List<CctvProduct> products,
+  List<Product> _applyFilters(
+    List<Product> products,
     String activeCategory,
   ) {
     var filtered = products;
@@ -477,8 +476,7 @@ class _ProductsTabState extends State<_ProductsTab> {
     final activeCategory = categories.contains(_selectedCategory)
         ? _selectedCategory
         : 'All';
-    final products =
-        _applyFilters(widget.provider.products, activeCategory);
+    final products = _applyFilters(widget.provider.products, activeCategory);
     _maybeAutoFetchMore(products);
 
     return Column(
@@ -488,15 +486,15 @@ class _ProductsTabState extends State<_ProductsTab> {
           child: TextField(
             controller: widget.searchCtrl,
             textInputAction: TextInputAction.search,
-            onSubmitted: (_) => widget.provider
-                .loadProducts(query: widget.searchCtrl.text),
+            onSubmitted: (_) =>
+                widget.provider.loadProducts(query: widget.searchCtrl.text),
             decoration: InputDecoration(
               hintText: 'Search products or SKU',
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.arrow_forward),
-                onPressed: () => widget.provider
-                    .loadProducts(query: widget.searchCtrl.text),
+                onPressed: () =>
+                    widget.provider.loadProducts(query: widget.searchCtrl.text),
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -532,8 +530,7 @@ class _ProductsTabState extends State<_ProductsTab> {
               FilterChip(
                 label: const Text('In stock'),
                 selected: _inStockOnly,
-                onSelected: (value) =>
-                    setState(() => _inStockOnly = value),
+                onSelected: (value) => setState(() => _inStockOnly = value),
               ),
               if (widget.isAdmin)
                 FilterChip(
@@ -570,10 +567,7 @@ class _ProductsTabState extends State<_ProductsTab> {
                     child: Text('Popularity'),
                   ),
                 ],
-                child: _FilterPill(
-                  icon: Icons.sort,
-                  label: _sortLabel(_sort),
-                ),
+                child: _FilterPill(icon: Icons.sort, label: _sortLabel(_sort)),
               ),
               if (widget.isAdmin && widget.onAddProduct != null)
                 FilledButton.icon(
@@ -601,14 +595,12 @@ class _ProductsTabState extends State<_ProductsTab> {
                   children: [
                     const Icon(Icons.error_outline, size: 48),
                     const SizedBox(height: 12),
-                    Text(
-                      widget.provider.error!,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(widget.provider.error!, textAlign: TextAlign.center),
                     const SizedBox(height: 12),
                     FilledButton(
-                      onPressed: () => widget.provider
-                          .loadProducts(query: widget.searchCtrl.text),
+                      onPressed: () => widget.provider.loadProducts(
+                        query: widget.searchCtrl.text,
+                      ),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -672,7 +664,7 @@ class _ProductsTabState extends State<_ProductsTab> {
     );
   }
 
-  void _maybeAutoFetchMore(List<CctvProduct> products) {
+  void _maybeAutoFetchMore(List<Product> products) {
     if (!widget.provider.productsHasMore ||
         widget.provider.isLoading ||
         widget.provider.isLoadingMore) {
@@ -688,12 +680,9 @@ class _ProductsTabState extends State<_ProductsTab> {
 
 class _ProductFormSheet extends StatefulWidget {
   final CommerceProvider provider;
-  final CctvProduct? product;
+  final Product? product;
 
-  const _ProductFormSheet({
-    required this.provider,
-    this.product,
-  });
+  const _ProductFormSheet({required this.provider, this.product});
 
   @override
   State<_ProductFormSheet> createState() => _ProductFormSheetState();
@@ -701,11 +690,11 @@ class _ProductFormSheet extends StatefulWidget {
 
 class _ProductList extends StatelessWidget {
   final ScrollController controller;
-  final List<CctvProduct> products;
+  final List<Product> products;
   final bool isAdmin;
-  final ValueChanged<CctvProduct> onAdd;
-  final ValueChanged<CctvProduct>? onEdit;
-  final ValueChanged<CctvProduct>? onDelete;
+  final ValueChanged<Product> onAdd;
+  final ValueChanged<Product>? onEdit;
+  final ValueChanged<Product>? onDelete;
   final bool isLoadingMore;
   final bool hasMore;
 
@@ -763,11 +752,11 @@ class _ProductList extends StatelessWidget {
 
 class _ProductGrid extends StatelessWidget {
   final ScrollController controller;
-  final List<CctvProduct> products;
+  final List<Product> products;
   final bool isAdmin;
-  final ValueChanged<CctvProduct> onAdd;
-  final ValueChanged<CctvProduct>? onEdit;
-  final ValueChanged<CctvProduct>? onDelete;
+  final ValueChanged<Product> onAdd;
+  final ValueChanged<Product>? onEdit;
+  final ValueChanged<Product>? onDelete;
   final bool isLoadingMore;
   final bool hasMore;
 
@@ -896,8 +885,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       return;
     }
     final name = _nameCtrl.text.trim();
-    final price =
-        double.parse(_priceCtrl.text.trim().replaceAll(',', '.'));
+    final price = double.parse(_priceCtrl.text.trim().replaceAll(',', '.'));
     final promoText = _promoCtrl.text.trim();
     final promoPrice = promoText.isEmpty
         ? null
@@ -910,18 +898,15 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
         : int.tryParse(popularityText) ?? 0;
 
     setState(() => _saving = true);
-    final product = CctvProduct(
+    debugPrint('[Commerce] Attempting to save product: ${name} (ID: ${widget.product?.id ?? "new"})');
+    final product = Product(
       id: widget.product?.id ?? '',
       name: name,
-      description: _descCtrl.text.trim().isEmpty
-          ? null
-          : _descCtrl.text.trim(),
+      description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
       price: price,
       promoPrice: promoPrice,
       sku: sku,
-      imageUrl: _imageCtrl.text.trim().isEmpty
-          ? null
-          : _imageCtrl.text.trim(),
+      imageUrl: _imageCtrl.text.trim().isEmpty ? null : _imageCtrl.text.trim(),
       category: _categoryCtrl.text.trim().isEmpty
           ? null
           : _categoryCtrl.text.trim(),
@@ -932,26 +917,33 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       isActive: _isActive,
     );
 
+    debugPrint('[Commerce] Product data to map: ${product.toMap(includeId: true)}');
     final ok = await widget.provider.saveProduct(product);
     if (!mounted) return;
 
     setState(() => _saving = false);
     if (ok) {
+      debugPrint('[Commerce] Product saved successfully.');
       Navigator.pop(context, true);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Save failed.')),
-      );
+      debugPrint('[Commerce] Product save FAILED.');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Save failed.')));
     }
   }
 
   Future<void> _pickAndUploadImage() async {
     if (_uploadingImage) return;
     final bucket = CommerceConfig.supabaseImagesBucket.trim();
+    debugPrint('[Commerce] Starting image pick. Bucket: "$bucket"');
+    
     if (bucket.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Supabase image bucket is not configured.')),
+        const SnackBar(
+          content: Text('Supabase image bucket is not configured.'),
+        ),
       );
       return;
     }
@@ -963,6 +955,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
         withData: true,
       );
       if (result == null || result.files.isEmpty) {
+        debugPrint('[Commerce] Image pick cancelled.');
         return;
       }
 
@@ -975,29 +968,34 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       final extension = (file.extension ?? '').toLowerCase();
       final safeExt = extension.isEmpty ? 'jpg' : extension;
       final fileName = '${Uuid().v4()}.$safeExt';
-      final storagePath = CommerceConfig.buildStoragePath(fileName);
       final contentType = _contentTypeForExtension(safeExt);
+      
+      debugPrint('[Commerce] Prepared upload: fileName=$fileName, contentType=$contentType, size=${bytes.length} bytes');
 
       await Supabase.instance.client.storage
           .from(bucket)
           .uploadBinary(
-            storagePath,
+            fileName,
             bytes,
             fileOptions: FileOptions(
               contentType: contentType ?? 'application/octet-stream',
+              upsert: true,
             ),
           );
 
+      debugPrint('[Commerce] Upload binary SUCCESS. Path set to: $fileName');
+
       if (!mounted) return;
-      setState(() => _imageCtrl.text = storagePath);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image uploaded.')),
-      );
-    } catch (_) {
+      setState(() => _imageCtrl.text = fileName);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Image uploaded.')));
+    } catch (e) {
+      debugPrint('[Commerce] Image upload error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image upload failed.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Image upload failed: $e')));
     } finally {
       if (mounted) setState(() => _uploadingImage = false);
     }
@@ -1045,10 +1043,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               _SectionHeader(label: 'Info'),
               const SizedBox(height: 8),
@@ -1085,12 +1080,11 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _priceCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[\d\.,]'),
-                  ),
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d\.,]')),
                 ],
                 decoration: const InputDecoration(
                   labelText: 'Price (DZD)',
@@ -1112,12 +1106,11 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _promoCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[\d\.,]'),
-                  ),
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d\.,]')),
                 ],
                 decoration: const InputDecoration(
                   labelText: 'Promo price (DZD)',
@@ -1165,8 +1158,8 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                         _uploadingImage
                             ? 'Uploading...'
                             : (_imageCtrl.text.trim().isEmpty
-                                ? 'Upload image'
-                                : 'Replace image'),
+                                  ? 'Upload image'
+                                  : 'Replace image'),
                       ),
                     ),
                   ),
@@ -1174,8 +1167,8 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                   OutlinedButton.icon(
                     onPressed:
                         (_imageCtrl.text.trim().isEmpty || _uploadingImage)
-                            ? null
-                            : () => setState(_imageCtrl.clear),
+                        ? null
+                        : () => setState(_imageCtrl.clear),
                     icon: const Icon(Icons.clear),
                     label: const Text('Clear'),
                   ),
@@ -1188,10 +1181,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                     borderRadius: BorderRadius.circular(12),
                     child: AspectRatio(
                       aspectRatio: 16 / 9,
-                      child: Image.network(
-                        previewUrl,
-                        fit: BoxFit.cover,
-                      ),
+                      child: Image.network(previewUrl, fit: BoxFit.cover),
                     ),
                   ),
                 ),
@@ -1209,9 +1199,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
               TextFormField(
                 controller: _stockCtrl,
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   labelText: 'Stock',
                   border: OutlineInputBorder(),
@@ -1229,9 +1217,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
               TextFormField(
                 controller: _popularityCtrl,
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   labelText: 'Popularity',
                   border: OutlineInputBorder(),
@@ -1257,8 +1243,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed:
-                      (_saving || _uploadingImage) ? null : _onSave,
+                  onPressed: (_saving || _uploadingImage) ? null : _onSave,
                   child: Text(_saving ? 'Saving...' : 'Save'),
                 ),
               ),
@@ -1271,7 +1256,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
 }
 
 class _ProductCard extends StatelessWidget {
-  final CctvProduct product;
+  final Product product;
   final bool isAdmin;
   final VoidCallback onAdd;
   final VoidCallback? onEdit;
@@ -1288,8 +1273,7 @@ class _ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final resolvedImageUrl =
-        CommerceConfig.resolveImageUrl(product.imageUrl);
+    final resolvedImageUrl = CommerceConfig.resolveImageUrl(product.imageUrl);
     final hasImage = resolvedImageUrl != null;
     final stock = product.stock;
     final isOutOfStock = stock != null && stock <= 0;
@@ -1300,11 +1284,11 @@ class _ProductCard extends StatelessWidget {
     final showPopularity = popularity > 0;
     final sku = product.sku?.trim();
     final hasSku = sku != null && sku.isNotEmpty;
-    final originalPriceStyle =
-        (theme.textTheme.labelSmall ?? const TextStyle()).copyWith(
-      decoration: TextDecoration.lineThrough,
-      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-    );
+    final originalPriceStyle = (theme.textTheme.labelSmall ?? const TextStyle())
+        .copyWith(
+          decoration: TextDecoration.lineThrough,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        );
 
     return Card(
       child: Padding(
@@ -1392,17 +1376,12 @@ class _ProductCard extends StatelessWidget {
                       ),
                       if (isOnPromo)
                         _Tag(
-                          text:
-                              '${product.price.toStringAsFixed(2)} DZD',
+                          text: '${product.price.toStringAsFixed(2)} DZD',
                           style: originalPriceStyle,
                         ),
                       if (isOnPromo)
-                        const _StatusBadge(
-                          text: 'Promo',
-                          color: Colors.pink,
-                        ),
-                      if (showPopularity)
-                        _Tag(text: 'Popularity: $popularity'),
+                        const _StatusBadge(text: 'Promo', color: Colors.pink),
+                      if (showPopularity) _Tag(text: 'Popularity: $popularity'),
                       if (isAdmin && hasSku) _Tag(text: 'SKU: $sku'),
                       if (product.category != null &&
                           product.category!.trim().isNotEmpty)
@@ -1443,8 +1422,9 @@ class _ProductCard extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
                       'Unavailable',
-                      style: theme.textTheme.labelSmall
-                          ?.copyWith(color: Colors.red),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: Colors.red,
+                      ),
                     ),
                   ),
               ],
@@ -1457,7 +1437,7 @@ class _ProductCard extends StatelessWidget {
 }
 
 class _ProductGridCard extends StatelessWidget {
-  final CctvProduct product;
+  final Product product;
   final bool isAdmin;
   final VoidCallback onAdd;
   final VoidCallback? onEdit;
@@ -1474,8 +1454,7 @@ class _ProductGridCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final resolvedImageUrl =
-        CommerceConfig.resolveImageUrl(product.imageUrl);
+    final resolvedImageUrl = CommerceConfig.resolveImageUrl(product.imageUrl);
     final stock = product.stock;
     final isOutOfStock = stock != null && stock <= 0;
     final isLowStock = stock != null && stock > 0 && stock <= 3;
@@ -1485,11 +1464,11 @@ class _ProductGridCard extends StatelessWidget {
     final showPopularity = popularity > 0;
     final sku = product.sku?.trim();
     final hasSku = sku != null && sku.isNotEmpty;
-    final originalPriceStyle =
-        (theme.textTheme.labelSmall ?? const TextStyle()).copyWith(
-      decoration: TextDecoration.lineThrough,
-      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-    );
+    final originalPriceStyle = (theme.textTheme.labelSmall ?? const TextStyle())
+        .copyWith(
+          decoration: TextDecoration.lineThrough,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        );
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -1499,10 +1478,7 @@ class _ProductGridCard extends StatelessWidget {
           if (resolvedImageUrl != null)
             AspectRatio(
               aspectRatio: 4 / 3,
-              child: Image.network(
-                resolvedImageUrl,
-                fit: BoxFit.cover,
-              ),
+              child: Image.network(resolvedImageUrl, fit: BoxFit.cover),
             )
           else
             Container(
@@ -1579,12 +1555,8 @@ class _ProductGridCard extends StatelessWidget {
                   runSpacing: 4,
                   children: [
                     if (isOnPromo)
-                      const _StatusBadge(
-                        text: 'Promo',
-                        color: Colors.pink,
-                      ),
-                    if (showPopularity)
-                      _Tag(text: 'Popularity: $popularity'),
+                      const _StatusBadge(text: 'Promo', color: Colors.pink),
+                    if (showPopularity) _Tag(text: 'Popularity: $popularity'),
                     if (isAdmin && hasSku) _Tag(text: 'SKU: $sku'),
                     if (product.category != null &&
                         product.category!.trim().isNotEmpty)
@@ -1592,10 +1564,7 @@ class _ProductGridCard extends StatelessWidget {
                     if (product.stock != null)
                       _Tag(text: 'Stock: ${product.stock}'),
                     if (!product.isActive)
-                      const _StatusBadge(
-                        text: 'Inactive',
-                        color: Colors.grey,
-                      ),
+                      const _StatusBadge(text: 'Inactive', color: Colors.grey),
                     if (isOutOfStock)
                       const _StatusBadge(
                         text: 'Out of stock',
@@ -1645,10 +1614,7 @@ class _Tag extends StatelessWidget {
         color: theme.colorScheme.surfaceVariant,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(
-        text,
-        style: resolvedStyle,
-      ),
+      child: Text(text, style: resolvedStyle),
     );
   }
 }
@@ -1657,10 +1623,7 @@ class _StatusBadge extends StatelessWidget {
   final String text;
   final Color color;
 
-  const _StatusBadge({
-    required this.text,
-    required this.color,
-  });
+  const _StatusBadge({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -1672,10 +1635,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: color),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
       ),
     );
   }
@@ -1686,11 +1646,7 @@ class _FilterPill extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
 
-  const _FilterPill({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
+  const _FilterPill({required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1708,10 +1664,9 @@ class _FilterPill extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: Theme.of(context)
-                .textTheme
-                .labelLarge
-                ?.copyWith(color: color),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: color),
           ),
         ],
       ),
@@ -1763,17 +1718,9 @@ class _ProductSkeletonList extends StatelessWidget {
                           color: Colors.white,
                         ),
                         const SizedBox(height: 8),
-                        Container(
-                          height: 12,
-                          width: 180,
-                          color: Colors.white,
-                        ),
+                        Container(height: 12, width: 180, color: Colors.white),
                         const SizedBox(height: 12),
-                        Container(
-                          height: 10,
-                          width: 120,
-                          color: Colors.white,
-                        ),
+                        Container(height: 10, width: 120, color: Colors.white),
                       ],
                     ),
                   ),
@@ -1797,9 +1744,9 @@ class _SectionHeader extends StatelessWidget {
     return Text(
       label.toUpperCase(),
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-            letterSpacing: 0.8,
-          ),
+        color: Theme.of(context).colorScheme.primary,
+        letterSpacing: 0.8,
+      ),
     );
   }
 }
@@ -1834,10 +1781,7 @@ class _CartTab extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'Your cart',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text('Your cart', style: Theme.of(context).textTheme.titleLarge),
               const Spacer(),
               TextButton.icon(
                 onPressed: provider.clearCart,
@@ -1860,10 +1804,7 @@ class _CartTab extends StatelessWidget {
                     label: 'Subtotal',
                     value: '${provider.total.toStringAsFixed(2)} DZD',
                   ),
-                  const _SummaryLine(
-                    label: 'Delivery',
-                    value: '0.00 DZD',
-                  ),
+                  const _SummaryLine(label: 'Delivery', value: '0.00 DZD'),
                   const Divider(height: 16),
                   _SummaryLine(
                     label: 'Total',
@@ -1895,8 +1836,7 @@ class _CartTab extends StatelessWidget {
                   color: Colors.red.withValues(alpha: 0.15),
                   child: const Icon(Icons.delete_outline, color: Colors.red),
                 ),
-                onDismissed: (_) =>
-                    provider.removeFromCart(item.product.id),
+                onDismissed: (_) => provider.removeFromCart(item.product.id),
                 child: _CartItemRow(
                   item: item,
                   onDecrement: () => provider.updateQuantity(
@@ -1907,8 +1847,7 @@ class _CartTab extends StatelessWidget {
                     item.product.id,
                     item.quantity + 1,
                   ),
-                  onRemove: () =>
-                      provider.removeFromCart(item.product.id),
+                  onRemove: () => provider.removeFromCart(item.product.id),
                 ),
               );
             },
@@ -1987,10 +1926,7 @@ class _CartItemRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item.product.name,
-                    style: theme.textTheme.titleSmall,
-                  ),
+                  Text(item.product.name, style: theme.textTheme.titleSmall),
                   const SizedBox(height: 4),
                   Text(
                     '${item.subtotal.toStringAsFixed(2)} DZD',
@@ -1999,15 +1935,9 @@ class _CartItemRow extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(
-              onPressed: onDecrement,
-              icon: const Icon(Icons.remove),
-            ),
+            IconButton(onPressed: onDecrement, icon: const Icon(Icons.remove)),
             Text(item.quantity.toString()),
-            IconButton(
-              onPressed: onIncrement,
-              icon: const Icon(Icons.add),
-            ),
+            IconButton(onPressed: onIncrement, icon: const Icon(Icons.add)),
             IconButton(
               onPressed: onRemove,
               icon: const Icon(Icons.delete_outline),
@@ -2053,8 +1983,9 @@ class _OrdersTab extends StatefulWidget {
   final VoidCallback onLoadMore;
   final Future<bool> Function({
     required String orderId,
-    required String status,
-  }) onUpdateStatus;
+    required OrderStatus status,
+  })
+  onUpdateStatus;
   final bool Function(String orderId) isUpdating;
   final bool canUpdateStatus;
 
@@ -2075,7 +2006,6 @@ class _OrdersTabState extends State<_OrdersTab> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _statusFilter = 'All';
   OrderSort _sort = OrderSort.dateDesc;
-  bool _updatingStatus = false;
 
   @override
   void dispose() {
@@ -2083,74 +2013,50 @@ class _OrdersTabState extends State<_OrdersTab> {
     super.dispose();
   }
 
-  List<String> _extractStatuses(List<CctvOrder> orders) {
+  List<String> _extractStatuses(List<Order> orders) {
     final statuses = <String>{};
     for (final order in orders) {
-      final status = order.status.trim();
-      if (status.isNotEmpty) {
-        statuses.add(status);
-      }
+      statuses.add(order.status.name);
     }
     final list = statuses.toList()..sort();
     return ['All', ...list];
   }
 
-  List<CctvOrder> _applyFilters(
-    List<CctvOrder> orders,
-    String activeStatus,
-  ) {
+  List<Order> _applyFilters(List<Order> orders, String activeStatus) {
     var filtered = orders;
     final query = _searchCtrl.text.trim().toLowerCase();
 
     if (activeStatus != 'All') {
-      filtered = filtered
-          .where((o) => o.status.trim() == activeStatus)
-          .toList();
+      filtered = filtered.where((o) => o.status.name == activeStatus).toList();
     }
 
     if (query.isNotEmpty) {
       filtered = filtered.where((o) {
         return o.id.toLowerCase().contains(query) ||
-            o.userId.toLowerCase().contains(query) ||
             o.phone.toLowerCase().contains(query) ||
-            o.address.toLowerCase().contains(query) ||
-            (o.note ?? '').toLowerCase().contains(query);
+            o.address.toLowerCase().contains(query);
       }).toList();
     }
 
     filtered.sort((a, b) {
       switch (_sort) {
         case OrderSort.dateAsc:
-          return (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
-              .compareTo(
-                  b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0));
+          return (a.createdAt ?? DateTime(0)).compareTo(
+            b.createdAt ?? DateTime(0),
+          );
         case OrderSort.totalDesc:
           return b.total.compareTo(a.total);
         case OrderSort.totalAsc:
           return a.total.compareTo(b.total);
         case OrderSort.dateDesc:
         default:
-          return (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
-              .compareTo(
-                  a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0));
+          return (b.createdAt ?? DateTime(0)).compareTo(
+            a.createdAt ?? DateTime(0),
+          );
       }
     });
 
     return filtered;
-  }
-
-  String _sortLabel(OrderSort sort) {
-    switch (sort) {
-      case OrderSort.dateAsc:
-        return 'Oldest';
-      case OrderSort.totalAsc:
-        return 'Total ↑';
-      case OrderSort.totalDesc:
-        return 'Total ↓';
-      case OrderSort.dateDesc:
-      default:
-        return 'Newest';
-    }
   }
 
   @override
@@ -2159,39 +2065,11 @@ class _OrdersTabState extends State<_OrdersTab> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (widget.provider.ordersError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 48),
-              const SizedBox(height: 12),
-              Text(
-                widget.provider.ordersError!,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: widget.onRefresh,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (widget.provider.orders.isEmpty) {
-      return const Center(child: Text('No orders yet.'));
-    }
-
     final statuses = _extractStatuses(widget.provider.orders);
-    final activeStatus =
-        statuses.contains(_statusFilter) ? _statusFilter : 'All';
-    final orders =
-        _applyFilters(widget.provider.orders, activeStatus);
+    final activeStatus = statuses.contains(_statusFilter)
+        ? _statusFilter
+        : 'All';
+    final orders = _applyFilters(widget.provider.orders, activeStatus);
 
     return RefreshIndicator(
       onRefresh: () async => widget.onRefresh(),
@@ -2200,10 +2078,9 @@ class _OrdersTabState extends State<_OrdersTab> {
         children: [
           TextField(
             controller: _searchCtrl,
-            textInputAction: TextInputAction.search,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Search orders',
+              hintText: 'Rechercher une commande...',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -2219,101 +2096,33 @@ class _OrdersTabState extends State<_OrdersTab> {
                 itemCount: statuses.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
-                  final status = statuses[index];
+                  final s = statuses[index];
                   return ChoiceChip(
-                    label: Text(status),
-                    selected: activeStatus == status,
-                    onSelected: (_) =>
-                        setState(() => _statusFilter = status),
+                    label: Text(s == 'All' ? 'Tout' : s),
+                    selected: activeStatus == s,
+                    onSelected: (_) => setState(() => _statusFilter = s),
                   );
                 },
               ),
             ),
           ],
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              PopupMenuButton<OrderSort>(
-                initialValue: _sort,
-                onSelected: (value) => setState(() => _sort = value),
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: OrderSort.dateDesc,
-                    child: Text('Newest first'),
-                  ),
-                  PopupMenuItem(
-                    value: OrderSort.dateAsc,
-                    child: Text('Oldest first'),
-                  ),
-                  PopupMenuItem(
-                    value: OrderSort.totalDesc,
-                    child: Text('Total high-low'),
-                  ),
-                  PopupMenuItem(
-                    value: OrderSort.totalAsc,
-                    child: Text('Total low-high'),
-                  ),
-                ],
-                child: _FilterPill(
-                  icon: Icons.sort,
-                  label: _sortLabel(_sort),
-                ),
-              ),
-              Text(
-                '${orders.length} orders',
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-            ],
-          ),
           const SizedBox(height: 12),
-          ...orders.map((order) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _OrderCard(
-                  order: order,
-                  isUpdating: widget.isUpdating(order.id),
-                  canUpdateStatus: widget.canUpdateStatus,
-                  onUpdateStatus: (status) async {
-                    if (_updatingStatus) return;
-                    setState(() => _updatingStatus = true);
-                    final ok = await widget.onUpdateStatus(
-                      orderId: order.id,
-                      status: status,
-                    );
-                    if (mounted) {
-                      setState(() => _updatingStatus = false);
-                      if (!ok) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Status update failed.'),
-                          ),
-                        );
-                      }
-                    }
-                  },
+          ...orders.map(
+            (order) => _OrderCard(
+              order: order,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => OrderDetailsScreen(orderId: order.id),
                 ),
-              )),
-          if (widget.provider.ordersLoadingMore)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (widget.provider.ordersHasMore)
-            Center(
-              child: OutlinedButton.icon(
-                onPressed: widget.onLoadMore,
-                icon: const Icon(Icons.expand_more),
-                label: const Text('Load more'),
               ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'All orders loaded.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
+          if (widget.provider.ordersHasMore)
+            Center(
+              child: TextButton(
+                onPressed: widget.onLoadMore,
+                child: const Text('Charger plus'),
               ),
             ),
         ],
@@ -2323,350 +2132,55 @@ class _OrdersTabState extends State<_OrdersTab> {
 }
 
 class _OrderCard extends StatelessWidget {
-  final CctvOrder order;
-  final bool isUpdating;
-  final bool canUpdateStatus;
-  final ValueChanged<String> onUpdateStatus;
+  final Order order;
+  final VoidCallback onTap;
 
-  const _OrderCard({
-    required this.order,
-    required this.isUpdating,
-    required this.canUpdateStatus,
-    required this.onUpdateStatus,
-  });
+  const _OrderCard({required this.order, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final itemCount = order.items.fold<int>(
-      0,
-      (sum, item) => sum + item.quantity,
-    );
-    final shortId = order.id.length > 6
-        ? order.id.substring(order.id.length - 6)
-        : order.id;
-    final dateLabel = order.createdAt == null
-        ? 'Unknown date'
-        : DateFormat('yyyy-MM-dd HH:mm')
-            .format(order.createdAt!.toLocal());
-    final statusColor = _statusColor(order.status);
-    const statusOptions = [
-      'pending',
-      'paid',
-      'shipped',
-      'delivered',
-      'cancelled',
-      'canceled',
-    ];
-
     return Card(
-      child: ExpansionTile(
-        title: Text(
-          order.id.isEmpty ? 'Order' : 'Order #$shortId',
-          style: theme.textTheme.titleSmall,
-        ),
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        onTap: onTap,
+        title: Text('Commande #${order.id.substring(0, 8)}'),
         subtitle: Text(
-          '${order.total.toStringAsFixed(2)} DZD • $itemCount items • $dateLabel',
+          '${order.total.toStringAsFixed(2)} DZD • ${order.items.length} articles',
         ),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                _StatusBadge(
-                  text: order.status,
-                  color: statusColor,
-                ),
-                if (order.userId.isNotEmpty) _Tag(text: order.userId),
-                if (canUpdateStatus)
-                  DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: statusOptions
-                              .contains(order.status.toLowerCase())
-                          ? order.status.toLowerCase()
-                          : 'pending',
-                      onChanged: isUpdating
-                          ? null
-                          : (value) {
-                              if (value == null) return;
-                              onUpdateStatus(value);
-                            },
-                      items: statusOptions
-                          .map(
-                            (status) => DropdownMenuItem(
-                              value: status,
-                              child: Text(
-                                status,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ),
-                if (canUpdateStatus && isUpdating)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4),
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (order.id.isNotEmpty)
-            _OrderDetailLine(label: 'Order ID', value: order.id),
-          _OrderDetailLine(label: 'Phone', value: order.phone),
-          _OrderDetailLine(label: 'Address', value: order.address),
-          if (order.note != null && order.note!.trim().isNotEmpty)
-            _OrderDetailLine(label: 'Note', value: order.note!),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              if (order.id.isNotEmpty)
-                OutlinedButton.icon(
-                  onPressed: () => _copyToClipboard(
-                    context,
-                    order.id,
-                    'Order ID copied.',
-                  ),
-                  icon: const Icon(Icons.copy),
-                  label: const Text('Copy ID'),
-                ),
-              if (order.phone.trim().isNotEmpty)
-                OutlinedButton.icon(
-                  onPressed: () => _callPhone(context, order.phone),
-                  icon: const Icon(Icons.phone),
-                  label: const Text('Call'),
-                ),
-              if (order.address.trim().isNotEmpty)
-                OutlinedButton.icon(
-                  onPressed: () => _copyToClipboard(
-                    context,
-                    order.address,
-                    'Address copied.',
-                  ),
-                  icon: const Icon(Icons.copy),
-                  label: const Text('Copy address'),
-                ),
-              if (order.phone.trim().isNotEmpty)
-                OutlinedButton.icon(
-                  onPressed: () => _copyToClipboard(
-                    context,
-                    order.phone,
-                    'Phone copied.',
-                  ),
-                  icon: const Icon(Icons.copy_all),
-                  label: const Text('Copy phone'),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Divider(),
-          _OrderTimeline(status: order.status),
-          ...order.items.map(
-            (item) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(item.name),
-              subtitle: Text(
-                'x${item.quantity} • ${item.price.toStringAsFixed(2)} DZD',
-              ),
-              trailing: Text(
-                '${item.subtotal.toStringAsFixed(2)} DZD',
-                style: theme.textTheme.labelLarge,
-              ),
-            ),
-          ),
-          if (order.items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text('No items.'),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Color _statusColor(String status) {
-    switch (status.trim().toLowerCase()) {
-      case 'paid':
-        return Colors.blue;
-      case 'shipped':
-        return Colors.deepPurple;
-      case 'delivered':
-        return Colors.green;
-      case 'cancelled':
-      case 'canceled':
-        return Colors.red;
-      case 'pending':
-      default:
-        return Colors.orange;
-    }
-  }
-
-  Future<void> _callPhone(BuildContext context, String phone) async {
-    final uri = Uri(scheme: 'tel', path: phone.trim());
-    final ok = await launchUrl(uri);
-    if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot start call.')),
-      );
-    }
-  }
-
-  void _copyToClipboard(
-    BuildContext context,
-    String value,
-    String message,
-  ) {
-    Clipboard.setData(ClipboardData(text: value));
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    }
-  }
-}
-
-class _OrderDetailLine extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _OrderDetailLine({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 72,
-            child: Text(
-              '$label:',
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-          ),
-          Expanded(
-            child: Text(value),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _OrderTimeline extends StatelessWidget {
-  final String status;
-
-  const _OrderTimeline({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final lower = status.trim().toLowerCase();
-    if (lower == 'cancelled' || lower == 'canceled') {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            _TimelineDot(color: Colors.red, filled: true),
-            const SizedBox(width: 8),
-            const Text('Cancelled'),
-          ],
-        ),
-      );
-    }
-
-    final steps = [
-      const _TimelineStep(label: 'Created', key: 'pending'),
-      const _TimelineStep(label: 'Paid', key: 'paid'),
-      const _TimelineStep(label: 'Shipped', key: 'shipped'),
-      const _TimelineStep(label: 'Delivered', key: 'delivered'),
-    ];
-
-    int currentIndex = 0;
-    for (var i = 0; i < steps.length; i++) {
-      if (steps[i].key == lower) {
-        currentIndex = i;
-        break;
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < steps.length; i++) ...[
-            Row(
-              children: [
-                _TimelineDot(
-                  color: Colors.green,
-                  filled: i <= currentIndex,
-                ),
-                const SizedBox(width: 8),
-                Text(steps[i].label),
-              ],
+            _StatusBadge(
+              text: order.status.label,
+              color: _statusColor(order.status),
             ),
-            if (i < steps.length - 1)
-              Padding(
-                padding: const EdgeInsets.only(left: 6),
-                child: Container(
-                  width: 2,
-                  height: 16,
-                  color: Colors.green.withValues(alpha: 0.3),
-                ),
+            const SizedBox(height: 4),
+            if (order.createdAt != null)
+              Text(
+                DateFormat('dd/MM').format(order.createdAt!),
+                style: theme.textTheme.labelSmall,
               ),
           ],
-        ],
+        ),
       ),
     );
   }
-}
 
-class _TimelineStep {
-  final String label;
-  final String key;
-
-  const _TimelineStep({
-    required this.label,
-    required this.key,
-  });
-}
-
-class _TimelineDot extends StatelessWidget {
-  final Color color;
-  final bool filled;
-
-  const _TimelineDot({
-    required this.color,
-    required this.filled,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 12,
-      height: 12,
-      decoration: BoxDecoration(
-        color: filled ? color : Colors.transparent,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color, width: 2),
-      ),
-    );
+  Color _statusColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.delivered:
+        return Colors.green;
+      case OrderStatus.shipped:
+        return Colors.orange;
+      case OrderStatus.cancelled:
+        return Colors.red;
+      case OrderStatus.paid:
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
   }
 }
+

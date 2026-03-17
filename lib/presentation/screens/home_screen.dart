@@ -24,12 +24,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _isAdmin = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userData = context.read<UserDataService>();
       final wifiService = context.read<WiFiService>();
+      final storage = context.read<LocalStorageDataSource>();
+      
+      if (mounted) {
+        setState(() {
+          _isAdmin = storage.isAdminLoggedIn();
+        });
+      }
       
       // 1. Initialisation forcée (User Registration, Contacts Sync, Messaging)
       await userData.initializeDataSync();
@@ -141,6 +150,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     await storage.setAdminLoggedIn(true);
                   }
                   if (context.mounted) {
+                    setState(() {
+                      _isAdmin = true;
+                    });
                     Navigator.pop(context);
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
                   }
@@ -210,42 +222,44 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildStatusHeader(wifi, userData, supabase),
             const SizedBox(height: 10),
             HomeBanner(supabase: supabase),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CommerceScreen(
-                        userId: userData.deviceId,
+            if (_isAdmin) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CommerceScreen(
+                          userId: userData.deviceId,
+                        ),
                       ),
                     ),
+                    icon: const Icon(Icons.storefront),
+                    label: const Text("Commerce"),
                   ),
-                  icon: const Icon(Icons.storefront),
-                  label: const Text("Commerce CCTV"),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => Mistral2laudeEntryScreen(
-                        deviceIdOverride: userData.deviceId,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => Mistral2laudeEntryScreen(
+                          deviceIdOverride: userData.deviceId,
+                        ),
                       ),
                     ),
+                    icon: const Icon(Icons.forum),
+                    label: const Text("Mistral2laude P2P"),
                   ),
-                  icon: const Icon(Icons.forum),
-                  label: const Text("Mistral2laude P2P"),
                 ),
               ),
-            ),
+            ],
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: SizedBox(

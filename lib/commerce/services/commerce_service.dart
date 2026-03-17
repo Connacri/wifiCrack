@@ -1,9 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../commerce_config.dart';
 import '../models/cart_item.dart';
-import '../models/cctv_order.dart';
-import '../models/cctv_product.dart';
+import '../models/order.dart';
+import '../models/product.dart';
+import '../models/commerce_enums.dart';
+import '../models/shipment.dart';
+import '../models/order_return.dart';
 
 class CommerceService {
   final SupabaseClient _client;
@@ -11,7 +15,7 @@ class CommerceService {
   CommerceService({SupabaseClient? client})
       : _client = client ?? Supabase.instance.client;
 
-  Future<List<CctvProduct>> fetchProducts({
+  Future<List<Product>> fetchProducts({
     String? query,
     String? category,
     bool includeInactive = false,
@@ -19,7 +23,8 @@ class CommerceService {
     int limit = 30,
   }) async {
     try {
-      var builder = _client.from('cctv_products').select();
+      final table = CommerceConfig.productsTable;
+      var builder = _client.from(table).select();
 
       if (!includeInactive) {
         builder = builder.eq('is_active', true);
@@ -40,39 +45,39 @@ class CommerceService {
           .order('name')
           .range(offset, offset + limit - 1);
       final list = List<Map<String, dynamic>>.from(data as List);
-      return list.map(CctvProduct.fromMap).toList();
+      return list.map(Product.fromMap).toList();
     } catch (e) {
       debugPrint('[Commerce] fetchProducts error: $e');
       rethrow;
     }
   }
 
-  Future<CctvProduct?> createProduct(CctvProduct product) async {
+  Future<Product?> createProduct(Product product) async {
     try {
       final res = await _client
-          .from('cctv_products')
+          .from(CommerceConfig.productsTable)
           .insert(product.toMap())
           .select()
           .maybeSingle();
       if (res == null) return null;
-      return CctvProduct.fromMap(res);
+      return Product.fromMap(res);
     } catch (e) {
       debugPrint('[Commerce] createProduct error: $e');
       rethrow;
     }
   }
 
-  Future<CctvProduct?> updateProduct(CctvProduct product) async {
+  Future<Product?> updateProduct(Product product) async {
     if (product.id.isEmpty) return null;
     try {
       final res = await _client
-          .from('cctv_products')
+          .from(CommerceConfig.productsTable)
           .update(product.toMap())
           .eq('id', product.id)
           .select()
           .maybeSingle();
       if (res == null) return null;
-      return CctvProduct.fromMap(res);
+      return Product.fromMap(res);
     } catch (e) {
       debugPrint('[Commerce] updateProduct error: $e');
       rethrow;
@@ -82,10 +87,45 @@ class CommerceService {
   Future<void> deleteProduct(String productId) async {
     if (productId.isEmpty) return;
     try {
-      await _client.from('cctv_products').delete().eq('id', productId);
+      // 1. Fetch product to get image path
+      final productRes = await _client
+          .from(CommerceConfig.productsTable)
+          .select('image_url')
+          .eq('id', productId)
+          .maybeSingle();
+      
+      final imageUrl = productRes?['image_url']?.toString();
+
+      // 2. Delete product from database
+      await _client
+          .from(CommerceConfig.productsTable)
+          .delete()
+          .eq('id', productId);
+
+      // 3. Delete image from storage if it belongs to our bucket
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        await deleteImage(imageUrl);
+      }
     } catch (e) {
       debugPrint('[Commerce] deleteProduct error: $e');
       rethrow;
+    }
+  }
+
+  Future<void> deleteImage(String path) async {
+    if (path.isEmpty) return;
+    // Only delete if it's a relative path (not an external URL)
+    if (path.startsWith('http://') || path.startsWith('https://')) return;
+    
+    try {
+      final bucket = CommerceConfig.supabaseImagesBucket.trim();
+      if (bucket.isEmpty) return;
+      
+      await _client.storage.from(bucket).remove([path]);
+      debugPrint('[Commerce] Image deleted: $path');
+    } catch (e) {
+      debugPrint('[Commerce] deleteImage error: $e');
+      // We don't rethrow here to avoid failing the whole operation if image delete fails
     }
   }
 
@@ -105,7 +145,7 @@ class CommerceService {
         'address': address,
         'note': note,
         'total': total,
-        'status': 'pending',
+        'status': OrderStatus.created.toJson(),
         'items': items
             .map(
               (item) => {
@@ -119,29 +159,48 @@ class CommerceService {
             .toList(),
       };
 
-      await _client.from('cctv_orders').insert(payload);
-      return '';
+      final res = await _client.from('orders').insert(payload).select('id').maybeSingle();
+      return res?['id']?.toString();
     } catch (e) {
       debugPrint('[Commerce] createOrder error: $e');
       rethrow;
     }
   }
 
-  Future<List<CctvOrder>> fetchOrders({
+  Future<List<Order>> fetchOrders({
+    String? userId,
     int offset = 0,
     int limit = 20,
   }) async {
     try {
-      final data = await _client
-          .from('cctv_orders')
-          .select()
+      // Try fetching with related shipments and returns
+      var builder = _client.from('orders').select('*, shipments(*), returns(*)');
+
+      if (userId != null && userId.trim().isNotEmpty) {
+        builder = builder.eq('user_id', userId.trim());
+      }
+
+      final data = await builder
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
       final list = List<Map<String, dynamic>>.from(data as List);
-      return list.map(CctvOrder.fromMap).toList();
+      return list.map(Order.fromMap).toList();
     } catch (e) {
       debugPrint('[Commerce] fetchOrders error: $e');
-      rethrow;
+      // Fallback if joined tables don't exist
+      try {
+        var builder = _client.from('orders').select();
+        if (userId != null && userId.trim().isNotEmpty) {
+          builder = builder.eq('user_id', userId.trim());
+        }
+        final data = await builder
+            .order('created_at', ascending: false)
+            .range(offset, offset + limit - 1);
+        final list = List<Map<String, dynamic>>.from(data as List);
+        return list.map(Order.fromMap).toList();
+      } catch (_) {
+        rethrow;
+      }
     }
   }
 
@@ -152,12 +211,65 @@ class CommerceService {
     if (orderId.trim().isEmpty) return false;
     try {
       await _client
-          .from('cctv_orders')
+          .from('orders')
           .update({'status': status})
           .eq('id', orderId);
       return true;
     } catch (e) {
       debugPrint('[Commerce] updateOrderStatus error: $e');
+      rethrow;
+    }
+  }
+
+  Future<Shipment?> createShipment({
+    required String orderId,
+    required String trackingNumber,
+    required String carrierName,
+    required List<OrderItem> items,
+  }) async {
+    try {
+      final payload = {
+        'order_id': orderId,
+        'tracking_number': trackingNumber,
+        'carrier_name': carrierName,
+        'status': ShipmentStatus.labelCreated.toJson(),
+        'items': items.map((i) => {
+          'product_id': i.productId,
+          'name': i.name,
+          'price': i.price,
+          'quantity': i.quantity,
+          'subtotal': i.subtotal,
+        }).toList(),
+        'shipped_at': DateTime.now().toIso8601String(),
+      };
+
+      final res = await _client
+          .from('shipments')
+          .insert(payload)
+          .select()
+          .maybeSingle();
+      
+      if (res == null) return null;
+      return Shipment.fromMap(res);
+    } catch (e) {
+      debugPrint('[Commerce] createShipment error: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> updateShipmentStatus({
+    required String shipmentId,
+    required String status,
+  }) async {
+    try {
+      final payload = <String, dynamic>{'status': status};
+      if (status == ShipmentStatus.delivered.toJson()) {
+        payload['actual_delivery'] = DateTime.now().toIso8601String();
+      }
+      await _client.from('shipments').update(payload).eq('id', shipmentId);
+      return true;
+    } catch (e) {
+      debugPrint('[Commerce] updateShipmentStatus error: $e');
       rethrow;
     }
   }

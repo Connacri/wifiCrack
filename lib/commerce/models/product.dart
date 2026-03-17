@@ -1,4 +1,4 @@
-class CctvProduct {
+class Product {
   final String id;
   final String name;
   final String? description;
@@ -11,7 +11,7 @@ class CctvProduct {
   final int popularity;
   final bool isActive;
 
-  const CctvProduct({
+  const Product({
     required this.id,
     required this.name,
     required this.price,
@@ -25,8 +25,8 @@ class CctvProduct {
     this.isActive = true,
   });
 
-  factory CctvProduct.fromMap(Map<String, dynamic> map) {
-    return CctvProduct(
+  factory Product.fromMap(Map<String, dynamic> map) {
+    return Product(
       id: map['id']?.toString() ?? '',
       name: map['name']?.toString() ?? 'Unknown',
       description: map['description']?.toString(),
