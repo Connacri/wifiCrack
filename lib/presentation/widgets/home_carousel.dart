@@ -47,7 +47,7 @@ class HomeBanner extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
-                          colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+                          colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
                         ),
                       ),
                       padding: const EdgeInsets.all(15),
@@ -126,7 +126,7 @@ class _AdSubmissionDialogState extends State<AdSubmissionDialog> {
     if (_rewarded) {
       return Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green)),
+        decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green)),
         child: const Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green),

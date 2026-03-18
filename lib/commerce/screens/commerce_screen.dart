@@ -1328,7 +1328,7 @@ class _ProductCard extends StatelessWidget {
                   width: 86,
                   height: 86,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceVariant,
+                    color: theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Hero(tag: heroTag, child: const Icon(Icons.videocam)),
@@ -1509,7 +1509,7 @@ class _ProductGridCard extends StatelessWidget {
             else
               Container(
                 height: 120,
-                color: theme.colorScheme.surfaceVariant,
+                color: theme.colorScheme.surfaceContainerHighest,
                 alignment: Alignment.center,
                 child: Hero(
                   tag: heroTag,
@@ -1644,7 +1644,7 @@ class _Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(text, style: resolvedStyle),

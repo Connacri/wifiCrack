@@ -277,7 +277,7 @@ class MessagingService {
         'messageId': message.messageId,
       });
     } catch (e) {
-      print('Erreur traitement message: $e');
+      // print('Erreur traitement message: $e');
     }
   }
 

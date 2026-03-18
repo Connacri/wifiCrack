@@ -26,9 +26,11 @@ class QRGeneratorScreen extends StatelessWidget {
           IconButton(
             tooltip: 'Partager le lien',
             icon: const Icon(Icons.share),
-            onPressed: () => Share.share(
-              'Ajoute-moi sur Mistral2laude P2P !\n$link',
-              subject: 'Invitation Mistral2laude P2P',
+            onPressed: () => SharePlus.instance.share(
+              ShareParams(
+                text: 'Ajoute-moi sur Mistral2laude P2P !\n$link',
+                subject: 'Invitation Mistral2laude P2P',
+              ),
             ),
           ),
         ],
@@ -86,8 +88,11 @@ class QRGeneratorScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               OutlinedButton.icon(
-                onPressed: () =>
-                    Share.share('Ajoute-moi sur Mistral2laude P2P !\n$link'),
+                onPressed: () => SharePlus.instance.share(
+                  ShareParams(
+                    text: 'Ajoute-moi sur Mistral2laude P2P !\n$link',
+                  ),
+                ),
                 icon: const Icon(Icons.link),
                 label: const Text('Partager le lien'),
               ),

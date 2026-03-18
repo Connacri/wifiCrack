@@ -16,7 +16,7 @@ import 'database_service.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print('Message en arrière-plan: ${message.messageId}');
+  // print('Message en arrière-plan: ${message.messageId}');
 }
 
 /// Service de notifications locales et push
@@ -45,7 +45,7 @@ class NotificationService {
     try {
       await Firebase.initializeApp();
     } catch (e) {
-      print('⚠️ NotificationService: Erreur Firebase.initializeApp: $e');
+      // print('⚠️ NotificationService: Erreur Firebase.initializeApp: $e');
     }
     
     await _requestPermissions();
@@ -60,7 +60,7 @@ class NotificationService {
       if (Platform.isAndroid || Platform.isIOS) {
         final notificationStatus = await Permission.notification.request();
         if (!notificationStatus.isGranted) {
-          print('Permission notifications refusée');
+          // print('Permission notifications refusée');
         }
 
         final settings = await _fcm.requestPermission(
@@ -71,11 +71,11 @@ class NotificationService {
         );
 
         if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-          print('Permissions FCM accordées');
+          // print('Permissions FCM accordées');
         }
       }
     } catch (e) {
-      print('⚠️ NotificationService: Erreur lors de la demande de permissions: $e');
+      // print('⚠️ NotificationService: Erreur lors de la demande de permissions: $e');
     }
   }
 
@@ -111,9 +111,9 @@ class NotificationService {
         },
       );
     } catch (e) {
-      print('⚠️ NotificationService: Erreur lors de l\'initialisation locale: $e');
+      // print('⚠️ NotificationService: Erreur lors de l\'initialisation locale: $e');
       if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-        print('Notifications locales désactivées sur ce bureau pour éviter le crash.');
+        // print('Notifications locales désactivées sur ce bureau pour éviter le crash.');
       } else {
         rethrow;
       }
@@ -143,11 +143,11 @@ class NotificationService {
 
         _fcmToken = await _fcm.getToken();
 
-        print('FCM Token: $_fcmToken');
+        // print('FCM Token: $_fcmToken');
 
         _fcm.onTokenRefresh.listen((token) {
           _fcmToken = token;
-          print('Nouveau FCM Token: $token');
+          // print('Nouveau FCM Token: $token');
         });
 
         FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
@@ -159,7 +159,7 @@ class NotificationService {
         }
       }
     } catch (e) {
-      print('⚠️ NotificationService: FCM non supporté ou erreur d\'initialisation: $e');
+      // print('⚠️ NotificationService: FCM non supporté ou erreur d\'initialisation: $e');
     }
   }
 
@@ -277,7 +277,7 @@ class NotificationService {
   // === Handlers FCM ===
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    print('Message FCM au premier plan: ${message.notification?.title}');
+    // print('Message FCM au premier plan: ${message.notification?.title}');
 
     final data = message.data;
     if (data['type'] == 'new_message') {
@@ -307,7 +307,7 @@ class NotificationService {
   }
 
   Future<void> _handleMessageOpenedApp(RemoteMessage message) async {
-    print('App ouverte depuis notification: ${message.messageId}');
+    // print('App ouverte depuis notification: ${message.messageId}');
 
     final data = message.data;
     if (data['type'] == 'new_message') {
@@ -324,7 +324,7 @@ class NotificationService {
       String body,
       Map<String, dynamic> data,
       ) async {
-    print('Envoi notification push à $toDeviceId: $title');
+    // print('Envoi notification push à $toDeviceId: $title');
     // TODO: Appeler la Supabase Edge Function
   }
 

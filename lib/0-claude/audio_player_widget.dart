@@ -85,7 +85,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: progress,
-                  backgroundColor: theme.colorScheme.surfaceVariant,
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
                   minHeight: 4,
                 ),

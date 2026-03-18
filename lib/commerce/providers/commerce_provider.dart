@@ -4,7 +4,6 @@ import '../models/cart_item.dart';
 import '../models/order.dart';
 import '../models/product.dart';
 import '../models/commerce_enums.dart';
-import '../models/shipment.dart';
 import '../services/commerce_service.dart';
 
 class CommerceProvider extends ChangeNotifier {

@@ -37,10 +37,8 @@ class AppTheme {
       primary: _primaryLight,
       secondary: _secondaryLight,
       error: _errorLight,
-      surface: _surfaceLight,
+      surface: _bgLight,
       onSurface: _textPrimaryLight,
-      background: _bgLight,
-      onBackground: _textPrimaryLight,
     );
 
     return ThemeData(
@@ -109,7 +107,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: _surfaceLight,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       ),
@@ -131,7 +129,7 @@ class AppTheme {
           borderSide: const BorderSide(color: _primaryLight, width: 2),
         ),
         labelStyle: const TextStyle(color: _textSecondaryLight),
-        hintStyle: TextStyle(color: _textSecondaryLight.withOpacity(0.7)),
+        hintStyle: TextStyle(color: _textSecondaryLight.withValues(alpha: 0.7)),
       ),
 
       // Button Themes
@@ -171,10 +169,8 @@ class AppTheme {
       primary: _primaryDark,
       secondary: _secondaryDark,
       error: _errorDark,
-      surface: _surfaceDark,
+      surface: _bgDark,
       onSurface: _textPrimaryDark,
-      background: _bgDark,
-      onBackground: _textPrimaryDark,
     );
 
     return ThemeData(
@@ -247,7 +243,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
           ), // Subtle borderss
         ),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -263,14 +259,14 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: _primaryDark, width: 2),
         ),
         labelStyle: const TextStyle(color: _textSecondaryDark),
-        hintStyle: TextStyle(color: _textSecondaryDark.withOpacity(0.7)),
+        hintStyle: TextStyle(color: _textSecondaryDark.withValues(alpha: 0.7)),
       ),
 
       // Button Themes

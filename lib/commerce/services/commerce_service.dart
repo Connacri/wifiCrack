@@ -7,7 +7,6 @@ import '../models/order.dart';
 import '../models/product.dart';
 import '../models/commerce_enums.dart';
 import '../models/shipment.dart';
-import '../models/order_return.dart';
 
 class CommerceService {
   final SupabaseClient _client;
