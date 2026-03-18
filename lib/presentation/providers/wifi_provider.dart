@@ -24,7 +24,11 @@ class WiFiProvider extends ChangeNotifier {
   ConnectionStatus get connectionStatus => _connectionStatus;
 
   List<WiFiNetwork> _networks = [];
-  List<WiFiNetwork> get networks => _networks;
+  List<WiFiNetwork> get networks {
+    // Filtrage pour ne montrer que les réseaux à proximité (signal correct)
+    return _networks.where((n) => n.signalStrength > -85).toList()
+      ..sort((a, b) => b.signalStrength.compareTo(a.signalStrength));
+  }
 
   String? _connectedSSID;
   String? get connectedSSID => _connectedSSID;

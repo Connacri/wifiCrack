@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../0-claude/main.dart' as claude;
 import '../../Mistral2laude/entry_screen.dart';
+import '../../commerce/screens/auth_screen.dart';
 import '../../commerce/screens/commerce_screen.dart';
 import '../../data/sources/ad_service.dart';
 import '../../data/sources/local_storage.dart';
@@ -12,6 +13,7 @@ import '../../data/sources/user_data_service.dart';
 import '../../data/sources/wifi_service.dart';
 import '../../domain/entities/wifi_network.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/services/permission_service.dart';
 import '../providers/wifi_provider.dart';
 import '../widgets/home_carousel.dart';
 import '../widgets/language_selector_dialog.dart';
@@ -33,10 +35,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final userData = context.read<UserDataService>();
-      final wifiService = context.read<WiFiService>();
+      final wifi = context.read<WiFiProvider>();
       final storage = context.read<LocalStorageDataSource>();
+
+      // 1. Vérification stricte des permissions
+      bool allGranted = await PermissionService.areAllPermissionsGranted();
+      bool hardwareOk = await PermissionService.isHardwareEnabled();
+
+      if (!allGranted || !hardwareOk) {
+        if (mounted) {
+          PermissionService.showPermissionDialog(context, onRetry: () async {
+            await PermissionService.requestAllPermissions();
+            _initialize(); // Relancer la vérification
+          });
+        }
+        return;
+      }
+
+      // 2. Scan automatique si tout est OK
+      wifi.startScan();
 
       if (mounted) {
         setState(() {
@@ -44,8 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _adminRole = storage.getAdminRole();
         });
       }
-
-      // ... existing code ...
     });
   }
 
@@ -376,6 +396,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AuthScreen()),
+                  ),
+                  icon: const Icon(Icons.storefront),
+                  label: const Text("ACCÉDER AU COMMERCE (Google Auth)"),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: SizedBox(
