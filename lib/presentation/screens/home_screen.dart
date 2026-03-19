@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
@@ -401,10 +402,22 @@ class _HomeScreenState extends State<HomeScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AuthScreen()),
-                  ),
+                  onPressed: () {
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CommerceScreen(userId: user.uid),
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AuthScreen()),
+                      );
+                    }
+                  },
                   icon: const Icon(Icons.storefront),
                   label: const Text("ACCÉDER AU COMMERCE (Google Auth)"),
                   style: FilledButton.styleFrom(

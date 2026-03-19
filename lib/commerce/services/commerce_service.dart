@@ -139,12 +139,13 @@ class CommerceService {
     if (items.isEmpty) return null;
     try {
       final payload = <String, dynamic>{
-        'user_id': userId,
-        'phone': phone,
-        'address': address,
+        'buyer_id': userId, // Dans le schéma "orders", c'est buyer_id
+        'order_number': 'ORD-${DateTime.now().millisecondsSinceEpoch}',
         'note': note,
-        'total': total,
-        'status': OrderStatus.created.toJson(),
+        'grand_total': total, // Dans le schéma "orders", c'est grand_total
+        'status': 'created', // Utilisation de l'enum order_status par défaut
+        // Les items sont gérés par la table order_items normalement, 
+        // mais si vous utilisez une colonne jsonb 'items' dans orders:
         'items': items
             .map(
               (item) => {
@@ -172,11 +173,10 @@ class CommerceService {
     int limit = 20,
   }) async {
     try {
-      // Try fetching with related shipments and returns
-      var builder = _client.from('orders').select('*, shipments(*), returns(*)');
+      var builder = _client.from('orders').select();
 
       if (userId != null && userId.trim().isNotEmpty) {
-        builder = builder.eq('user_id', userId.trim());
+        builder = builder.eq('buyer_id', userId.trim());
       }
 
       final data = await builder
@@ -186,20 +186,7 @@ class CommerceService {
       return list.map(Order.fromMap).toList();
     } catch (e) {
       debugPrint('[Commerce] fetchOrders error: $e');
-      // Fallback if joined tables don't exist
-      try {
-        var builder = _client.from('orders').select();
-        if (userId != null && userId.trim().isNotEmpty) {
-          builder = builder.eq('user_id', userId.trim());
-        }
-        final data = await builder
-            .order('created_at', ascending: false)
-            .range(offset, offset + limit - 1);
-        final list = List<Map<String, dynamic>>.from(data as List);
-        return list.map(Order.fromMap).toList();
-      } catch (_) {
-        rethrow;
-      }
+      rethrow;
     }
   }
 

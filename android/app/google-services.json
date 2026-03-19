@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "537627321444-44i6hqn77330tavbsvrqe2398vbpl0hf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wificrack.dz",
+            "certificate_hash": "656d0428352df527005258c551d611a0fb92065f"
+          }
+        },
+        {
           "client_id": "537627321444-aav9f404n8lguepft40s374f45ih4t0q.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -58,6 +66,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "537627321444-emavbd2qa4k79oqvj4fs3t9255a0p19h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wificrack.dz.comwificrack",
+            "certificate_hash": "503bca0e7d9cf11193b8a34339154f33bc34aace"
+          }
+        },
+        {
+          "client_id": "537627321444-vtq1h4mtinik9l4bvmgmd5no6m10s017.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wificrack.dz.comwificrack",
+            "certificate_hash": "656d0428352df527005258c551d611a0fb92065f"
+          }
+        },
         {
           "client_id": "537627321444-1oeddjpqetaqu9rvdhe76m8mg1a839f0.apps.googleusercontent.com",
           "client_type": 3

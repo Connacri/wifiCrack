@@ -17,6 +17,7 @@ drop table if exists public.return_status_transitions cascade;
 drop table if exists public.order_events cascade;
 drop table if exists public.order_items cascade;
 drop table if exists public.orders cascade;
+drop table if exists public.products cascade;
 drop table if exists public.carriers cascade;
 drop table if exists public.addresses cascade;
 drop table if exists public.org_members cascade;
@@ -24,8 +25,6 @@ drop table if exists public.organizations cascade;
 drop table if exists public.user_fcm_tokens cascade;
 drop table if exists public.user_ads cascade;
 drop table if exists public.user_activity cascade;
-drop table if exists public.cctv_orders cascade;
-drop table if exists public.cctv_products cascade;
 drop table if exists public.admin_settings cascade;
 drop table if exists public.caroussel cascade;
 drop table if exists public.contacts cascade;
@@ -200,42 +199,13 @@ create table public.contacts (
   name text
 );
 
-create table public.cctv_orders (
-  id uuid default gen_random_uuid() primary key,
-  user_id text not null,
-  phone text not null,
-  address text not null,
-  note text,
-  total numeric not null check (total >= 0),
-  status text not null default 'pending',
-  items jsonb not null,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
-create table public.cctv_products (
-  id uuid default gen_random_uuid() primary key,
-  name text not null,
-  description text,
-  price numeric not null check (price >= 0),
-  image_url text,
-  category text,
-  stock integer,
-  is_active boolean not null default true,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  sku text,
-  promo_price numeric,
-  popularity integer not null default 0 check (popularity >= 0)
-);
-
 create table public.products (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   sku text unique,
   description text,
   price numeric not null check (price >= 0),
-  promo_price numeric,
+  promo_price numeric check (promo_price is null or promo_price >= 0),
   category text,
   stock integer,
   image_url text,
@@ -262,6 +232,7 @@ create table public.orders (
   shipping_address_id uuid references public.addresses(id),
   billing_address_id uuid references public.addresses(id),
   note text,
+  items jsonb, -- Keep jsonb items for app compatibility
   placed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -494,12 +465,6 @@ create table public.caroussel (
   created_at timestamptz default now()
 );
 
-create table public.admin_settings (
-  key text primary key,
-  value text not null,
-  updated_at timestamptz default now()
-);
-
 -- Indexes
 create index on public.orders (buyer_id);
 create index on public.orders (status);
@@ -508,7 +473,7 @@ create index on public.shipments (order_id);
 create index on public.shipment_events (shipment_id, occurred_at desc);
 create index on public.returns (order_id);
 
--- Sample transitions (optional, adjust as needed)
+-- Sample transitions
 insert into public.order_status_transitions (from_status, to_status, allowed_roles) values
   ('created', 'order_confirmed', array['wholesaler_admin', 'wholesaler_ops']),
   ('order_confirmed', 'stock_allocated', array['warehouse_picker', 'warehouse_packer']),
@@ -524,22 +489,4 @@ insert into public.order_status_transitions (from_status, to_status, allowed_rol
   ('return_authorized', 'return_in_transit', array['support', 'courier']),
   ('return_in_transit', 'return_received', array['support']),
   ('return_received', 'refund_pending', array['support']),
-  ('refund_pending', 'refunded', array['support']);
-
-insert into public.shipment_status_transitions (from_status, to_status, allowed_roles) values
-  ('label_created', 'picked_up', array['carrier_dispatch']),
-  ('picked_up', 'in_transit', array['carrier_dispatch']),
-  ('in_transit', 'arrived_at_hub', array['carrier_dispatch']),
-  ('arrived_at_hub', 'out_for_delivery', array['carrier_dispatch']),
-  ('out_for_delivery', 'delivered', array['courier']),
-  ('out_for_delivery', 'delivery_failed', array['courier']),
-  ('delivery_failed', 'exception', array['support']),
-  ('delivered', 'return_to_sender', array['support']);
-
-insert into public.return_status_transitions (from_status, to_status, allowed_roles) values
-  ('requested', 'authorized', array['support']),
-  ('authorized', 'label_issued', array['support']),
-  ('label_issued', 'in_transit', array['courier']),
-  ('in_transit', 'received', array['support']),
-  ('received', 'refund_pending', array['support']),
   ('refund_pending', 'refunded', array['support']);

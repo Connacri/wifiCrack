@@ -1,4 +1,5 @@
 ﻿import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ import '../models/order.dart';
 import '../models/product.dart';
 import '../providers/commerce_provider.dart';
 import '../services/commerce_service.dart';
+import 'firebase_user_list_screen.dart';
 import 'order_details_screen.dart';
 import 'product_detail_screen.dart';
 
@@ -223,6 +225,44 @@ class _CommerceViewState extends State<_CommerceView> {
             appBar: AppBar(
               title: const Text('Commerce'),
               actions: [
+                IconButton(
+                  tooltip: 'Sigma Messenger (Firebase)',
+                  icon: const Icon(Icons.chat_bubble_outline, color: Colors.orange),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => FirebaseUserListScreen()),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Se déconnecter',
+                  icon: const Icon(Icons.logout),
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Déconnexion"),
+                        content: const Text("Voulez-vous vous déconnecter du commerce ?"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text("Annuler"),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text("Déconnexion"),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      await FirebaseAuth.instance.signOut();
+                      if (context.mounted) {
+                        Navigator.of(context).pop(); // Retour au HomeScreen
+                      }
+                    }
+                  },
+                ),
                 IconButton(
                   onPressed: provider.isLoading
                       ? null

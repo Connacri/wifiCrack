@@ -5,7 +5,7 @@ class CommerceConfig {
   // Override with: --dart-define=SUPABASE_PRODUCTS_TABLE=...
   static const String productsTable = String.fromEnvironment(
     'SUPABASE_PRODUCTS_TABLE',
-    defaultValue: 'cctv_products',
+    defaultValue: 'products',
   );
 
   // Supabase Storage bucket for product images.

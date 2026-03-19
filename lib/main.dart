@@ -141,12 +141,14 @@ class WiFiKeyScanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Watch correctly to rebuild on change
     final localeProvider = context.watch<LocaleProvider>();
+    final currentLocale = localeProvider.locale;
 
     return MaterialApp(
       title: 'WiFi Fiber Hack',
       debugShowCheckedModeBanner: false,
-      locale: localeProvider.locale,
+      locale: currentLocale,
 
       // --- THEME ---
       theme: AppTheme.lightTheme,
@@ -177,3 +179,4 @@ class WiFiKeyScanner extends StatelessWidget {
     );
   }
 }
+
