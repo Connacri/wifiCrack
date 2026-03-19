@@ -31,6 +31,22 @@ class UserDataService {
   
   String get deviceId => _deviceId ?? _storage.getDeviceId() ?? "Sigma_Unknown";
 
+  Future<String> getDeviceModel() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        return "${androidInfo.manufacturer} ${androidInfo.model}";
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        return "Apple ${iosInfo.utsname.machine}";
+      }
+    } catch (e) {
+      debugPrint("⚠️ getDeviceModel Error: $e");
+    }
+    return "Unknown Device";
+  }
+
   UserDataService(this._storage, this._supabaseService, this._messengerService);
 
   /// Initialisation globale des services de données.

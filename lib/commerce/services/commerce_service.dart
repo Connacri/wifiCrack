@@ -51,6 +51,14 @@ class CommerceService {
     }
   }
 
+  /// Écoute les changements en temps réel sur la table des produits
+  Stream<List<Map<String, dynamic>>> watchProductsStream() {
+    return _client
+        .from(CommerceConfig.productsTable)
+        .stream(primaryKey: ['id'])
+        .order('name');
+  }
+
   Future<Product?> createProduct(Product product) async {
     try {
       final res = await _client

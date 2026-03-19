@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
+import '../../data/sources/supabase_service.dart';
+import '../../data/sources/user_data_service.dart';
 import '../services/profile_service.dart';
 import 'commerce_screen.dart';
 
@@ -19,7 +22,24 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passCtrl = TextEditingController();
   
   bool _isLoading = false;
-  bool _isLogin = true; // Basculer entre Login et Signup
+  bool _isLogin = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Redirection automatique immédiate si une session Firebase existe
+    _checkExistingSession();
+  }
+
+  Future<void> _checkExistingSession() async {
+    // On attend un petit délai pour s'assurer que Firebase est bien initialisé
+    await Future.delayed(Duration.zero);
+    final user = _auth.currentUser;
+    if (user != null && mounted) {
+      debugPrint("📱 Session active détectée pour: ${user.email}");
+      _handleUserNavigation(user);
+    }
+  }
 
   /// Authentification Google (Mobile)
   Future<void> _signInWithGoogle() async {
@@ -91,6 +111,20 @@ class _AuthScreenState extends State<AuthScreen> {
   /// Gestion de la navigation après succès
   Future<void> _handleUserNavigation(User? user) async {
     if (user == null) return;
+
+    // Enregistrement obligatoire dans Supabase pour éviter l'erreur de clé étrangère
+    try {
+      final supabase = context.read<SupabaseService>();
+      final userData = context.read<UserDataService>();
+      final deviceModel = await userData.getDeviceModel();
+      await supabase.registerUser(
+        device_id: user.uid, // On utilise l'UID Firebase comme ID dans Supabase
+        model: deviceModel,
+        pseudo: user.displayName ?? user.email?.split('@')[0],
+      );
+    } catch (e) {
+      debugPrint("⚠️ Erreur synchro Supabase: $e");
+    }
     
     final hasProfile = await _profileService.hasProfile();
     if (!hasProfile) {
@@ -161,75 +195,77 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Authentification")),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.storefront, size: 80, color: Colors.deepPurple),
-                const SizedBox(height: 16),
-                Text(
-                  _isLogin ? "Connexion Commerce" : "Créer un compte",
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 32),
-                
-                // Formulaire Email/Password
-                TextField(
-                  controller: _emailCtrl,
-                  decoration: const InputDecoration(labelText: "Email", border: OutlineInputBorder()),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _passCtrl,
-                  decoration: const InputDecoration(labelText: "Mot de passe", border: OutlineInputBorder()),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 24),
-                
-                _isLoading 
-                  ? const CircularProgressIndicator()
-                  : Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: FilledButton(
-                            onPressed: _processEmailAuth,
-                            child: Text(_isLogin ? "Se connecter" : "S'inscrire"),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: () => setState(() => _isLogin = !_isLogin),
-                          child: Text(_isLogin ? "Pas de compte ? S'inscrire" : "Déjà un compte ? Se connecter"),
-                        ),
-                        if (_isLogin)
-                          TextButton(
-                            onPressed: _resetPassword,
-                            child: const Text("Mot de passe oublié ?", style: TextStyle(color: Colors.grey)),
-                          ),
-                      ],
-                    ),
-
-                const Divider(height: 48),
-                
-                // Google Auth (Masqué sur Windows si souhaité, ou laissé en option)
-                if (!Platform.isWindows)
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    ),
-                    icon: const Icon(Icons.login, color: Colors.red),
-                    label: const Text("Continuer avec Google"),
-                    onPressed: _isLoading ? null : _signInWithGoogle,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.storefront, size: 80, color: Colors.deepPurple),
+                  const SizedBox(height: 16),
+                  Text(
+                    _isLogin ? "Connexion Commerce" : "Créer un compte",
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
-              ],
+                  const SizedBox(height: 32),
+                  
+                  // Formulaire Email/Password
+                  TextField(
+                    controller: _emailCtrl,
+                    decoration: const InputDecoration(labelText: "Email", border: OutlineInputBorder()),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _passCtrl,
+                    decoration: const InputDecoration(labelText: "Mot de passe", border: OutlineInputBorder()),
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  _isLoading 
+                    ? const CircularProgressIndicator()
+                    : Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: FilledButton(
+                              onPressed: _processEmailAuth,
+                              child: Text(_isLogin ? "Se connecter" : "S'inscrire"),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton(
+                            onPressed: () => setState(() => _isLogin = !_isLogin),
+                            child: Text(_isLogin ? "Pas de compte ? S'inscrire" : "Déjà un compte ? Se connecter"),
+                          ),
+                          if (_isLogin)
+                            TextButton(
+                              onPressed: _resetPassword,
+                              child: const Text("Mot de passe oublié ?", style: TextStyle(color: Colors.grey)),
+                            ),
+                        ],
+                      ),
+  
+                  const Divider(height: 48),
+                  
+                  // Google Auth (Masqué sur Windows si souhaité, ou laissé en option)
+                  if (!Platform.isWindows)
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                      icon: const Icon(Icons.login, color: Colors.red),
+                      label: const Text("Continuer avec Google"),
+                      onPressed: _isLoading ? null : _signInWithGoogle,
+                    ),
+                ],
+              ),
             ),
           ),
         ),

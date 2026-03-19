@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../models/cart_item.dart';
@@ -8,8 +9,30 @@ import '../services/commerce_service.dart';
 
 class CommerceProvider extends ChangeNotifier {
   final CommerceService _service;
+  StreamSubscription? _productsSub;
 
-  CommerceProvider(this._service);
+  CommerceProvider(this._service) {
+    _initProductsStream();
+  }
+
+  void _initProductsStream() {
+    _productsSub?.cancel();
+    _productsSub = _service.watchProductsStream().listen((data) {
+      // Uniquement si on n'est pas en train de filtrer ou de chercher spécifiquement
+      if ((_lastQuery == null || _lastQuery!.isEmpty) && 
+          (_lastCategory == null || _lastCategory == 'All')) {
+        _products = data.map(Product.fromMap).toList();
+        _productsHasMore = false; // Le stream donne tout par défaut
+        notifyListeners();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _productsSub?.cancel();
+    super.dispose();
+  }
 
   List<Product> _products = [];
   bool _loading = false;
@@ -185,8 +208,9 @@ class CommerceProvider extends ChangeNotifier {
   Future<bool> saveProduct(Product product) async {
     try {
       final isNew = product.id.isEmpty;
-      
-      // If updating, check if image changed to delete old one
+      String? oldImageUrl;
+
+      // Si c'est une mise à jour, on identifie l'ancienne image à supprimer
       if (!isNew) {
         final oldProduct = _products.cast<Product?>().firstWhere(
           (p) => p?.id == product.id,
@@ -196,15 +220,21 @@ class CommerceProvider extends ChangeNotifier {
             oldProduct.imageUrl != null &&
             oldProduct.imageUrl!.isNotEmpty &&
             oldProduct.imageUrl != product.imageUrl) {
-          // New image or image removed, delete old one if it was in our storage
-          await _service.deleteImage(oldProduct.imageUrl!);
+          oldImageUrl = oldProduct.imageUrl;
         }
       }
 
       final saved = isNew
           ? await _service.createProduct(product)
           : await _service.updateProduct(product);
+      
       if (saved == null) return false;
+
+      // Nettoyage de l'ancienne image SEULEMENT après succès de l'opération en base
+      if (oldImageUrl != null) {
+        await _service.deleteImage(oldImageUrl);
+      }
+
       await loadProducts(query: _lastQuery, category: _lastCategory, reset: true);
       return true;
     } catch (e) {

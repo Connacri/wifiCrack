@@ -227,7 +227,10 @@ class _CommerceViewState extends State<_CommerceView> {
               actions: [
                 IconButton(
                   tooltip: 'Sigma Messenger (Firebase)',
-                  icon: const Icon(Icons.chat_bubble_outline, color: Colors.orange),
+                  icon: const Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.orange,
+                  ),
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => FirebaseUserListScreen()),
@@ -241,7 +244,9 @@ class _CommerceViewState extends State<_CommerceView> {
                       context: context,
                       builder: (context) => AlertDialog(
                         title: const Text("Déconnexion"),
-                        content: const Text("Voulez-vous vous déconnecter du commerce ?"),
+                        content: const Text(
+                          "Voulez-vous vous déconnecter du commerce ?",
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
@@ -1078,226 +1083,228 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
     final previewUrl = CommerceConfig.resolveImageUrl(
       _imageCtrl.text.trim().isEmpty ? null : _imageCtrl.text.trim(),
     );
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-      ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
-              _SectionHeader(label: 'Info'),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Name is required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _skuCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'SKU / Reference',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descCtrl,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _priceCtrl,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\d\.,]')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Price (DZD)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Price is required';
-                  }
-                  final parsed = double.tryParse(
-                    value.trim().replaceAll(',', '.'),
-                  );
-                  if (parsed == null || parsed < 0) {
-                    return 'Enter a valid price';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _promoCtrl,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\d\.,]')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Promo price (DZD)',
-                  border: OutlineInputBorder(),
-                  helperText: 'Optional',
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+                _SectionHeader(label: 'Info'),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _nameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Name is required';
+                    }
                     return null;
-                  }
-                  final parsed = double.tryParse(
-                    value.trim().replaceAll(',', '.'),
-                  );
-                  if (parsed == null || parsed < 0) {
-                    return 'Enter a valid promo price';
-                  }
-                  final price = double.tryParse(
-                    _priceCtrl.text.trim().replaceAll(',', '.'),
-                  );
-                  if (price != null && parsed >= price) {
-                    return 'Promo must be lower than price';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _SectionHeader(label: 'Image'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _imageCtrl,
-                onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  labelText: 'Image URL or Storage path',
-                  border: OutlineInputBorder(),
+                  },
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: _uploadingImage ? null : _pickAndUploadImage,
-                      icon: const Icon(Icons.cloud_upload),
-                      label: Text(
-                        _uploadingImage
-                            ? 'Uploading...'
-                            : (_imageCtrl.text.trim().isEmpty
-                                  ? 'Upload image'
-                                  : 'Replace image'),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _skuCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'SKU / Reference',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _priceCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[\d\.,]')),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'Price (DZD)',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Price is required';
+                    }
+                    final parsed = double.tryParse(
+                      value.trim().replaceAll(',', '.'),
+                    );
+                    if (parsed == null || parsed < 0) {
+                      return 'Enter a valid price';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _promoCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[\d\.,]')),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'Promo price (DZD)',
+                    border: OutlineInputBorder(),
+                    helperText: 'Optional',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return null;
+                    }
+                    final parsed = double.tryParse(
+                      value.trim().replaceAll(',', '.'),
+                    );
+                    if (parsed == null || parsed < 0) {
+                      return 'Enter a valid promo price';
+                    }
+                    final price = double.tryParse(
+                      _priceCtrl.text.trim().replaceAll(',', '.'),
+                    );
+                    if (price != null && parsed >= price) {
+                      return 'Promo must be lower than price';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                _SectionHeader(label: 'Image'),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _imageCtrl,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    labelText: 'Image URL or Storage path',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: _uploadingImage ? null : _pickAndUploadImage,
+                        icon: const Icon(Icons.cloud_upload),
+                        label: Text(
+                          _uploadingImage
+                              ? 'Uploading...'
+                              : (_imageCtrl.text.trim().isEmpty
+                                    ? 'Upload image'
+                                    : 'Replace image'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed:
+                          (_imageCtrl.text.trim().isEmpty || _uploadingImage)
+                          ? null
+                          : () => setState(_imageCtrl.clear),
+                      icon: const Icon(Icons.clear),
+                      label: const Text('Clear'),
+                    ),
+                  ],
+                ),
+                if (previewUrl != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Image.network(previewUrl, fit: BoxFit.cover),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed:
-                        (_imageCtrl.text.trim().isEmpty || _uploadingImage)
-                        ? null
-                        : () => setState(_imageCtrl.clear),
-                    icon: const Icon(Icons.clear),
-                    label: const Text('Clear'),
-                  ),
-                ],
-              ),
-              if (previewUrl != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: Image.network(previewUrl, fit: BoxFit.cover),
-                    ),
+                const SizedBox(height: 16),
+                _SectionHeader(label: 'Stock & status'),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _categoryCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-              const SizedBox(height: 16),
-              _SectionHeader(label: 'Stock & status'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _categoryCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _stockCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    labelText: 'Stock',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final parsed = int.tryParse(value.trim());
+                    if (parsed == null || parsed < 0) {
+                      return 'Enter a valid stock';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _stockCtrl,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
-                  labelText: 'Stock',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _popularityCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    labelText: 'Popularity',
+                    border: OutlineInputBorder(),
+                    helperText: 'Higher means more popular',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final parsed = int.tryParse(value.trim());
+                    if (parsed == null || parsed < 0) {
+                      return 'Enter a valid popularity';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) return null;
-                  final parsed = int.tryParse(value.trim());
-                  if (parsed == null || parsed < 0) {
-                    return 'Enter a valid stock';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _popularityCtrl,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
-                  labelText: 'Popularity',
-                  border: OutlineInputBorder(),
-                  helperText: 'Higher means more popular',
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _isActive,
+                  title: const Text('Active'),
+                  onChanged: (value) => setState(() => _isActive = value),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) return null;
-                  final parsed = int.tryParse(value.trim());
-                  if (parsed == null || parsed < 0) {
-                    return 'Enter a valid popularity';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _isActive,
-                title: const Text('Active'),
-                onChanged: (value) => setState(() => _isActive = value),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: (_saving || _uploadingImage) ? null : _onSave,
-                  child: Text(_saving ? 'Saving...' : 'Save'),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: (_saving || _uploadingImage) ? null : _onSave,
+                    child: Text(_saving ? 'Saving...' : 'Save'),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -1467,6 +1474,7 @@ class _ProductCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
+
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

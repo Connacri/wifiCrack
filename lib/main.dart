@@ -179,4 +179,3 @@ class WiFiKeyScanner extends StatelessWidget {
     );
   }
 }
-
