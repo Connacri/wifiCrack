@@ -120,20 +120,47 @@ class SupabaseService {
   // --- USER MANAGEMENT ---
 
   Future<void> registerUser({
-    required String deviceId, 
+    required String device_id, 
     required String model, 
     String? pseudo,
     String? macAddress,
   }) async {
     try {
-      await _client.from('users').upsert({
-        'device_id': deviceId,
+      // On prépare les données de base
+      final updates = {
+        'device_id': device_id,
         'model': model,
-        'pseudo': pseudo ?? (deviceId.length > 8 ? deviceId.substring(0, 8) : deviceId),
         'last_seen': DateTime.now().toUtc().toIso8601String(),
-      }, onConflict: 'device_id');
+      };
+
+      // Si un pseudo est fourni, on l'ajoute. Sinon, on laisse faire la base de données
+      // ou on ne le met à jour que si c'est une nouvelle insertion.
+      if (pseudo != null) {
+        updates['pseudo'] = pseudo;
+      }
+
+      await _client.from('users').upsert(
+        updates, 
+        onConflict: 'device_id',
+        ignoreDuplicates: false, // On veut mettre à jour last_seen
+      );
     } catch (e) {
-      debugPrint("❌ registerUser Error: $e");
+      // Si l'erreur est une violation de contrainte d'unicité sur le pseudo (code 23505)
+      if (e.toString().contains('23505') && e.toString().contains('pseudo')) {
+        debugPrint("⚠️ Conflit de pseudo détecté, tentative d'enregistrement sans mise à jour du pseudo...");
+        try {
+          // On réessaie sans le pseudo pour ne pas bloquer l'enregistrement de l'activité
+          await _client.from('users').upsert({
+            'device_id': device_id,
+            'model': model,
+            'last_seen': DateTime.now().toUtc().toIso8601String(),
+          }, onConflict: 'device_id');
+        } catch (retryError) {
+          debugPrint("❌ Échec définitif de registerUser: $retryError");
+        }
+      } else {
+        debugPrint("❌ registerUser Error: $e");
+      }
     }
   }
 

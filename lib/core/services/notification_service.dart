@@ -1,19 +1,48 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  /// Initialise les notifications locales et les channels Android.
+  /// Initialise les notifications locales pour TOUTES les plateformes, y compris Windows.
   static Future<void> initialize() async {
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // 1. Paramètres Android
+    const AndroidInitializationSettings initializationSettingsAndroid = 
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
+    // 2. Paramètres iOS / macOS (Darwin)
+    const DarwinInitializationSettings initializationSettingsDarwin = 
+        DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
     );
 
-    // 1. initialize utilise le paramètre NOMMÉ 'settings'
+    // 3. Paramètres Linux
+    const LinuxInitializationSettings initializationSettingsLinux = 
+        LinuxInitializationSettings(defaultActionName: 'Open notification');
+
+    // 4. Paramètres Windows (OBLIGATOIRE sur Windows v21.x+)
+    // Ces identifiants sont nécessaires pour que Windows affiche les notifications
+    const WindowsInitializationSettings initializationSettingsWindows = 
+        WindowsInitializationSettings(
+      appName: 'WiFi Fiber Hack', // Nom de votre app
+      appUserModelId: 'com.comwificrack.app', // ID unique
+      guid: '77602667-6666-4666-8666-666666666666', // Un GUID unique au format string
+    );
+
+    // 5. Initialisation globale
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsDarwin,
+      macOS: initializationSettingsDarwin,
+      linux: initializationSettingsLinux,
+      windows: initializationSettingsWindows, // AJOUT CRITIQUE ICI
+    );
+
+    // Initialisation
     await _notificationsPlugin.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
@@ -21,52 +50,54 @@ class NotificationService {
       },
     );
 
-    // 2. AndroidNotificationChannel utilise des paramètres POSITIONNELS (id, name)
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', 
-      'Notifications Importantes',
-      description: 'Ce canal est utilisé pour les notifications critiques.',
-      importance: Importance.max,
-    );
+    // Configuration spécifique à Android (Channels)
+    if (Platform.isAndroid) {
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'high_importance_channel', 
+        'Notifications Importantes',
+        description: 'Ce canal est utilisé pour les notifications critiques.',
+        importance: Importance.max,
+      );
 
-    // 3. createNotificationChannel utilise un paramètre POSITIONNEL (channel)
-    await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+      await _notificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
 
-    // Configurer Firebase Messaging pour afficher les notifs quand l'app est ouverte
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
+      // Écoute des messages FCM en premier plan
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        RemoteNotification? notification = message.notification;
+        AndroidNotification? android = message.notification?.android;
 
-      if (notification != null && android != null) {
-        // 4. show utilise TOUS les paramètres NOMMÉS (id, title, body, notificationDetails)
-        _notificationsPlugin.show(
-          id: notification.hashCode,
-          title: notification.title,
-          body: notification.body,
-          notificationDetails: NotificationDetails(
-            android: AndroidNotificationDetails(
-              channel.id, // 5. channelId POSITIONNEL
-              channel.name, // 6. channelName POSITIONNEL
-              channelDescription: channel.description,
-              icon: android.smallIcon,
-              importance: Importance.max,
-              priority: Priority.high,
+        if (notification != null && android != null) {
+          _notificationsPlugin.show(
+            id: notification.hashCode,
+            title: notification.title,
+            body: notification.body,
+            notificationDetails: NotificationDetails(
+              android: AndroidNotificationDetails(
+                channel.id, 
+                channel.name,
+                channelDescription: channel.description,
+                icon: android.smallIcon,
+                importance: Importance.max,
+                priority: Priority.high,
+              ),
             ),
-          ),
-        );
-      }
-    });
+          );
+        }
+      });
+    }
   }
 
-  /// Demande les permissions (iOS/Android 13+)
+  /// Demande les permissions (Uniquement sur Mobile)
   static Future<void> requestPermissions() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    if (Platform.isAndroid || Platform.isIOS) {
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
   }
 }

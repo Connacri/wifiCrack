@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "537627321444",
+    "firebase_url": "https://wificrack-9be37-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "wificrack-9be37",
     "storage_bucket": "wificrack-9be37.firebasestorage.app"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "537627321444-aav9f404n8lguepft40s374f45ih4t0q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wificrack.dz",
+            "certificate_hash": "503bca0e7d9cf11193b8a34339154f33bc34aace"
+          }
+        },
         {
           "client_id": "537627321444-1oeddjpqetaqu9rvdhe76m8mg1a839f0.apps.googleusercontent.com",
           "client_type": 3

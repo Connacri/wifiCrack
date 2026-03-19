@@ -89,7 +89,7 @@ class UserDataService {
       }
 
       await _supabaseService.registerUser(
-        deviceId: deviceId,
+        device_id: deviceId, // Correction du nom du paramètre
         model: model,
         pseudo: getPseudo(),
       );

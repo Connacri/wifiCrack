@@ -15,6 +15,7 @@ class PermissionService {
 
   /// Vérifie si toutes les permissions sont accordées.
   static Future<bool> areAllPermissionsGranted() async {
+    if (Platform.isWindows) return true; // Bypass Windows
     for (var permission in requiredPermissions) {
       if (Platform.isAndroid && permission == Permission.nearbyWifiDevices) {
         // nearbyWifiDevices est pour Android 13+
@@ -27,12 +28,14 @@ class PermissionService {
 
   /// Demande toutes les permissions et retourne vrai si tout est accepté.
   static Future<bool> requestAllPermissions() async {
+    if (Platform.isWindows) return true; // Bypass Windows
     Map<Permission, PermissionStatus> statuses = await requiredPermissions.request();
     return statuses.values.every((status) => status.isGranted);
   }
 
   /// Vérifie si le matériel (GPS/WiFi) est activé.
   static Future<bool> isHardwareEnabled() async {
+    if (Platform.isWindows) return true; // Bypass Windows
     bool gpsEnabled = await Geolocator.isLocationServiceEnabled();
     bool wifiEnabled = await WiFiForIoTPlugin.isEnabled();
     return gpsEnabled && wifiEnabled;
