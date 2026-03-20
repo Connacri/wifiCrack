@@ -147,13 +147,13 @@ class CommerceService {
     if (items.isEmpty) return null;
     try {
       final payload = <String, dynamic>{
-        'buyer_id': userId, // Dans le schéma "orders", c'est buyer_id
+        'buyer_id': userId,
         'order_number': 'ORD-${DateTime.now().millisecondsSinceEpoch}',
         'note': note,
-        'grand_total': total, // Dans le schéma "orders", c'est grand_total
-        'status': 'created', // Utilisation de l'enum order_status par défaut
-        // Les items sont gérés par la table order_items normalement, 
-        // mais si vous utilisez une colonne jsonb 'items' dans orders:
+        'phone': phone,
+        'address': address,
+        'grand_total': total,
+        'status': 'created',
         'items': items
             .map(
               (item) => {

@@ -1,8 +1,10 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
+
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/user_data_service.dart';
 import '../services/profile_service.dart';
@@ -20,7 +22,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _profileService = ProfileService();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _isLogin = true;
 
@@ -45,19 +47,27 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn.instance
+          .authenticate();
       if (googleUser == null) {
         setState(() => _isLoading = false);
         return;
       }
 
-      final auth = await googleUser.authorizationClient.authorizeScopes(['email', 'profile']);
+      final auth = await googleUser.authorizationClient.authorizeScopes([
+        'email',
+        'profile',
+      ]);
       final idToken = googleUser.authentication.idToken;
       final accessToken = auth.accessToken;
 
-      if (idToken == null || accessToken == null) throw Exception("Tokens manquants");
+      if (idToken == null || accessToken == null)
+        throw Exception("Tokens manquants");
 
-      final credential = GoogleAuthProvider.credential(accessToken: accessToken, idToken: idToken);
+      final credential = GoogleAuthProvider.credential(
+        accessToken: accessToken,
+        idToken: idToken,
+      );
       final userCredential = await _auth.signInWithCredential(credential);
       _handleUserNavigation(userCredential.user);
     } catch (e) {
@@ -81,9 +91,15 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       UserCredential userCredential;
       if (_isLogin) {
-        userCredential = await _auth.signInWithEmailAndPassword(email: email, password: pass);
+        userCredential = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: pass,
+        );
       } else {
-        userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: pass);
+        userCredential = await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: pass,
+        );
       }
       _handleUserNavigation(userCredential.user);
     } on FirebaseAuthException catch (e) {
@@ -125,7 +141,7 @@ class _AuthScreenState extends State<AuthScreen> {
     } catch (e) {
       debugPrint("⚠️ Erreur synchro Supabase: $e");
     }
-    
+
     final hasProfile = await _profileService.hasProfile();
     if (!hasProfile) {
       if (mounted) _showRoleSelectionDialog(user);
@@ -151,28 +167,40 @@ class _AuthScreenState extends State<AuthScreen> {
           title: const Text("Choisissez votre rôle"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: roles.map((role) => RadioListTile<String>(
-              title: Text(role),
-              value: role,
-              groupValue: selectedRole,
-              onChanged: (val) => setDialogState(() => selectedRole = val),
-            )).toList(),
+            children: roles
+                .map(
+                  (role) => RadioListTile<String>(
+                    title: Text(role),
+                    value: role,
+                    groupValue: selectedRole,
+                    onChanged: (val) =>
+                        setDialogState(() => selectedRole = val),
+                  ),
+                )
+                .toList(),
           ),
           actions: [
             FilledButton(
-              onPressed: selectedRole == null ? null : () async {
-                await _profileService.createUserProfile(
-                  role: selectedRole!,
-                  displayName: user.displayName ?? user.email?.split('@')[0] ?? "Utilisateur",
-                );
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => CommerceScreen(userId: user.uid)),
-                  );
-                }
-              },
+              onPressed: selectedRole == null
+                  ? null
+                  : () async {
+                      await _profileService.createUserProfile(
+                        role: selectedRole!,
+                        displayName:
+                            user.displayName ??
+                            user.email?.split('@')[0] ??
+                            "Utilisateur",
+                      );
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CommerceScreen(userId: user.uid),
+                          ),
+                        );
+                      }
+                    },
               child: const Text("Valider"),
             ),
           ],
@@ -183,12 +211,16 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _showError(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
   }
 
   void _showSuccess(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.green));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.green));
   }
 
   @override
@@ -204,61 +236,89 @@ class _AuthScreenState extends State<AuthScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.storefront, size: 80, color: Colors.deepPurple),
+                  const Icon(
+                    Icons.storefront,
+                    size: 80,
+                    color: Colors.deepPurple,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     _isLogin ? "Connexion Commerce" : "Créer un compte",
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Formulaire Email/Password
                   TextField(
                     controller: _emailCtrl,
-                    decoration: const InputDecoration(labelText: "Email", border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: "Email",
+                      border: OutlineInputBorder(),
+                    ),
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _passCtrl,
-                    decoration: const InputDecoration(labelText: "Mot de passe", border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: "Mot de passe",
+                      border: OutlineInputBorder(),
+                    ),
                     obscureText: true,
                   ),
                   const SizedBox(height: 24),
-                  
-                  _isLoading 
-                    ? const CircularProgressIndicator()
-                    : Column(
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: FilledButton(
-                              onPressed: _processEmailAuth,
-                              child: Text(_isLogin ? "Se connecter" : "S'inscrire"),
+
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : Column(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: FilledButton(
+                                onPressed: _processEmailAuth,
+                                child: Text(
+                                  _isLogin ? "Se connecter" : "S'inscrire",
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextButton(
-                            onPressed: () => setState(() => _isLogin = !_isLogin),
-                            child: Text(_isLogin ? "Pas de compte ? S'inscrire" : "Déjà un compte ? Se connecter"),
-                          ),
-                          if (_isLogin)
+                            const SizedBox(height: 12),
                             TextButton(
-                              onPressed: _resetPassword,
-                              child: const Text("Mot de passe oublié ?", style: TextStyle(color: Colors.grey)),
+                              onPressed: () =>
+                                  setState(() => _isLogin = !_isLogin),
+                              child: Text(
+                                _isLogin
+                                    ? "Pas de compte ? S'inscrire"
+                                    : "Déjà un compte ? Se connecter",
+                              ),
                             ),
-                        ],
-                      ),
-  
+                            if (_isLogin)
+                              TextButton(
+                                onPressed: _resetPassword,
+                                child: const Text(
+                                  "Mot de passe oublié ?",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                          ],
+                        ),
+
                   const Divider(height: 48),
-                  
+
                   // Google Auth (Masqué sur Windows si souhaité, ou laissé en option)
                   if (!Platform.isWindows)
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
                       icon: const Icon(Icons.login, color: Colors.red),
                       label: const Text("Continuer avec Google"),

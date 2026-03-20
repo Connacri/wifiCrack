@@ -6,6 +6,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 import '0-claude/app_provider.dart';
+import 'commerce/providers/commerce_provider.dart';
+import 'commerce/services/commerce_service.dart';
+// ... (reste des imports)
 import 'core/services/notification_service.dart'; // AJOUT
 import 'core/theme/app_theme.dart';
 import 'data/sources/ad_service.dart';
@@ -130,6 +133,11 @@ void main() async {
 
         // --- Claude's Project AppProvider (Global State) ---
         ChangeNotifierProvider<AppProvider>(create: (_) => AppProvider()),
+
+        // --- Commerce (Global) ---
+        ChangeNotifierProvider<CommerceProvider>(
+          create: (_) => CommerceProvider(CommerceService())..loadProducts(),
+        ),
       ],
       child: const WiFiKeyScanner(),
     ),

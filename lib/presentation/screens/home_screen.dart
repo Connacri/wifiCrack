@@ -7,6 +7,7 @@ import '../../0-claude/main.dart' as claude;
 import '../../Mistral2laude/entry_screen.dart';
 import '../../commerce/screens/auth_screen.dart';
 import '../../commerce/screens/commerce_screen.dart';
+import '../../core/services/permission_service.dart';
 import '../../data/sources/ad_service.dart';
 import '../../data/sources/local_storage.dart';
 import '../../data/sources/supabase_service.dart';
@@ -14,7 +15,6 @@ import '../../data/sources/user_data_service.dart';
 import '../../data/sources/wifi_service.dart';
 import '../../domain/entities/wifi_network.dart';
 import '../../l10n/app_localizations.dart';
-import '../../core/services/permission_service.dart';
 import '../providers/wifi_provider.dart';
 import '../widgets/home_carousel.dart';
 import '../widgets/language_selector_dialog.dart';
@@ -50,10 +50,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (!allGranted || !hardwareOk) {
         if (mounted) {
-          PermissionService.showPermissionDialog(context, onRetry: () async {
-            await PermissionService.requestAllPermissions();
-            _initialize(); // Relancer la vérification
-          });
+          PermissionService.showPermissionDialog(
+            context,
+            onRetry: () async {
+              await PermissionService.requestAllPermissions();
+              _initialize(); // Relancer la vérification
+            },
+          );
         }
         return;
       }
@@ -402,13 +405,28 @@ class _HomeScreenState extends State<HomeScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () {
-                    final user = FirebaseAuth.instance.currentUser;
+                  onPressed: () async {
+                    // Récupération de l'utilisateur actuel
+                    User? user = FirebaseAuth.instance.currentUser;
+
+                    // Si null (souvent au premier clic sur Windows), on attend brièvement l'initialisation
+                    if (user == null) {
+                      user = await FirebaseAuth.instance
+                          .authStateChanges()
+                          .first
+                          .timeout(
+                            const Duration(milliseconds: 500),
+                            onTimeout: () => null,
+                          );
+                    }
+
+                    if (!mounted) return;
+
                     if (user != null) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => CommerceScreen(userId: user.uid),
+                          builder: (_) => CommerceScreen(userId: user!.uid),
                         ),
                       );
                     } else {

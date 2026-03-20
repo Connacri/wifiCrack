@@ -14,8 +14,7 @@ import '../models/commerce_enums.dart';
 import '../models/order.dart';
 import '../models/product.dart';
 import '../providers/commerce_provider.dart';
-import '../services/commerce_service.dart';
-import 'firebase_user_list_screen.dart';
+import 'auth_screen.dart';
 import 'order_details_screen.dart';
 import 'product_detail_screen.dart';
 
@@ -43,10 +42,7 @@ class CommerceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CommerceProvider(CommerceService())..loadProducts(),
-      child: _CommerceView(userId: userId),
-    );
+    return _CommerceView(userId: userId);
   }
 }
 
@@ -77,11 +73,15 @@ class _CommerceViewState extends State<_CommerceView> {
     });
   }
 
-  void _refreshOrders() {
+  Future<void> _refreshOrders() async {
     final provider = context.read<CommerceProvider>();
-    // If not admin, only load orders for current userId
-    final filterUserId = _isAdminMode ? null : widget.userId;
-    provider.loadOrders(userId: filterUserId, reset: true);
+    // Sur Windows, si widget.userId est null, on utilise l'utilisateur Firebase actuel
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    final effectiveUserId = widget.userId ?? firebaseUser?.uid;
+
+    // Si pas admin, on charge seulement les commandes de l'utilisateur effectif
+    final filterUserId = _isAdminMode ? null : effectiveUserId;
+    await provider.loadOrders(userId: filterUserId, reset: true);
   }
 
   @override
@@ -97,6 +97,8 @@ class _CommerceViewState extends State<_CommerceView> {
     final phone = _phoneCtrl.text.trim();
     final address = _addressCtrl.text.trim();
     final note = _noteCtrl.text.trim();
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    final effectiveUserId = widget.userId ?? firebaseUser?.uid;
 
     if (phone.isEmpty || address.isEmpty) {
       if (!mounted) return;
@@ -112,7 +114,7 @@ class _CommerceViewState extends State<_CommerceView> {
         phone: phone,
         address: address,
         note: note.isEmpty ? null : note,
-        userId: widget.userId,
+        userId: effectiveUserId,
       );
 
       if (!mounted) return;
@@ -126,6 +128,12 @@ class _CommerceViewState extends State<_CommerceView> {
       _noteCtrl.clear();
       _phoneCtrl.clear();
       _addressCtrl.clear();
+
+      // Basculer vers l'onglet des commandes (index 1)
+      DefaultTabController.of(context).animateTo(1);
+      
+      // Rafraîchir la liste des commandes
+      _refreshOrders();
 
       final message = orderId.trim().isEmpty
           ? 'Order created.'
@@ -209,11 +217,42 @@ class _CommerceViewState extends State<_CommerceView> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CommerceProvider>();
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    // Sur Windows, si widget.userId est null, on tente de récupérer le currentUser actuel
+    final effectiveUserId = widget.userId ?? firebaseUser?.uid;
 
     final tabs = <Tab>[
       const Tab(text: 'Products'),
-      const Tab(text: 'Orders'),
-      Tab(text: 'Cart (${provider.totalItems})'),
+      Tab(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Orders'),
+            if (provider.orders.isNotEmpty) ...[
+              const SizedBox(width: 4),
+              Badge(
+                label: Text(provider.orders.length.toString()),
+                backgroundColor: Colors.blue,
+              ),
+            ],
+          ],
+        ),
+      ),
+      Tab(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Cart'),
+            if (provider.totalItems > 0) ...[
+              const SizedBox(width: 4),
+              Badge(
+                label: Text(provider.totalItems.toString()),
+                backgroundColor: Colors.green,
+              ),
+            ],
+          ],
+        ),
+      ),
     ];
 
     return DefaultTabController(
@@ -225,17 +264,15 @@ class _CommerceViewState extends State<_CommerceView> {
             appBar: AppBar(
               title: const Text('Commerce'),
               actions: [
-                IconButton(
-                  tooltip: 'Sigma Messenger (Firebase)',
-                  icon: const Icon(
-                    Icons.chat_bubble_outline,
-                    color: Colors.orange,
+                if (firebaseUser == null)
+                  IconButton(
+                    tooltip: 'Se connecter',
+                    icon: const Icon(Icons.login, color: Colors.blue),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AuthScreen()),
+                    ),
                   ),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => FirebaseUserListScreen()),
-                  ),
-                ),
                 IconButton(
                   tooltip: 'Se déconnecter',
                   icon: const Icon(Icons.logout),
@@ -2221,29 +2258,73 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final statusColor = _statusColor(order.status);
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      child: InkWell(
         onTap: onTap,
-        title: Text('Commande #${order.id.substring(0, 8)}'),
-        subtitle: Text(
-          '${order.total.toStringAsFixed(2)} DZD • ${order.items.length} articles',
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            _StatusBadge(
-              text: order.status.label,
-              color: _statusColor(order.status),
-            ),
-            const SizedBox(height: 4),
-            if (order.createdAt != null)
-              Text(
-                DateFormat('dd/MM').format(order.createdAt!),
-                style: theme.textTheme.labelSmall,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Commande #${order.id.substring(0, 8)}',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (order.createdAt != null)
+                        Text(
+                          DateFormat(
+                            'dd MMM yyyy, HH:mm',
+                          ).format(order.createdAt!),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.grey,
+                          ),
+                        ),
+                    ],
+                  ),
+                  _StatusBadge(
+                    text: order.status.label.toUpperCase(),
+                    color: statusColor,
+                  ),
+                ],
               ),
-          ],
+              const Divider(height: 24),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.shopping_bag_outlined,
+                    size: 20,
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(width: 8),
+                  Text('${order.items.length} articles'),
+                  const Spacer(),
+                  Text(
+                    '${order.total.toStringAsFixed(2)} DZD',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _DeliveryProgressBar(status: order.status),
+            ],
+          ),
         ),
       ),
     );
@@ -2252,15 +2333,90 @@ class _OrderCard extends StatelessWidget {
   Color _statusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.delivered:
-        return Colors.green;
+        return Colors.purple;
       case OrderStatus.shipped:
         return Colors.orange;
       case OrderStatus.cancelled:
         return Colors.red;
       case OrderStatus.paid:
+        return Colors.green;
+      case OrderStatus.created:
         return Colors.blue;
       default:
         return Colors.grey;
     }
+  }
+}
+
+class _DeliveryProgressBar extends StatelessWidget {
+  final OrderStatus status;
+
+  const _DeliveryProgressBar({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    int step = 0;
+    // Progression : created(0) -> orderConfirmed(1) -> packed(2) -> shipped(3) -> delivered(4)
+    if (status == OrderStatus.orderConfirmed)
+      step = 1;
+    else if (status == OrderStatus.packed || status == OrderStatus.readyToShip)
+      step = 2;
+    else if (status == OrderStatus.shipped ||
+        status == OrderStatus.partiallyShipped)
+      step = 3;
+    else if (status == OrderStatus.delivered)
+      step = 4;
+    else if (status == OrderStatus.cancelled)
+      step = -1;
+
+    return Column(
+      children: [
+        Row(
+          children: List.generate(5, (index) {
+            bool isPast = step >= index;
+            bool isCurrent = step == index;
+            Color color = isPast ? Colors.green : Colors.grey.shade300;
+            if (status == OrderStatus.cancelled)
+              color = Colors.red.withValues(alpha: 0.3);
+
+            return Expanded(
+              child: Container(
+                height: 6,
+                margin: EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(3),
+                  boxShadow: isCurrent
+                      ? [
+                          BoxShadow(
+                            color: Colors.green.withValues(alpha: 0.4),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Confirmé', style: _stepStyle(context, step >= 0)),
+            Text('Expédié', style: _stepStyle(context, step >= 3)),
+            Text('Livré', style: _stepStyle(context, step >= 4)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  TextStyle _stepStyle(BuildContext context, bool active) {
+    return Theme.of(context).textTheme.labelSmall!.copyWith(
+      color: active ? Colors.green : Colors.grey,
+      fontWeight: active ? FontWeight.bold : FontWeight.normal,
+    );
   }
 }

@@ -294,11 +294,19 @@ class CommerceProvider extends ChangeNotifier {
     String? userId,
   }) async {
     if (_cart.isEmpty) return null;
-    final safeUserId =
-        (userId == null || userId.trim().isEmpty) ? 'guest' : userId.trim();
+    
+    // Si l'utilisateur est authentifié, on utilise son ID (Firebase UID synchronisé dans Supabase)
+    // Sinon on utilise le deviceId fourni. On évite 'guest' car il n'est pas dans la table users.
+    final buyerId = (userId == null || userId.trim().isEmpty) ? null : userId.trim();
+    
+    if (buyerId == null) {
+       _ordersError = "Impossible de passer commande : utilisateur non identifié.";
+       notifyListeners();
+       return null;
+    }
 
     final orderId = await _service.createOrder(
-      userId: safeUserId,
+      userId: buyerId,
       items: cartItems,
       total: total,
       phone: phone,

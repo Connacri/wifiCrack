@@ -34,6 +34,9 @@ class OrderDetailsScreen extends StatelessWidget {
           children: [
             _OrderStatusCard(order: order),
             const SizedBox(height: 16),
+            if (provider.currentRole == UserRole.admin)
+              _AdminStatusEditCard(order: order, provider: provider),
+            const SizedBox(height: 16),
             _OrderItemsCard(order: order),
             const SizedBox(height: 16),
             _ShipmentsCard(order: order),
@@ -148,8 +151,8 @@ class _OrderItemsCard extends StatelessWidget {
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(item.name),
-                  subtitle: Text('Prix: ${item.price.toStringAsFixed(2)} DZD'),
-                  trailing: Text('x${item.quantity}',
+                  subtitle: Text('Prix: ${item.price.toStringAsFixed(2)} DZD x ${item.quantity}'),
+                  trailing: Text('${item.subtotal.toStringAsFixed(2)} DZD',
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                 );
               },
@@ -466,4 +469,53 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+
+class _AdminStatusEditCard extends StatelessWidget {
+  final Order order;
+  final CommerceProvider provider;
+
+  const _AdminStatusEditCard({required this.order, required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.blue.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.admin_panel_settings, color: Colors.blue),
+                SizedBox(width: 8),
+                Text('Administration : Statut', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<OrderStatus>(
+              value: order.status,
+              decoration: const InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+              ),
+              items: OrderStatus.values.map((s) => DropdownMenuItem(
+                value: s,
+                child: Text(s.label),
+              )).toList(),
+              onChanged: (newStatus) {
+                if (newStatus != null && newStatus != order.status) {
+                  provider.updateOrderStatus(orderId: order.id, status: newStatus);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 

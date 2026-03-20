@@ -66,11 +66,11 @@ class Order {
 
     return Order(
       id: map['id']?.toString() ?? '',
-      userId: map['user_id']?.toString() ?? '',
+      userId: (map['buyer_id'] ?? map['user_id'])?.toString() ?? '',
       phone: map['phone']?.toString() ?? '',
       address: map['address']?.toString() ?? '',
       note: map['note']?.toString(),
-      total: (map['total'] as num?)?.toDouble() ?? 0,
+      total: ((map['grand_total'] ?? map['total']) as num?)?.toDouble() ?? 0,
       status: OrderStatus.fromJson(map['status']?.toString()),
       paymentStatus: PaymentStatus.fromJson(map['payment_status']?.toString()),
       createdAt: _parseDate(map['created_at']),
