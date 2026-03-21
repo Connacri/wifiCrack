@@ -300,6 +300,8 @@ class _CommerceViewState extends State<_CommerceView> {
                     if (confirm == true) {
                       await FirebaseAuth.instance.signOut();
                       if (context.mounted) {
+                        provider.setRole(UserRole.client);
+                        setState(() => _isAdminMode = false);
                         Navigator.of(context).pop(); // Retour au HomeScreen
                       }
                     }

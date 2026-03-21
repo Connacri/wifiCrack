@@ -400,51 +400,55 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ],
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () async {
-                    // Récupération de l'utilisateur actuel
-                    User? user = FirebaseAuth.instance.currentUser;
+            if (_isAdmin)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () async {
+                      // Récupération de l'utilisateur actuel
+                      User? user = FirebaseAuth.instance.currentUser;
 
-                    // Si null (souvent au premier clic sur Windows), on attend brièvement l'initialisation
-                    if (user == null) {
-                      user = await FirebaseAuth.instance
-                          .authStateChanges()
-                          .first
-                          .timeout(
-                            const Duration(milliseconds: 500),
-                            onTimeout: () => null,
-                          );
-                    }
+                      // Si null (souvent au premier clic sur Windows), on attend brièvement l'initialisation
+                      if (user == null) {
+                        user = await FirebaseAuth.instance
+                            .authStateChanges()
+                            .first
+                            .timeout(
+                              const Duration(milliseconds: 500),
+                              onTimeout: () => null,
+                            );
+                      }
 
-                    if (!mounted) return;
+                      if (!mounted) return;
 
-                    if (user != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CommerceScreen(userId: user!.uid),
-                        ),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AuthScreen()),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.storefront),
-                  label: const Text("ACCÉDER AU COMMERCE (Google Auth)"),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                      if (user != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CommerceScreen(userId: user!.uid),
+                          ),
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const AuthScreen()),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.storefront),
+                    label: const Text("ACCÉDER AU COMMERCE (Google Auth)"),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
                   ),
                 ),
               ),
-            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: SizedBox(
