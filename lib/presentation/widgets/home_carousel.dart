@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../l10n/app_localizations.dart';
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/ad_service.dart';
 
@@ -95,43 +96,44 @@ class _AdSubmissionDialogState extends State<AdSubmissionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text("🚀 Propose ton annonce Sigma"),
+      title: Text(l10n.sigmaAdProposalTitle),
       content: SingleChildScrollView(
         child: Column(
           children: [
-            const Text("Envoie une image, une description et gagne des coins !", style: TextStyle(fontSize: 12)),
+            Text(l10n.submitAdInfo, style: const TextStyle(fontSize: 12)),
             const SizedBox(height: 15),
-            TextField(controller: _descCtrl, decoration: const InputDecoration(labelText: "Description", border: OutlineInputBorder())),
+            TextField(controller: _descCtrl, decoration: InputDecoration(labelText: l10n.descriptionLabel, border: const OutlineInputBorder())),
             const SizedBox(height: 10),
-            TextField(controller: _imgCtrl, decoration: const InputDecoration(labelText: "Lien de l'image (URL)", border: OutlineInputBorder())),
+            TextField(controller: _imgCtrl, decoration: InputDecoration(labelText: l10n.imageLinkUrl, border: const OutlineInputBorder())),
             const SizedBox(height: 10),
-            TextField(controller: _linkCtrl, decoration: const InputDecoration(labelText: "Lien externe", border: OutlineInputBorder())),
+            TextField(controller: _linkCtrl, decoration: InputDecoration(labelText: l10n.externalLink, border: const OutlineInputBorder())),
             const SizedBox(height: 20),
-            _buildRewardSection(),
+            _buildRewardSection(l10n),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
         FilledButton(
           onPressed: _loading ? null : _submit,
-          child: _loading ? const CircularProgressIndicator(strokeWidth: 2) : const Text("Soumettre"),
+          child: _loading ? const CircularProgressIndicator(strokeWidth: 2) : Text(l10n.submit),
         ),
       ],
     );
   }
 
-  Widget _buildRewardSection() {
+  Widget _buildRewardSection(AppLocalizations l10n) {
     if (_rewarded) {
       return Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green)),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            SizedBox(width: 8),
-            Expanded(child: Text("Bonus de Coins activé ! (Vidéo vue)", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12))),
+            const Icon(Icons.check_circle, color: Colors.green),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.bonusAddedText, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12))),
           ],
         ),
       );
@@ -140,7 +142,7 @@ class _AdSubmissionDialogState extends State<AdSubmissionDialog> {
     return OutlinedButton.icon(
       onPressed: _showRewardedAd,
       icon: const Icon(Icons.play_circle_fill, color: Colors.orange),
-      label: const Text("Regarder une vidéo pour +50 Coins bonus", style: TextStyle(fontSize: 11)),
+      label: Text(l10n.watchVideoBonus, style: const TextStyle(fontSize: 11)),
     );
   }
 
@@ -152,6 +154,7 @@ class _AdSubmissionDialogState extends State<AdSubmissionDialog> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_descCtrl.text.isEmpty || _imgCtrl.text.isEmpty) return;
     setState(() => _loading = true);
     try {
@@ -162,7 +165,7 @@ class _AdSubmissionDialogState extends State<AdSubmissionDialog> {
       
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("✅ Soumission envoyée ! Attend la validation de l'admin pour tes coins.")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.submitAdSuccess)));
       }
     } catch (e) {
       debugPrint("❌ Ad Submission Error: $e");

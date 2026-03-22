@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/user_data_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../services/profile_service.dart';
 import 'commerce_screen.dart';
 
@@ -45,6 +46,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   /// Authentification Google (Mobile)
   Future<void> _signInWithGoogle() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn.instance
@@ -71,7 +73,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final userCredential = await _auth.signInWithCredential(credential);
       _handleUserNavigation(userCredential.user);
     } catch (e) {
-      _showError("Erreur Google: $e");
+      _showError(l10n.googleError(e.toString()));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -79,11 +81,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
   /// Authentification Email/Password (Windows & Mobile)
   Future<void> _processEmailAuth() async {
+    final l10n = AppLocalizations.of(context)!;
     final email = _emailCtrl.text.trim();
     final pass = _passCtrl.text.trim();
 
     if (email.isEmpty || pass.isEmpty) {
-      _showError("Veuillez remplir tous les champs.");
+      _showError(l10n.fillAllFields);
       return;
     }
 
@@ -103,7 +106,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
       _handleUserNavigation(userCredential.user);
     } on FirebaseAuthException catch (e) {
-      _showError(e.message ?? "Erreur d'authentification");
+      _showError(e.message ?? l10n.error);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -111,16 +114,17 @@ class _AuthScreenState extends State<AuthScreen> {
 
   /// Réinitialisation du mot de passe
   Future<void> _resetPassword() async {
+    final l10n = AppLocalizations.of(context)!;
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) {
-      _showError("Entrez votre email pour réinitialiser le mot de passe.");
+      _showError(l10n.email);
       return;
     }
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      _showSuccess("Email de réinitialisation envoyé !");
+      _showSuccess(l10n.resetEmailSent);
     } catch (e) {
-      _showError("Erreur: $e");
+      _showError("${l10n.error}: $e");
     }
   }
 
@@ -157,14 +161,15 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _showRoleSelectionDialog(User user) {
     String? selectedRole;
-    final roles = ['Client', 'Vendeur', 'Livreur', 'Grossiste'];
+    final l10n = AppLocalizations.of(context)!;
+    final roles = [l10n.client, l10n.vendor, l10n.deliveryPerson, l10n.wholesaler];
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text("Choisissez votre rôle"),
+          title: Text(l10n.chooseRole),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: roles
@@ -189,7 +194,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         displayName:
                             user.displayName ??
                             user.email?.split('@')[0] ??
-                            "Utilisateur",
+                            l10n.user,
                       );
                       if (context.mounted) {
                         Navigator.pop(context);
@@ -201,7 +206,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         );
                       }
                     },
-              child: const Text("Valider"),
+              child: Text(l10n.validate),
             ),
           ],
         ),
@@ -225,8 +230,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text("Authentification")),
+      appBar: AppBar(title: Text(l10n.authTitle)),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -243,7 +249,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _isLogin ? "Connexion Commerce" : "Créer un compte",
+                    _isLogin ? l10n.commerceLogin : l10n.createAccount,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -254,18 +260,18 @@ class _AuthScreenState extends State<AuthScreen> {
                   // Formulaire Email/Password
                   TextField(
                     controller: _emailCtrl,
-                    decoration: const InputDecoration(
-                      labelText: "Email",
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.email,
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _passCtrl,
-                    decoration: const InputDecoration(
-                      labelText: "Mot de passe",
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      border: const OutlineInputBorder(),
                     ),
                     obscureText: true,
                   ),
@@ -281,7 +287,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               child: FilledButton(
                                 onPressed: _processEmailAuth,
                                 child: Text(
-                                  _isLogin ? "Se connecter" : "S'inscrire",
+                                  _isLogin ? l10n.login : l10n.createAccount,
                                 ),
                               ),
                             ),
@@ -291,16 +297,16 @@ class _AuthScreenState extends State<AuthScreen> {
                                   setState(() => _isLogin = !_isLogin),
                               child: Text(
                                 _isLogin
-                                    ? "Pas de compte ? S'inscrire"
-                                    : "Déjà un compte ? Se connecter",
+                                    ? l10n.noAccount
+                                    : l10n.hasAccount,
                               ),
                             ),
                             if (_isLogin)
                               TextButton(
                                 onPressed: _resetPassword,
-                                child: const Text(
-                                  "Mot de passe oublié ?",
-                                  style: TextStyle(color: Colors.grey),
+                                child: Text(
+                                  l10n.forgotPassword,
+                                  style: const TextStyle(color: Colors.grey),
                                 ),
                               ),
                           ],
@@ -321,7 +327,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                       icon: const Icon(Icons.login, color: Colors.red),
-                      label: const Text("Continuer avec Google"),
+                      label: Text(l10n.loginGoogle),
                       onPressed: _isLoading ? null : _signInWithGoogle,
                     ),
                 ],

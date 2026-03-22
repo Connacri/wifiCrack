@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../data/sources/message_service.dart';
 import '../../data/sources/p2p_transfer_service.dart';
 import '../../data/sources/user_data_service.dart';
@@ -121,13 +122,14 @@ class _UserChatScreenState extends State<UserChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Support Sigma Pro", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            Text("Messagerie P2P Chiffrée", style: TextStyle(fontSize: 10, color: Colors.greenAccent)),
+            Text(l10n.supportSigmaPro, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text(l10n.p2pEncryptedChat, style: const TextStyle(fontSize: 10, color: Colors.greenAccent)),
           ],
         ),
         backgroundColor: Colors.deepPurple[900],
@@ -156,9 +158,9 @@ class _UserChatScreenState extends State<UserChatScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        AnimatedEmoji(AnimatedEmojis.smile, size: 64),
+                        const AnimatedEmoji(AnimatedEmojis.smile, size: 64),
                         const SizedBox(height: 16),
-                        const Text("Besoin d'aide ? Envoyez-nous un message."),
+                        Text(l10n.needHelpMessage),
                       ],
                     ),
                   );
@@ -188,7 +190,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
             ),
           ),
           _buildEmojiBar(),
-          _buildInput(),
+          _buildInput(l10n),
         ],
       ),
     );
@@ -218,7 +220,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
     );
   }
 
-  Widget _buildInput() {
+  Widget _buildInput(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SafeArea(
@@ -226,7 +228,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
         ),
         child: Row(
           children: [
@@ -234,7 +236,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
               child: TextField(
                 controller: _controller,
                 decoration: InputDecoration(
-                  hintText: 'Message au support...',
+                  hintText: l10n.supportChatPlaceholder,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide.none),
                   filled: true,
                   fillColor: isDark ? Colors.grey[800] : Colors.grey[100],

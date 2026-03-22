@@ -395,6 +395,894 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Publish Ad & Earn'**
   String get publishAdEarn;
+
+  /// No description provided for @adminDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sigma Dashboard Pro'**
+  String get adminDashboardTitle;
+
+  /// No description provided for @logoutSnackBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected from admin.'**
+  String get logoutSnackBar;
+
+  /// No description provided for @logoutTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Logout'**
+  String get logoutTooltip;
+
+  /// No description provided for @tabStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get tabStats;
+
+  /// No description provided for @tabAds.
+  ///
+  /// In en, this message translates to:
+  /// **'Ads'**
+  String get tabAds;
+
+  /// No description provided for @tabTargets.
+  ///
+  /// In en, this message translates to:
+  /// **'Targets'**
+  String get tabTargets;
+
+  /// No description provided for @tabMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get tabMap;
+
+  /// No description provided for @tabTraces.
+  ///
+  /// In en, this message translates to:
+  /// **'Traces'**
+  String get tabTraces;
+
+  /// No description provided for @tabContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get tabContacts;
+
+  /// No description provided for @tabConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Config'**
+  String get tabConfig;
+
+  /// No description provided for @securityAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'🔐 Security Admin'**
+  String get securityAdmin;
+
+  /// No description provided for @changePasswordInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the dashboard access password. This change is immediate for all devices.'**
+  String get changePasswordInfo;
+
+  /// No description provided for @minPasswordError.
+  ///
+  /// In en, this message translates to:
+  /// **'The password must be at least 6 characters.'**
+  String get minPasswordError;
+
+  /// No description provided for @passwordUpdateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Admin password updated on Supabase!'**
+  String get passwordUpdateSuccess;
+
+  /// No description provided for @passwordUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Error during update.'**
+  String get passwordUpdateError;
+
+  /// No description provided for @addCarousel.
+  ///
+  /// In en, this message translates to:
+  /// **'📢 Add to Carousel'**
+  String get addCarousel;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPassword;
+
+  /// No description provided for @publish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get publish;
+
+  /// No description provided for @bannerAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Banner added!'**
+  String get bannerAdded;
+
+  /// No description provided for @userSubmissionsManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'User submissions management'**
+  String get userSubmissionsManagement;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @model.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get model;
+
+  /// No description provided for @coinsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Coins'**
+  String get coinsLabel;
+
+  /// No description provided for @chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get chat;
+
+  /// No description provided for @giveCoins.
+  ///
+  /// In en, this message translates to:
+  /// **'Give Coins'**
+  String get giveCoins;
+
+  /// No description provided for @coinsAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of coins'**
+  String get coinsAmountLabel;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @online.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get online;
+
+  /// No description provided for @offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offline;
+
+  /// No description provided for @searchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search...'**
+  String get searchPlaceholder;
+
+  /// No description provided for @bannerText.
+  ///
+  /// In en, this message translates to:
+  /// **'Banner text'**
+  String get bannerText;
+
+  /// No description provided for @imageUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Image URL'**
+  String get imageUrl;
+
+  /// No description provided for @externalLink.
+  ///
+  /// In en, this message translates to:
+  /// **'External link'**
+  String get externalLink;
+
+  /// No description provided for @editPseudo.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit my Pseudo'**
+  String get editPseudo;
+
+  /// No description provided for @newPseudo.
+  ///
+  /// In en, this message translates to:
+  /// **'New Pseudo'**
+  String get newPseudo;
+
+  /// No description provided for @pseudoUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Pseudo updated!'**
+  String get pseudoUpdated;
+
+  /// No description provided for @pseudoError.
+  ///
+  /// In en, this message translates to:
+  /// **'Pseudo unavailable or error.'**
+  String get pseudoError;
+
+  /// No description provided for @messengerDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Sigma Messenger Dashboard'**
+  String get messengerDashboard;
+
+  /// No description provided for @noUsersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found.'**
+  String get noUsersFound;
+
+  /// No description provided for @noActivityAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity available.'**
+  String get noActivityAvailable;
+
+  /// No description provided for @deleteConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete conversation'**
+  String get deleteConversation;
+
+  /// No description provided for @confirmDeleteConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all messages with {pseudo}?'**
+  String confirmDeleteConversation(Object pseudo);
+
+  /// No description provided for @conversationDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation deleted locally.'**
+  String get conversationDeleted;
+
+  /// No description provided for @p2pSecure.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure P2P'**
+  String get p2pSecure;
+
+  /// No description provided for @coinsForUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Coins for {pseudo}'**
+  String coinsForUser(Object pseudo);
+
+  /// No description provided for @coinsAddedToUser.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} coins added to {pseudo}'**
+  String coinsAddedToUser(Object amount, Object pseudo);
+
+  /// No description provided for @amountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amountLabel;
+
+  /// No description provided for @addCoins.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Coins'**
+  String get addCoins;
+
+  /// No description provided for @refreshUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Users'**
+  String get refreshUsers;
+
+  /// No description provided for @changePseudoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Change my pseudo'**
+  String get changePseudoTooltip;
+
+  /// No description provided for @userProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get userProfile;
+
+  /// No description provided for @p2pSecureSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure P2P • {id}...'**
+  String p2pSecureSubtitle(Object id);
+
+  /// No description provided for @deleteConversationTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear conversation'**
+  String get deleteConversationTooltip;
+
+  /// No description provided for @addCoinsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Give coins'**
+  String get addCoinsTooltip;
+
+  /// No description provided for @coinsToAddLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of coins to add'**
+  String get coinsToAddLabel;
+
+  /// No description provided for @messageSigmaPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Sigma Message...'**
+  String get messageSigmaPlaceholder;
+
+  /// No description provided for @supportChatPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Message to support...'**
+  String get supportChatPlaceholder;
+
+  /// No description provided for @userProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'User Profile'**
+  String get userProfileTitle;
+
+  /// No description provided for @tabInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get tabInfo;
+
+  /// No description provided for @tabActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get tabActivity;
+
+  /// No description provided for @tabSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get tabSecurity;
+
+  /// No description provided for @tabNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get tabNetwork;
+
+  /// No description provided for @identity.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get identity;
+
+  /// No description provided for @deviceAndSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Device & Session'**
+  String get deviceAndSession;
+
+  /// No description provided for @lastActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Activity'**
+  String get lastActivity;
+
+  /// No description provided for @createdAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created at'**
+  String get createdAt;
+
+  /// No description provided for @activitySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Summary'**
+  String get activitySummary;
+
+  /// No description provided for @eventsCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'Events collected'**
+  String get eventsCollected;
+
+  /// No description provided for @validGpsPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid GPS points'**
+  String get validGpsPoints;
+
+  /// No description provided for @maxContactsSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Max contacts seen'**
+  String get maxContactsSeen;
+
+  /// No description provided for @securityStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Status'**
+  String get securityStatus;
+
+  /// No description provided for @activeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Active session'**
+  String get activeSession;
+
+  /// No description provided for @lastPing.
+  ///
+  /// In en, this message translates to:
+  /// **'Last ping'**
+  String get lastPing;
+
+  /// No description provided for @agoMin.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String agoMin(Object minutes);
+
+  /// No description provided for @anomalyDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Anomaly detected'**
+  String get anomalyDetected;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None (local heuristic)'**
+  String get none;
+
+  /// No description provided for @securityNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: this tab displays application security signals based on available data (not a full server audit).'**
+  String get securityNote;
+
+  /// No description provided for @networkStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Status'**
+  String get networkStatus;
+
+  /// No description provided for @mainChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Main channel'**
+  String get mainChannel;
+
+  /// No description provided for @presence.
+  ///
+  /// In en, this message translates to:
+  /// **'Presence'**
+  String get presence;
+
+  /// No description provided for @available.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get available;
+
+  /// No description provided for @unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get unavailable;
+
+  /// No description provided for @geolocSamples.
+  ///
+  /// In en, this message translates to:
+  /// **'Geoloc samples'**
+  String get geolocSamples;
+
+  /// No description provided for @rawDebugData.
+  ///
+  /// In en, this message translates to:
+  /// **'Raw debug data'**
+  String get rawDebugData;
+
+  /// No description provided for @yes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// No description provided for @no.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
+
+  /// No description provided for @sigmaAdProposalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🚀 Submit your Sigma Ad'**
+  String get sigmaAdProposalTitle;
+
+  /// No description provided for @submitAdSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Submission sent! Wait for admin validation for your coins.'**
+  String get submitAdSuccess;
+
+  /// No description provided for @submitAdInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Send an image and description to earn coins!'**
+  String get submitAdInfo;
+
+  /// No description provided for @descriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get descriptionLabel;
+
+  /// No description provided for @submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get submit;
+
+  /// No description provided for @bonusActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Coin Bonus activated! (Video watched)'**
+  String get bonusActivated;
+
+  /// No description provided for @watchVideoBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch a video for +50 bonus Coins'**
+  String get watchVideoBonus;
+
+  /// No description provided for @languageSelectorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language / Choisir la langue'**
+  String get languageSelectorTitle;
+
+  /// No description provided for @imageLinkUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Link (URL)'**
+  String get imageLinkUrl;
+
+  /// No description provided for @bonusAddedText.
+  ///
+  /// In en, this message translates to:
+  /// **'Coin Bonus activated! (Video watched)'**
+  String get bonusAddedText;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Key copied: {text}'**
+  String copiedToClipboard(Object text);
+
+  /// No description provided for @disconnectTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get disconnectTooltip;
+
+  /// No description provided for @connectTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculate & Connect'**
+  String get connectTooltip;
+
+  /// No description provided for @audioUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Vocal not available.'**
+  String get audioUnavailable;
+
+  /// No description provided for @supportSigmaPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Sigma Pro Support'**
+  String get supportSigmaPro;
+
+  /// No description provided for @p2pEncryptedChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted P2P Messaging'**
+  String get p2pEncryptedChat;
+
+  /// No description provided for @needHelpMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help? Send us a message.'**
+  String get needHelpMessage;
+
+  /// No description provided for @chooseAdminRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your Admin role'**
+  String get chooseAdminRole;
+
+  /// No description provided for @configRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Required Configuration'**
+  String get configRequiredTitle;
+
+  /// No description provided for @configRequiredInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'To work, Sigma needs: \n'**
+  String get configRequiredInfo;
+
+  /// No description provided for @configVisibleNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Without this, you will not be visible on the Sigma map.'**
+  String get configVisibleNote;
+
+  /// No description provided for @configureNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure Now'**
+  String get configureNow;
+
+  /// No description provided for @accessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Access denied.'**
+  String get accessDenied;
+
+  /// No description provided for @sigmaKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Sigma Key: {key}'**
+  String sigmaKey(Object key);
+
+  /// No description provided for @wifiDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'WiFi is disabled.'**
+  String get wifiDisabled;
+
+  /// No description provided for @locationWifiPermsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Location/WiFi permissions required.'**
+  String get locationWifiPermsRequired;
+
+  /// No description provided for @gpsRequiredAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS is required to scan on Android.'**
+  String get gpsRequiredAndroid;
+
+  /// No description provided for @noCompatibleNetworks.
+  ///
+  /// In en, this message translates to:
+  /// **'No compatible network detected nearby.'**
+  String get noCompatibleNetworks;
+
+  /// No description provided for @scanError.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan error: {error}'**
+  String scanError(Object error);
+
+  /// No description provided for @scanNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'WiFi scan is not supported on this device.'**
+  String get scanNotSupported;
+
+  /// No description provided for @gpsDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS is disabled.'**
+  String get gpsDisabled;
+
+  /// No description provided for @scanUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan is unavailable ({status}).'**
+  String scanUnavailable(Object status);
+
+  /// No description provided for @manualKeyEntryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the key manually if connection fails.'**
+  String get manualKeyEntryNote;
+
+  /// No description provided for @authRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication required'**
+  String get authRequired;
+
+  /// No description provided for @chooseRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your role'**
+  String get chooseRole;
+
+  /// No description provided for @user.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get user;
+
+  /// No description provided for @validate.
+  ///
+  /// In en, this message translates to:
+  /// **'Validate'**
+  String get validate;
+
+  /// No description provided for @authTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication'**
+  String get authTitle;
+
+  /// No description provided for @commerceLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Commerce Login'**
+  String get commerceLogin;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccount;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @loginGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get loginGoogle;
+
+  /// No description provided for @noAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'No account? Sign up'**
+  String get noAccount;
+
+  /// No description provided for @hasAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Login'**
+  String get hasAccount;
+
+  /// No description provided for @resetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset email sent!'**
+  String get resetEmailSent;
+
+  /// No description provided for @fillAllFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill all fields.'**
+  String get fillAllFields;
+
+  /// No description provided for @googleError.
+  ///
+  /// In en, this message translates to:
+  /// **'Google error: {error}'**
+  String googleError(Object error);
+
+  /// No description provided for @permsRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions Required'**
+  String get permsRequiredTitle;
+
+  /// No description provided for @permsRequiredInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'To use this app, you must:\n\n'**
+  String get permsRequiredInfo;
+
+  /// No description provided for @permsFatalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Without this, the application cannot work.'**
+  String get permsFatalNote;
+
+  /// No description provided for @understandAndConfigure.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand, configure'**
+  String get understandAndConfigure;
+
+  /// No description provided for @commerceDisconnectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to logout from commerce?'**
+  String get commerceDisconnectConfirm;
+
+  /// No description provided for @startDiscussion.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the discussion'**
+  String get startDiscussion;
+
+  /// No description provided for @yourMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your message...'**
+  String get yourMessage;
+
+  /// No description provided for @orderErrorUnidentified.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to place order: unidentified user.'**
+  String get orderErrorUnidentified;
+
+  /// No description provided for @client.
+  ///
+  /// In en, this message translates to:
+  /// **'Client'**
+  String get client;
+
+  /// No description provided for @vendor.
+  ///
+  /// In en, this message translates to:
+  /// **'Vendor'**
+  String get vendor;
+
+  /// No description provided for @deliveryPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Person'**
+  String get deliveryPerson;
+
+  /// No description provided for @wholesaler.
+  ///
+  /// In en, this message translates to:
+  /// **'Wholesaler'**
+  String get wholesaler;
 }
 
 class _AppLocalizationsDelegate

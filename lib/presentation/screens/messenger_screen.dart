@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:animated_emoji/animated_emoji.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../data/sources/message_service.dart';
 import '../../data/sources/p2p_transfer_service.dart';
 import '../../data/sources/supabase_service.dart';
@@ -47,21 +48,22 @@ class _MessengerScreenState extends State<MessengerScreen> {
 
   Future<void> _editPseudo() async {
     final userData = context.read<UserDataService>();
+    final l10n = AppLocalizations.of(context)!;
     final currentPseudo = userData.getPseudo();
     final controller = TextEditingController(text: currentPseudo);
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Modifier mon Pseudo"),
+        title: Text(l10n.editPseudo),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: "Nouveau Pseudo"),
+          decoration: InputDecoration(labelText: l10n.newPseudo),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Annuler"),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -73,8 +75,8 @@ class _MessengerScreenState extends State<MessengerScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(success 
-                        ? "Pseudo mis à jour !" 
-                        : "Pseudo indisponible ou erreur."),
+                        ? l10n.pseudoUpdated 
+                        : l10n.pseudoError),
                       backgroundColor: success ? Colors.green : Colors.red,
                     ),
                   );
@@ -82,7 +84,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
                 }
               }
             },
-            child: const Text("Enregistrer"),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -92,19 +94,21 @@ class _MessengerScreenState extends State<MessengerScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUserId = context.read<UserDataService>().deviceId;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sigma Messenger Dashboard'),
+        title: Text(l10n.messengerDashboard),
         backgroundColor: Colors.orange,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            tooltip: "Changer mon pseudo",
+            tooltip: l10n.changePseudoTooltip,
             onPressed: _editPseudo,
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: l10n.refreshUsers,
             onPressed: _refreshUsers,
           ),
         ],
@@ -117,7 +121,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Aucun utilisateur trouve.'));
+            return Center(child: Text(l10n.noUsersFound));
           }
 
           final users = snapshot.data!
@@ -136,7 +140,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
                 if (deviceId.isEmpty) return const SizedBox.shrink();
                 final pseudo =
                     user['pseudo']?.toString() ?? deviceId.substring(0, 8);
-                final model = user['model']?.toString() ?? 'Inconnu';
+                final model = user['model']?.toString() ?? l10n.unknown;
 
                 return _UserChatTile(
                   userId: deviceId,
@@ -196,6 +200,7 @@ class _UserChatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<int>(
       stream: messenger.getUnreadCountStream(userId),
       builder: (context, snapshot) {
@@ -222,7 +227,7 @@ class _UserChatTile extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: onProfileTap,
-                  tooltip: 'Profil',
+                  tooltip: l10n.userProfile,
                   icon: const Icon(Icons.badge_outlined),
                 ),
                 unreadCount > 0
@@ -254,6 +259,7 @@ class _UserChatTile extends StatelessWidget {
     );
   }
 }
+
 
 class DetailedChatScreen extends StatefulWidget {
   final String userId;

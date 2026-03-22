@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../data/sources/supabase_service.dart';
 
 class UserProfileDetailScreen extends StatefulWidget {
@@ -37,16 +38,17 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.pseudo?.isNotEmpty == true ? widget.pseudo! : 'Profil utilisateur'),
+        title: Text(widget.pseudo?.isNotEmpty == true ? widget.pseudo! : l10n.userProfileTitle),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Infos', icon: Icon(Icons.badge_outlined)),
-            Tab(text: 'Activité', icon: Icon(Icons.timeline)),
-            Tab(text: 'Sécurité', icon: Icon(Icons.shield_outlined)),
-            Tab(text: 'Réseau', icon: Icon(Icons.wifi_tethering_outlined)),
+          tabs: [
+            Tab(text: l10n.tabInfo, icon: const Icon(Icons.badge_outlined)),
+            Tab(text: l10n.tabActivity, icon: const Icon(Icons.timeline)),
+            Tab(text: l10n.tabSecurity, icon: const Icon(Icons.shield_outlined)),
+            Tab(text: l10n.tabNetwork, icon: const Icon(Icons.wifi_tethering_outlined)),
           ],
         ),
       ),
@@ -69,7 +71,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
 
           final lastSeen = DateTime.tryParse(user['last_seen']?.toString() ?? '');
           final isOnline = lastSeen != null && DateTime.now().difference(lastSeen).inMinutes < 2;
-          final model = user['model']?.toString() ?? 'Inconnu';
+          final model = user['model']?.toString() ?? l10n.unknown;
           final coins = user['coins']?.toString() ?? '0';
           final createdAt = DateTime.tryParse(user['created_at']?.toString() ?? '');
 
@@ -95,28 +97,28 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
                         child: const Icon(Icons.person, color: Colors.white),
                       ),
                       title: Text(profilePseudo, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(isOnline ? 'En ligne' : 'Hors ligne'),
+                      subtitle: Text(isOnline ? l10n.online : l10n.offline),
                       trailing: Text(
-                        '$coins coins',
+                        '$coins ${l10n.coins}',
                         style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.orange),
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   _SectionCard(
-                    title: 'Identité',
+                    title: l10n.identity,
                     rows: [
                       _kv('Device ID', widget.userId),
-                      _kv('Pseudo', profilePseudo),
+                      _kv(l10n.pseudo, profilePseudo),
                     ],
                   ),
                   const SizedBox(height: 12),
                   _SectionCard(
-                    title: 'Appareil & Session',
+                    title: l10n.deviceAndSession,
                     rows: [
-                      _kv('Modèle', model),
-                      _kv('Dernière activité', _formatDate(lastSeen)),
-                      _kv('Créé le', _formatDate(createdAt)),
+                      _kv(l10n.model, model),
+                      _kv(l10n.lastActivity, _formatDate(lastSeen)),
+                      _kv(l10n.createdAt, _formatDate(createdAt)),
                     ],
                   ),
                 ],
@@ -125,11 +127,11 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
                 padding: const EdgeInsets.all(16),
                 children: [
                   _SectionCard(
-                    title: 'Résumé activité',
+                    title: l10n.activitySummary,
                     rows: [
-                      _kv('Événements collectés', '${activities.length}'),
-                      _kv('Points GPS valides', '$points'),
-                      _kv('Contacts max vus', '$contactsMax'),
+                      _kv(l10n.eventsCollected, '${activities.length}'),
+                      _kv(l10n.validGpsPoints, '$points'),
+                      _kv(l10n.maxContactsSeen, '$contactsMax'),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -139,13 +141,13 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Timeline récente',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          Text(
+                            l10n.tabActivity,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                           ),
                           const SizedBox(height: 8),
                           if (activities.isEmpty)
-                            const Text('Aucune activité disponible.')
+                            Text(l10n.noActivityAvailable)
                           else
                             ...activities.take(30).map((a) {
                               final ts = DateTime.tryParse(a['timestamp']?.toString() ?? '');
@@ -179,22 +181,19 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
                 padding: const EdgeInsets.all(16),
                 children: [
                   _SectionCard(
-                    title: 'État sécurité',
+                    title: l10n.securityStatus,
                     rows: [
                       _kv('ID appareil', widget.userId),
-                      _kv('Session active', isOnline ? 'Oui' : 'Non'),
-                      _kv('Dernier ping', ageMinutes == null ? '-' : 'il y a $ageMinutes min'),
-                      _kv('Anomalie détectée', 'Aucune (heuristique locale)'),
+                      _kv(l10n.activeSession, isOnline ? l10n.yes : l10n.no),
+                      _kv(l10n.lastPing, ageMinutes == null ? '-' : l10n.agoMin(ageMinutes)),
+                      _kv(l10n.anomalyDetected, l10n.none),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Card(
+                  Card(
                     child: Padding(
-                      padding: EdgeInsets.all(14),
-                      child: Text(
-                        'Note: cet onglet affiche des signaux de sécurité applicatifs '
-                        'basés sur les données disponibles (pas un audit serveur complet).',
-                      ),
+                      padding: const EdgeInsets.all(14),
+                      child: Text(l10n.securityNote),
                     ),
                   ),
                 ],
@@ -203,17 +202,17 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
                 padding: const EdgeInsets.all(16),
                 children: [
                   _SectionCard(
-                    title: 'État réseau',
+                    title: l10n.networkStatus,
                     rows: [
-                      _kv('Canal principal', 'WebRTC P2P'),
-                      _kv('Présence', isOnline ? 'Disponible' : 'Indisponible'),
-                      _kv('Dernière vue', _formatDate(lastSeen)),
-                      _kv('Échantillons de géoloc', '$points'),
+                      _kv(l10n.mainChannel, 'WebRTC P2P'),
+                      _kv(l10n.presence, isOnline ? l10n.available : l10n.unavailable),
+                      _kv(l10n.lastActivity, _formatDate(lastSeen)),
+                      _kv(l10n.geolocSamples, '$points'),
                     ],
                   ),
                   const SizedBox(height: 12),
                   ExpansionTile(
-                    title: const Text('Données brutes (debug)'),
+                    title: Text(l10n.rawDebugData),
                     childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     children: [
                       SelectableText(

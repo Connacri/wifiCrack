@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' hide Path; 
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../data/sources/supabase_service.dart';
 import '../../data/sources/user_data_service.dart';
 import '../../data/sources/local_storage.dart';
@@ -36,39 +37,41 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
 
   Future<void> _logout(BuildContext context) async {
     final storage = context.read<LocalStorageDataSource>();
+    final l10n = AppLocalizations.of(context)!;
     await storage.setAdminLoggedIn(false);
     await storage.setAdminRole(null);
     if (context.mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Déconnecté de l'admin.")),
+        SnackBar(content: Text(l10n.logoutSnackBar)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sigma Dashboard Pro', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(l10n.adminDashboardTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
-            tooltip: "Déconnexion locale",
+            tooltip: l10n.logoutTooltip,
             onPressed: () => _logout(context),
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabs: const [
-            Tab(icon: Icon(Icons.dashboard), text: 'Stats'),
-            Tab(icon: Icon(Icons.view_carousel), text: 'Ads'),
-            Tab(icon: Icon(Icons.people), text: 'Cibles'),
-            Tab(icon: Icon(Icons.map), text: 'Carte'),
-            Tab(icon: Icon(Icons.location_history), text: 'Traces'),
-            Tab(icon: Icon(Icons.contacts), text: 'Contacts'),
-            Tab(icon: Icon(Icons.settings), text: 'Config'),
+          tabs: [
+            Tab(icon: const Icon(Icons.dashboard), text: l10n.tabStats),
+            Tab(icon: const Icon(Icons.view_carousel), text: l10n.tabAds),
+            Tab(icon: const Icon(Icons.people), text: l10n.tabTargets),
+            Tab(icon: const Icon(Icons.map), text: l10n.tabMap),
+            Tab(icon: const Icon(Icons.location_history), text: l10n.tabTraces),
+            Tab(icon: const Icon(Icons.contacts), text: l10n.tabContacts),
+            Tab(icon: const Icon(Icons.settings), text: l10n.tabConfig),
           ],
         ),
       ),
@@ -107,8 +110,9 @@ class _AdminSettingsManagerState extends State<_AdminSettingsManager> {
 
   Future<void> _updatePassword() async {
     final pass = _newPassCtrl.text.trim();
+    final l10n = AppLocalizations.of(context)!;
     if (pass.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Le mot de passe doit faire au moins 6 caractères.")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.minPasswordError)));
       return;
     }
 
@@ -118,29 +122,30 @@ class _AdminSettingsManagerState extends State<_AdminSettingsManager> {
 
     if (ok) {
       _newPassCtrl.clear();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("✅ Mot de passe Admin mis à jour sur Supabase !")));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.passwordUpdateSuccess)));
     } else {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("❌ Erreur lors de la mise à jour.")));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.passwordUpdateError)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("🔐 Sécurité Admin", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(l10n.securityAdmin, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
-          const Text("Changez le mot de passe d'accès au dashboard. Ce changement est immédiat pour tous les appareils.", style: TextStyle(color: Colors.grey, fontSize: 13)),
+          Text(l10n.changePasswordInfo, style: const TextStyle(color: Colors.grey, fontSize: 13)),
           const SizedBox(height: 30),
           TextField(
             controller: _newPassCtrl,
-            decoration: const InputDecoration(
-              labelText: "Nouveau mot de passe",
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.lock_outline),
+            decoration: InputDecoration(
+              labelText: l10n.newPassword,
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.lock_outline),
             ),
           ),
           const SizedBox(height: 20),
@@ -149,7 +154,7 @@ class _AdminSettingsManagerState extends State<_AdminSettingsManager> {
             child: FilledButton.icon(
               onPressed: _isUpdating ? null : _updatePassword,
               icon: _isUpdating ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.save),
-              label: const Text("Enregistrer les modifications"),
+              label: Text(l10n.saveChanges),
             ),
           ),
         ],
@@ -172,27 +177,28 @@ class _CarouselManagerState extends State<_CarouselManager> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          const Text("📢 Ajouter au Carrousel", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(l10n.addCarousel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 15),
-          TextField(controller: _text, decoration: const InputDecoration(labelText: "Texte de la bannière")),
-          TextField(controller: _img, decoration: const InputDecoration(labelText: "URL de l'image")),
-          TextField(controller: _link, decoration: const InputDecoration(labelText: "Lien externe")),
+          TextField(controller: _text, decoration: InputDecoration(labelText: l10n.bannerText)),
+          TextField(controller: _img, decoration: InputDecoration(labelText: l10n.imageUrl)),
+          TextField(controller: _link, decoration: InputDecoration(labelText: l10n.externalLink)),
           const SizedBox(height: 10),
           FilledButton.icon(
             onPressed: () async {
               await widget.supabase.addCarouselItem(_text.text, _img.text, _link.text);
               _text.clear(); _img.clear(); _link.clear();
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Bannière ajoutée !")));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.bannerAdded)));
             },
             icon: const Icon(Icons.add),
-            label: const Text("Publier"),
+            label: Text(l10n.publish),
           ),
           const Divider(height: 40),
-          const Expanded(child: Center(child: Text("Gestion des soumissions utilisateurs"))),
+          Expanded(child: Center(child: Text(l10n.userSubmissionsManagement))),
         ],
       ),
     );
@@ -255,6 +261,7 @@ class _AdminMapView extends StatelessWidget {
 
   void _showUserSheet(BuildContext context, Map<String, dynamic> user) {
     final String pseudo = user['pseudo'] ?? user['device_id'].toString().substring(0, 8);
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -265,11 +272,11 @@ class _AdminMapView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(pseudo, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                Text("Coins: ${user['coins'] ?? 0}", style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                Text("${l10n.coinsLabel}: ${user['coins'] ?? 0}", style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 8),
-            Text("Modèle: ${user['model'] ?? 'Inconnu'}", style: const TextStyle(color: Colors.grey)),
+            Text("${l10n.model}: ${user['model'] ?? l10n.unknown}", style: const TextStyle(color: Colors.grey)),
             const Divider(height: 32),
             Row(
               children: [
@@ -289,7 +296,7 @@ class _AdminMapView extends StatelessWidget {
                       );
                     },
                     icon: const Icon(Icons.badge_outlined),
-                    label: const Text("Profil"),
+                    label: Text(l10n.profileTooltip),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -300,7 +307,7 @@ class _AdminMapView extends StatelessWidget {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => DetailedChatScreen(userId: user['device_id'], pseudo: pseudo)));
                     },
                     icon: const Icon(Icons.chat_bubble),
-                    label: const Text("Chat"),
+                    label: Text(l10n.chat),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -311,7 +318,7 @@ class _AdminMapView extends StatelessWidget {
                       _showAddCoinsDialog(context, user['device_id'], pseudo);
                     },
                     icon: const Icon(Icons.monetization_on),
-                    label: const Text("Donner Coins"),
+                    label: Text(l10n.giveCoins),
                     style: FilledButton.styleFrom(backgroundColor: Colors.orange[800]),
                   ),
                 ),
@@ -325,20 +332,21 @@ class _AdminMapView extends StatelessWidget {
 
   void _showAddCoinsDialog(BuildContext context, String userId, String pseudo) {
     final ctrl = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Coins pour $pseudo"),
-        content: TextField(controller: ctrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "Nombre de coins")),
+        title: Text("${l10n.coinsLabel} $pseudo"),
+        content: TextField(controller: ctrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: l10n.coinsAmountLabel)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
           FilledButton(onPressed: () async {
             final amount = int.tryParse(ctrl.text) ?? 0;
             if (amount > 0) {
               await supabase.addCoins(userId, amount);
             }
             if (context.mounted) Navigator.pop(context);
-          }, child: const Text("Ajouter")),
+          }, child: Text(l10n.add)),
         ],
       ),
     );
@@ -350,6 +358,7 @@ class _DashboardSummary extends StatelessWidget {
   const _DashboardSummary({required this.supabase});
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return FutureBuilder<Map<String, dynamic>>(
       future: supabase.fetchStats(),
       builder: (context, snapshot) {
@@ -359,9 +368,9 @@ class _DashboardSummary extends StatelessWidget {
           crossAxisCount: 2, padding: const EdgeInsets.all(16),
           children: [
             _statCard("WiFi", (stats['wifi'] as int? ?? 0), Icons.wifi, Colors.blue),
-            _statCard("Online", (stats['online'] as int? ?? 0), Icons.bolt, Colors.green),
-            _statCard("Offline", (stats['offline'] as int? ?? 0), Icons.power_off, Colors.red),
-            _statCard("Contacts", (stats['contacts'] as int? ?? 0), Icons.contacts, Colors.orange),
+            _statCard(l10n.online, (stats['online'] as int? ?? 0), Icons.bolt, Colors.green),
+            _statCard(l10n.offline, (stats['offline'] as int? ?? 0), Icons.power_off, Colors.red),
+            _statCard(l10n.tabContacts, (stats['contacts'] as int? ?? 0), Icons.contacts, Colors.orange),
           ],
         );
       },
@@ -390,6 +399,7 @@ class _UserList extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentUserId = context.read<UserDataService>().deviceId;
     final filteredUsers = users.where((u) => u['device_id'] != currentUserId).toList();
+    final l10n = AppLocalizations.of(context)!;
     
     return ListView.builder(
       itemCount: filteredUsers.length,
@@ -419,7 +429,7 @@ class _UserList extends StatelessWidget {
             ],
           ),
           title: Text(pseudo, style: TextStyle(fontWeight: isOnline ? FontWeight.bold : FontWeight.normal)),
-          subtitle: Text(isOnline ? "En ligne" : "Hors ligne"),
+          subtitle: Text(isOnline ? l10n.online : l10n.offline),
           trailing: SizedBox(
             width: 96,
             child: Row(
@@ -427,7 +437,7 @@ class _UserList extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.badge_outlined),
-                  tooltip: 'Profil',
+                  tooltip: l10n.profileTooltip,
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -477,8 +487,9 @@ class _DataListState extends State<_DataList> {
   }
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(children: [
-      if (widget.showSearch) Padding(padding: const EdgeInsets.all(8), child: TextField(decoration: const InputDecoration(hintText: "Rechercher...", prefixIcon: Icon(Icons.search)), onChanged: (v) { _query = v; _loadMore(reset: true); })),
+      if (widget.showSearch) Padding(padding: const EdgeInsets.all(8), child: TextField(decoration: InputDecoration(hintText: l10n.searchPlaceholder, prefixIcon: const Icon(Icons.search)), onChanged: (v) { _query = v; _loadMore(reset: true); })),
       Expanded(child: ListView.builder(itemCount: _items.length, itemBuilder: (context, index) {
         final item = _items[index];
         return ListTile(

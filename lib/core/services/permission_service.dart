@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:wifi_iot/wifi_iot.dart';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:wifi_iot/wifi_iot.dart';
+
+import '../../l10n/app_localizations.dart';
 
 class PermissionService {
   static const List<Permission> requiredPermissions = [
@@ -19,7 +22,7 @@ class PermissionService {
     for (var permission in requiredPermissions) {
       if (Platform.isAndroid && permission == Permission.nearbyWifiDevices) {
         // nearbyWifiDevices est pour Android 13+
-        continue; 
+        continue;
       }
       if (!await permission.isGranted) return false;
     }
@@ -29,7 +32,8 @@ class PermissionService {
   /// Demande toutes les permissions et retourne vrai si tout est accepté.
   static Future<bool> requestAllPermissions() async {
     if (Platform.isWindows) return true; // Bypass Windows
-    Map<Permission, PermissionStatus> statuses = await requiredPermissions.request();
+    Map<Permission, PermissionStatus> statuses = await requiredPermissions
+        .request();
     return statuses.values.every((status) => status.isGranted);
   }
 
@@ -42,18 +46,28 @@ class PermissionService {
   }
 
   /// Affiche une dialog d'alerte si les conditions ne sont pas remplies.
-  static void showPermissionDialog(BuildContext context, {required VoidCallback onRetry}) {
+  static void showPermissionDialog(
+    BuildContext context, {
+    required VoidCallback onRetry,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("Autorisations Requises", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-        content: const Text(
-          "Pour utiliser cette application, vous devez impérativement :\n\n"
+        title: Text(
+          l10n.permsRequiredTitle,
+          style: const TextStyle(
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          "${l10n.permsRequiredInfo}"
           "1. Accepter TOUTES les permissions (Localisation, Appareils à proximité).\n"
           "2. Activer votre GPS.\n"
           "3. Activer votre WiFi.\n\n"
-          "Sans cela, l'application ne peut pas fonctionner.",
+          "${l10n.permsFatalNote}",
         ),
         actions: [
           FilledButton(
@@ -61,7 +75,7 @@ class PermissionService {
               Navigator.pop(context);
               onRetry();
             },
-            child: const Text("J'ai compris, configurer"),
+            child: Text(l10n.understandAndConfigure),
           ),
         ],
       ),

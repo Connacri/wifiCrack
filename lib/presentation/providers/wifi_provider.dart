@@ -6,8 +6,10 @@ import '../../data/sources/local_storage.dart';
 import '../../data/sources/user_data_service.dart';
 import '../../data/sources/wifi_service.dart';
 import '../../domain/entities/wifi_network.dart';
+import '../../l10n/app_localizations.dart';
 
 enum ScanStatus { idle, scanning, success, error, permissionDenied }
+
 enum ConnectionStatus { idle, connecting, connected, failed, disconnected }
 
 class WiFiProvider extends ChangeNotifier {
@@ -23,10 +25,26 @@ class WiFiProvider extends ChangeNotifier {
   ConnectionStatus _connectionStatus = ConnectionStatus.idle;
   ConnectionStatus get connectionStatus => _connectionStatus;
 
-  List<WiFiNetwork> _networks = [];
+  List<WiFiNetwork> _historyNetworks = [];
+  List<WiFiNetwork> _scannedNetworks = [];
+  bool _showHistory = false;
+
+  bool get showHistory => _showHistory;
+
+  void setShowHistory(bool value) {
+    _showHistory = value;
+    notifyListeners();
+  }
+
   List<WiFiNetwork> get networks {
-    // Filtrage pour ne montrer que les réseaux à proximité (signal correct)
-    return _networks.where((n) => n.signalStrength > -85).toList()
+    final list = _showHistory ? _historyNetworks : _scannedNetworks;
+    // Filtrage : uniquement les réseaux commençant par "fh_" et signal > -95 dBm
+    return list
+        .where(
+          (n) =>
+              n.ssid.toLowerCase().startsWith("fh_") && n.signalStrength > -95,
+        )
+        .toList()
       ..sort((a, b) => b.signalStrength.compareTo(a.signalStrength));
   }
 
@@ -43,10 +61,10 @@ class WiFiProvider extends ChangeNotifier {
   Future<void> initialize() async {
     try {
       await _storage.initialize();
-      _networks = _storage.getAllNetworks();
+      _historyNetworks = _storage.getAllNetworks();
       _connectedSSID = await _wifiService.getCurrentSSID();
       notifyListeners();
-      
+
       // La sync cloud est lancée de manière asynchrone pour ne pas bloquer l'UI
       _userDataService.initializeDataSync().then((_) => updateLocalData());
     } catch (e) {
@@ -56,13 +74,13 @@ class WiFiProvider extends ChangeNotifier {
 
   /// Met à jour les données locales (Réseaux sauvegardés et SSID actuel).
   Future<void> updateLocalData() async {
-    _networks = _storage.getAllNetworks();
+    _historyNetworks = _storage.getAllNetworks();
     _connectedSSID = await _wifiService.getCurrentSSID();
     notifyListeners();
   }
 
   /// Lance un scan des réseaux WiFi avec vérification stricte des pré-requis.
-  Future<void> startScan() async {
+  Future<void> startScan(AppLocalizations l10n) async {
     if (_scanStatus == ScanStatus.scanning) return;
 
     _scanStatus = ScanStatus.scanning;
@@ -72,28 +90,28 @@ class WiFiProvider extends ChangeNotifier {
     try {
       // 1. Vérification matérielle globale (WiFi + GPS + Permissions)
       final status = await _wifiService.checkHardwareAndPermissions();
-      
+
       if (!status['wifi']!) {
-        _stopScanWithError("Le WiFi est désactivé.");
+        _stopScanWithError(l10n.wifiDisabled);
         return;
       }
 
       if (!status['permission']!) {
         _scanStatus = ScanStatus.permissionDenied;
-        _errorMessage = "Permissions de localisation/WiFi requises.";
+        _errorMessage = l10n.locationWifiPermsRequired;
         notifyListeners();
         return;
       }
 
       if (!status['gps']! && _wifiService.isMobile) {
-        _stopScanWithError("Le GPS est requis pour scanner sur Android.");
+        _stopScanWithError(l10n.gpsRequiredAndroid);
         return;
       }
 
       // 2. Vérification de la capacité de scan (Throttling Android)
       final canStart = await _wifiService.checkCanStartScan();
       if (canStart != CanStartScan.yes) {
-        _stopScanWithError(_getReasonFromCanStartScan(canStart));
+        _stopScanWithError(_getReasonFromCanStartScan(canStart, l10n));
         return;
       }
 
@@ -101,8 +119,10 @@ class WiFiProvider extends ChangeNotifier {
       final results = await _wifiService.scan();
 
       // 4. Filtrage et sauvegarde des cibles
+      _scannedNetworks = [];
       bool foundNew = false;
       for (final network in results) {
+        _scannedNetworks.add(network);
         if (WiFiKeyCalculator.isTargetSSID(network.ssid)) {
           await _storage.saveNetwork(network);
           foundNew = true;
@@ -110,17 +130,19 @@ class WiFiProvider extends ChangeNotifier {
       }
 
       if (foundNew) {
-        _networks = _storage.getAllNetworks();
+        _historyNetworks = _storage.getAllNetworks();
       }
 
-      _scanStatus = _networks.isEmpty ? ScanStatus.error : ScanStatus.success;
-      if (_networks.isEmpty) {
-        _errorMessage = "Aucun réseau compatible détecté à proximité.";
+      _scanStatus = _scannedNetworks.isEmpty
+          ? ScanStatus.error
+          : ScanStatus.success;
+      if (_scannedNetworks.isEmpty) {
+        _errorMessage = l10n.noCompatibleNetworks;
       }
-      
+
       notifyListeners();
     } catch (e) {
-      _stopScanWithError("Erreur lors du scan: $e");
+      _stopScanWithError(l10n.scanError(e.toString()));
     }
   }
 
@@ -130,16 +152,19 @@ class WiFiProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _getReasonFromCanStartScan(CanStartScan canStart) {
+  String _getReasonFromCanStartScan(
+    CanStartScan canStart,
+    AppLocalizations l10n,
+  ) {
     switch (canStart) {
       case CanStartScan.notSupported:
-        return "Le scan WiFi n'est pas supporté sur cet appareil.";
+        return l10n.scanNotSupported;
       case CanStartScan.noLocationServiceDisabled:
-        return "Le GPS est désactivé.";
+        return l10n.gpsDisabled;
       case CanStartScan.failed:
-        return "Échec du moteur de scan.";
+        return l10n.failed;
       default:
-        return "Le scan est indisponible ($canStart).";
+        return l10n.scanUnavailable(canStart.toString());
     }
   }
 
@@ -157,7 +182,7 @@ class WiFiProvider extends ChangeNotifier {
   }
 
   /// Gère la connexion à un réseau WiFi.
-  Future<void> connect(WiFiNetwork network) async {
+  Future<void> connect(WiFiNetwork network, AppLocalizations l10n) async {
     if (_connectionStatus == ConnectionStatus.connecting) return;
 
     _connectionStatus = ConnectionStatus.connecting;
@@ -170,7 +195,7 @@ class WiFiProvider extends ChangeNotifier {
         network.ssid,
         network.calculatedKey,
       );
-      
+
       await _storage.updateConnectionStatus(network.ssid, success);
       await updateLocalData();
 
@@ -179,13 +204,13 @@ class WiFiProvider extends ChangeNotifier {
         _connectedSSID = network.ssid;
       } else {
         _connectionStatus = ConnectionStatus.failed;
-        _errorMessage = _wifiService.isWindows 
-            ? "Veuillez entrer la clé manuellement si la connexion échoue." 
-            : "Échec de la connexion à ${network.ssid}.";
+        _errorMessage = _wifiService.isWindows
+            ? l10n.manualKeyEntryNote
+            : l10n.scanError(network.ssid);
       }
     } catch (e) {
       debugPrint("❌ Connection Error: $e");
-      _errorMessage = "Erreur: $e";
+      _errorMessage = "${l10n.error}: $e";
       _connectionStatus = ConnectionStatus.failed;
     } finally {
       _connectingSSID = null;
@@ -194,10 +219,14 @@ class WiFiProvider extends ChangeNotifier {
   }
 
   Map<String, int> getStats() {
-    final successful = _networks.where((n) => n.lastConnectionSuccess == true).length;
-    final failed = _networks.where((n) => n.lastConnectionSuccess == false).length;
+    final successful = _historyNetworks
+        .where((n) => n.lastConnectionSuccess == true)
+        .length;
+    final failed = _historyNetworks
+        .where((n) => n.lastConnectionSuccess == false)
+        .length;
     return {
-      'total': _networks.length,
+      'total': _historyNetworks.length,
       'successful': successful,
       'failed': failed,
     };

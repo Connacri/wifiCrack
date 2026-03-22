@@ -5,6 +5,8 @@ import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../l10n/app_localizations.dart';
+
 /// Widget expert pour l'enregistrement vocal avec animation Sigma.
 class VoiceRecorder extends StatefulWidget {
   final Function(String path, Duration duration) onStop;
@@ -212,6 +214,7 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
   }
 
   void _playPause() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_playerState == PlayerState.playing) {
       await _player.pause();
     } else {
@@ -229,7 +232,7 @@ class _AudioMessageBubbleState extends State<AudioMessageBubble> {
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Vocal non disponible.")),
+              SnackBar(content: Text(l10n.audioUnavailable)),
             );
           }
         }

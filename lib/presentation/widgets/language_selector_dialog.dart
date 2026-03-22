@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../providers/locale_provider.dart';
 
 class LanguageSelectorDialog extends StatelessWidget {
@@ -9,6 +10,7 @@ class LanguageSelectorDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final localeProvider = context.watch<LocaleProvider>();
     final currentLocale = localeProvider.locale ?? Localizations.localeOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final languages = [
       {'name': 'English', 'code': 'en', 'flag': '🇺🇸'},
@@ -24,7 +26,7 @@ class LanguageSelectorDialog extends StatelessWidget {
     ];
 
     return AlertDialog(
-      title: const Text('Select Language / Choisir la langue'),
+      title: Text(l10n.languageSelectorTitle),
       content: SizedBox(
         width: double.maxFinite,
         child: ListView.builder(
@@ -49,7 +51,7 @@ class LanguageSelectorDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close / Fermer'),
+          child: Text(l10n.close),
         ),
       ],
     );

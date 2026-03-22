@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../domain/entities/wifi_network.dart';
+import '../../l10n/app_localizations.dart';
 
 class WiFiNetworkCard extends StatelessWidget {
   final WiFiNetwork network;
@@ -17,8 +18,8 @@ class WiFiNetworkCard extends StatelessWidget {
     this.onConnect,
   });
 
-  String _getFrequencyLabel(String? freq) {
-    if (freq == null) return "Unknown";
+  String _getFrequencyLabel(String? freq, AppLocalizations l10n) {
+    if (freq == null) return l10n.unknown;
     final val = int.tryParse(freq.replaceAll(RegExp(r'[^0-9]'), ''));
     if (val == null) return freq;
     if (val >= 5000) return "5.0 GHz";
@@ -29,19 +30,20 @@ class WiFiNetworkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final percentage = network.signalPercentage;
-    final frequencyLabel = _getFrequencyLabel(network.frequency);
+    final frequencyLabel = _getFrequencyLabel(network.frequency, l10n);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isConnected 
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3) 
+        color: isConnected
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isConnected 
-              ? theme.colorScheme.primary.withValues(alpha: 0.5) 
+          color: isConnected
+              ? theme.colorScheme.primary.withValues(alpha: 0.5)
               : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           width: isConnected ? 2 : 1,
         ),
@@ -56,7 +58,7 @@ class WiFiNetworkCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
-          onTap: () => _copyToClipboard(context, network.calculatedKey),
+          onTap: () => _copyToClipboard(context, network.calculatedKey, l10n),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -95,7 +97,11 @@ class WiFiNetworkCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           if (network.lastConnectionSuccess == true)
-                            Icon(Icons.verified, size: 14, color: Colors.green[600]),
+                            Icon(
+                              Icons.verified,
+                              size: 14,
+                              color: Colors.green[600],
+                            ),
                         ],
                       ),
                     ],
@@ -103,7 +109,7 @@ class WiFiNetworkCard extends StatelessWidget {
                 ),
 
                 // Action Button
-                _buildActionButton(context, theme),
+                _buildActionButton(context, theme, l10n),
               ],
             ),
           ),
@@ -112,7 +118,11 @@ class WiFiNetworkCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context, ThemeData theme) {
+  Widget _buildActionButton(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     if (isConnecting) {
       return Container(
         width: 48,
@@ -126,7 +136,9 @@ class WiFiNetworkCard extends StatelessWidget {
     }
 
     return Material(
-      color: isConnected ? Colors.red.withValues(alpha: 0.1) : theme.colorScheme.primary.withValues(alpha: 0.1),
+      color: isConnected
+          ? Colors.red.withValues(alpha: 0.1)
+          : theme.colorScheme.primary.withValues(alpha: 0.1),
       shape: const CircleBorder(),
       child: IconButton(
         onPressed: () => onConnect?.call(network),
@@ -134,7 +146,7 @@ class WiFiNetworkCard extends StatelessWidget {
           isConnected ? Icons.link_off : Icons.bolt,
           color: isConnected ? Colors.red : theme.colorScheme.primary,
         ),
-        tooltip: isConnected ? "Déconnecter" : "Calculer & Connecter",
+        tooltip: isConnected ? l10n.disconnectTooltip : l10n.connectTooltip,
       ),
     );
   }
@@ -194,7 +206,11 @@ class WiFiNetworkCard extends StatelessWidget {
     );
   }
 
-  void _copyToClipboard(BuildContext context, String text) {
+  void _copyToClipboard(
+    BuildContext context,
+    String text,
+    AppLocalizations l10n,
+  ) {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -202,7 +218,7 @@ class WiFiNetworkCard extends StatelessWidget {
           children: [
             const Icon(Icons.key, color: Colors.white, size: 18),
             const SizedBox(width: 8),
-            Text("Clé copiée : $text"),
+            Text(l10n.copiedToClipboard(text)),
           ],
         ),
         behavior: SnackBarBehavior.floating,

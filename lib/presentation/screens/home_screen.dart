@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       // 2. Scan automatique si tout est OK
-      wifi.startScan();
+      wifi.startScan(AppLocalizations.of(context)!);
 
       if (mounted) {
         setState(() {
@@ -84,11 +84,12 @@ class _HomeScreenState extends State<HomeScreen> {
       'admin',
     ];
 
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("Choisissez votre rôle Admin"),
+        title: Text(l10n.chooseAdminRole),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: roles
@@ -114,22 +115,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _checkHardware(BuildContext context, WiFiService service) async {
     final status = await service.checkHardwareAndPermissions();
+    final l10n = AppLocalizations.of(context)!;
     if (status.containsValue(false)) {
       if (context.mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: const Text(
-              "Configuration Requise",
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            title: Text(
+              l10n.configRequiredTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
             ),
-            content: const Text(
-              "Pour fonctionner, Sigma a besoin de : \n"
-              "• WiFi Activé\n"
-              "• GPS Activé\n"
-              "• Permissions de Localisation\n\n"
-              "Sans cela, vous ne serez pas visible sur la carte Sigma.",
+            content: Text(
+              "${l10n.configRequiredInfo}\n"
+              "• ${l10n.scanWifi} (WiFi)\n"
+              "• GPS\n"
+              "• Permissions\n\n"
+              "${l10n.configVisibleNote}",
             ),
             actions: [
               FilledButton(
@@ -141,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (context.mounted) _checkHardware(context, service);
                   });
                 },
-                child: const Text("Configurer Maintenant"),
+                child: Text(l10n.configureNow),
               ),
             ],
           ),
@@ -150,13 +152,36 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _openAdmin(BuildContext context) {
+  void _logoutAdmin() async {
     final storage = context.read<LocalStorageDataSource>();
+    final l10n = AppLocalizations.of(context)!;
+    await storage.setAdminLoggedIn(false);
+    await storage.setAdminRole(null);
+    if (mounted) {
+      setState(() {
+        _isAdmin = false;
+        _adminRole = null;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.logoutSnackBar)));
+    }
+  }
+
+  void _openAdmin(BuildContext context) async {
+    final storage = context.read<LocalStorageDataSource>();
+    final l10n = AppLocalizations.of(context)!;
     if (storage.isAdminLoggedIn()) {
-      Navigator.push(
+      await Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const AdminScreen()),
       );
+      if (mounted) {
+        setState(() {
+          _isAdmin = storage.isAdminLoggedIn();
+          _adminRole = storage.getAdminRole();
+        });
+      }
       return;
     }
 
@@ -169,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text("Accès Admin Sigma"),
+          title: Text(l10n.adminDashboardTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -177,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 controller: ctrl,
                 obscureText: obscureText,
                 decoration: InputDecoration(
-                  labelText: "Mot de passe Sigma",
+                  labelText: l10n.password,
                   suffixIcon: IconButton(
                     icon: Icon(
                       obscureText ? Icons.visibility : Icons.visibility_off,
@@ -190,9 +215,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 10),
               CheckboxListTile(
-                title: const Text(
-                  "Rester connecté",
-                  style: TextStyle(fontSize: 14),
+                title: Text(
+                  l10n.activeSession,
+                  style: const TextStyle(fontSize: 14),
                 ),
                 value: keepLoggedIn,
                 onChanged: (v) =>
@@ -210,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Annuler"),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: isValidating
@@ -231,23 +256,29 @@ class _HomeScreenState extends State<HomeScreen> {
                             _isAdmin = true;
                           });
                           Navigator.pop(context);
-                          Navigator.push(
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => const AdminScreen(),
                             ),
                           );
+                          if (mounted) {
+                            setState(() {
+                              _isAdmin = storage.isAdminLoggedIn();
+                              _adminRole = storage.getAdminRole();
+                            });
+                          }
                         }
                       } else {
                         setDialogState(() => isValidating = false);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Accès refusé.")),
+                            SnackBar(content: Text(l10n.accessDenied)),
                           );
                         }
                       }
                     },
-              child: const Text("Entrer"),
+              child: Text(l10n.login),
             ),
           ],
         ),
@@ -270,8 +301,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
+            icon: Icon(wifi.showHistory ? Icons.history : Icons.radar),
+            tooltip: wifi.showHistory ? l10n.detected : l10n.scan,
+            onPressed: () => wifi.setShowHistory(!wifi.showHistory),
+          ),
+          IconButton(
             icon: const Icon(Icons.language),
-            tooltip: 'Change language',
+            tooltip: l10n.language,
             onPressed: () => showDialog(
               context: context,
               builder: (_) => const LanguageSelectorDialog(),
@@ -279,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.person_outline),
-            tooltip: 'Mon profil',
+            tooltip: l10n.profileTooltip,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -291,12 +327,48 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.admin_panel_settings),
-            onPressed: () => _openAdmin(context),
-          ),
+          _isAdmin
+              ? PopupMenuButton<String>(
+                  icon: const Icon(
+                    Icons.admin_panel_settings,
+                    color: Colors.orange,
+                  ),
+                  tooltip: l10n.adminTooltip,
+                  onSelected: (value) {
+                    if (value == 'open') {
+                      _openAdmin(context);
+                    } else if (value == 'logout') {
+                      _logoutAdmin();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'open',
+                      child: ListTile(
+                        leading: const Icon(Icons.dashboard),
+                        title: Text(l10n.admin),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'logout',
+                      child: ListTile(
+                        leading: const Icon(Icons.logout, color: Colors.red),
+                        title: Text(
+                          l10n.logout,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : IconButton(
+                  icon: const Icon(Icons.admin_panel_settings),
+                  tooltip: l10n.adminTooltip,
+                  onPressed: () => _openAdmin(context),
+                ),
           IconButton(
             icon: const Icon(Icons.chat),
+            tooltip: l10n.chatTooltip,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MessengerScreen()),
@@ -304,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.rocket_launch, color: Colors.deepOrange),
-            tooltip: 'Claude Project',
+            tooltip: l10n.p2pTooltip,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -315,12 +387,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => wifi.startScan(),
+        onRefresh: () => wifi.startScan(l10n),
         child: Column(
           children: [
-            _buildStatusHeader(wifi, userData, supabase),
+            if (_isAdmin) _buildStatusHeader(wifi, userData, supabase, l10n),
             const SizedBox(height: 10),
-            HomeBanner(supabase: supabase),
+            if (_isAdmin) HomeBanner(supabase: supabase),
             if (_isAdmin) ...[
               if (_adminRole == null)
                 Padding(
@@ -333,7 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: FilledButton.icon(
                       onPressed: _selectRole,
                       icon: const Icon(Icons.admin_panel_settings),
-                      label: const Text("Choisir mon rôle Admin"),
+                      label: Text(l10n.admin),
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.orange,
                       ),
@@ -349,7 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     children: [
                       Text(
-                        "Mode Admin: ${_adminRole!.replaceAll('_', ' ').toUpperCase()}",
+                        "${l10n.admin}: ${_adminRole!.replaceAll('_', ' ').toUpperCase()}",
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.deepPurple,
@@ -390,13 +462,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       icon: const Icon(Icons.forum),
-                      label: const Text("Mistral2laude P2P"),
+                      label: Text(l10n.p2pChat),
                     ),
                   ),
                 ),
                 TextButton(
                   onPressed: _selectRole,
-                  child: const Text("Changer de rôle"),
+                  child: Text(l10n.edit),
                 ),
               ],
             ],
@@ -441,7 +513,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
                     },
                     icon: const Icon(Icons.storefront),
-                    label: const Text("ACCÉDER AU COMMERCE (Google Auth)"),
+                    label: Text(l10n.commerce.toUpperCase()),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -449,26 +521,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => showDialog(
-                    context: context,
-                    builder: (_) => AdSubmissionDialog(
-                      userId: userData.deviceId,
-                      supabase: supabase,
+            if (_isAdmin)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (_) => AdSubmissionDialog(
+                        userId: userData.deviceId,
+                        supabase: supabase,
+                      ),
                     ),
+                    icon: const Icon(Icons.add_photo_alternate),
+                    label: Text(l10n.publishAd),
                   ),
-                  icon: const Icon(Icons.add_photo_alternate),
-                  label: const Text("Publier une annonce & Gagner des Coins"),
                 ),
               ),
-            ),
             Expanded(
               child: wifi.networks.isEmpty
-                  ? _buildEmptyState(wifi)
+                  ? _buildEmptyState(wifi, l10n)
                   : ListView.builder(
                       padding: const EdgeInsets.only(bottom: 80),
                       itemCount:
@@ -501,12 +577,12 @@ class _HomeScreenState extends State<HomeScreen> {
             : () {
                 // AFFICHER UN INTERSTITIEL AVANT LE SCAN
                 context.read<AdService>().showInterstitialAd();
-                wifi.startScan();
+                wifi.startScan(l10n);
               },
         label: Text(
           wifi.scanStatus == ScanStatus.scanning
-              ? "Scan en cours..."
-              : "Scanner WiFi",
+              ? l10n.scanning
+              : l10n.scanWifi,
         ),
         icon: wifi.scanStatus == ScanStatus.scanning
             ? const SizedBox(
@@ -539,6 +615,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WiFiProvider wifi,
     UserDataService userData,
     SupabaseService supabase,
+    AppLocalizations l10n,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -561,7 +638,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        "$coins Coins",
+                        "$coins ${l10n.coins}",
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -578,13 +655,13 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _statItem("${wifi.networks.length}", "Détectés", Colors.blue),
+              _statItem("${wifi.networks.length}", l10n.detected, Colors.blue),
               _statItem(
                 "${wifi.getStats()['successful']}",
-                "Connectés",
+                l10n.connected,
                 Colors.green,
               ),
-              _statItem("${wifi.getStats()['failed']}", "Échecs", Colors.red),
+              _statItem("${wifi.getStats()['failed']}", l10n.failed, Colors.red),
             ],
           ),
         ],
@@ -608,7 +685,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildEmptyState(WiFiProvider wifi) {
+  Widget _buildEmptyState(WiFiProvider wifi, AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -616,14 +693,14 @@ class _HomeScreenState extends State<HomeScreen> {
           const Icon(Icons.wifi_off, size: 80, color: Colors.grey),
           const SizedBox(height: 16),
           Text(
-            wifi.errorMessage ?? "Aucun réseau détecté",
+            wifi.errorMessage ?? l10n.noNetworks,
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.grey),
           ),
           if (wifi.scanStatus == ScanStatus.permissionDenied)
             TextButton(
               onPressed: wifi.fixPermissions,
-              child: const Text("Donner les permissions"),
+              child: Text(l10n.fixPermissions),
             ),
         ],
       ),
@@ -699,7 +776,7 @@ class _NetworkTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Clé Sigma: ${network.calculatedKey}",
+              AppLocalizations.of(context)!.sigmaKey(network.calculatedKey),
               style: const TextStyle(
                 color: Colors.deepPurple,
                 fontSize: 12,
@@ -723,7 +800,7 @@ class _NetworkTile extends StatelessWidget {
                   isConnected ? Icons.check_circle : Icons.link,
                   color: isConnected ? Colors.green : null,
                 ),
-                onPressed: () => wifi.connect(network),
+                onPressed: () => wifi.connect(network, AppLocalizations.of(context)!),
               ),
       ),
     );
