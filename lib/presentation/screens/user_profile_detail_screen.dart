@@ -108,7 +108,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
                   _SectionCard(
                     title: l10n.identity,
                     rows: [
-                      _kv('Device ID', widget.userId),
+                      _kv(l10n.deviceIdLabel, widget.userId),
                       _kv(l10n.pseudo, profilePseudo),
                     ],
                   ),
@@ -183,7 +183,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
                   _SectionCard(
                     title: l10n.securityStatus,
                     rows: [
-                      _kv('ID appareil', widget.userId),
+                      _kv(l10n.deviceIdLabel, widget.userId),
                       _kv(l10n.activeSession, isOnline ? l10n.yes : l10n.no),
                       _kv(l10n.lastPing, ageMinutes == null ? '-' : l10n.agoMin(ageMinutes)),
                       _kv(l10n.anomalyDetected, l10n.none),
@@ -204,7 +204,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen>
                   _SectionCard(
                     title: l10n.networkStatus,
                     rows: [
-                      _kv(l10n.mainChannel, 'WebRTC P2P'),
+                      _kv(l10n.mainChannel, l10n.mainChannelValue),
                       _kv(l10n.presence, isOnline ? l10n.available : l10n.unavailable),
                       _kv(l10n.lastActivity, _formatDate(lastSeen)),
                       _kv(l10n.geolocSamples, '$points'),

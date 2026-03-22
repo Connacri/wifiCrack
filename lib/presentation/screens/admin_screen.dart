@@ -493,7 +493,7 @@ class _DataListState extends State<_DataList> {
       Expanded(child: ListView.builder(itemCount: _items.length, itemBuilder: (context, index) {
         final item = _items[index];
         return ListTile(
-          title: Text(widget.type == 'contacts' ? item['name'] : (item['ssid'] ?? "Trace")),
+          title: Text(widget.type == 'contacts' ? item['name'] : (item['ssid'] ?? l10n.trace)),
           subtitle: Text(widget.type == 'contacts' ? item['phone'] : (item['timestamp'] ?? "")),
         );
       })),

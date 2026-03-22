@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+
+import '../l10n/app_localizations.dart';
 import 'app_provider.dart';
 
 class AddContactScreen extends StatefulWidget {
@@ -29,15 +31,14 @@ class _AddContactScreenState extends State<AddContactScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ajouter un contact'),
-      ),
+      appBar: AppBar(title: Text(l10n.addContactTitle)),
       body: _showScanner ? _buildScanner() : _buildMyQRCode(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => setState(() => _showScanner = !_showScanner),
         icon: Icon(_showScanner ? Icons.qr_code : Icons.qr_code_scanner),
-        label: Text(_showScanner ? 'Mon QR Code' : 'Scanner'),
+        label: Text(_showScanner ? l10n.myQrCode : l10n.scan),
       ),
     );
   }
@@ -48,6 +49,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
     }
 
     final provider = context.read<AppProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Center(
       child: SingleChildScrollView(
@@ -56,16 +58,15 @@ class _AddContactScreenState extends State<AddContactScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Votre QR Code',
+              l10n.yourQrCodeTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
-              'Faites scanner ce code par vos contacts',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Colors.grey),
+              l10n.yourQrCodeSubtitle,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -102,14 +103,16 @@ class _AddContactScreenState extends State<AddContactScreen> {
                   children: [
                     _InfoRow(
                       icon: Icons.person,
-                      label: 'Pseudo',
-                      value: provider.pseudo ?? 'N/A',
+                      label: l10n.pseudo,
+                      value: provider.pseudo ?? l10n.notAvailable,
                     ),
                     const Divider(height: 24),
                     _InfoRow(
                       icon: Icons.fingerprint,
-                      label: 'Device ID',
-                      value: provider.deviceId?.substring(0, 8) ?? 'N/A',
+                      label: l10n.deviceIdLabel,
+                      value:
+                          provider.deviceId?.substring(0, 8) ??
+                          l10n.notAvailable,
                     ),
                   ],
                 ),
@@ -122,6 +125,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
   }
 
   Widget _buildScanner() {
+    final l10n = AppLocalizations.of(context)!;
     return Stack(
       children: [
         MobileScanner(
@@ -137,10 +141,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
         ),
 
         // Overlay avec cadre
-        CustomPaint(
-          painter: _ScannerOverlayPainter(),
-          child: Container(),
-        ),
+        CustomPaint(painter: _ScannerOverlayPainter(), child: Container()),
 
         // Instructions
         Positioned(
@@ -155,9 +156,9 @@ class _AddContactScreenState extends State<AddContactScreen> {
               color: Colors.black.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
-              'Placez le QR Code dans le cadre',
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            child: Text(
+              l10n.placeQrInFrame,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
               textAlign: TextAlign.center,
             ),
           ),
@@ -168,6 +169,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
 
   Future<void> _handleScannedQRCode(String qrCode) async {
     final provider = context.read<AppProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       await provider.addContact(qrCode);
@@ -175,8 +177,8 @@ class _AddContactScreenState extends State<AddContactScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Contact ajouté avec succès !'),
+        SnackBar(
+          content: Text(l10n.contactAddedSuccess),
           backgroundColor: Colors.green,
         ),
       );
@@ -187,7 +189,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: $e'),
+          content: Text(l10n.errorWithDetails(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -218,16 +220,12 @@ class _InfoRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Colors.grey),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey),
               ),
               const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -240,7 +238,7 @@ class _ScannerOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-    // FIX: withValues(alpha:) partout
+      // FIX: withValues(alpha:) partout
       ..color = Colors.black.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
@@ -262,25 +260,49 @@ class _ScannerOverlayPainter extends CustomPainter {
 
     const cornerLength = 30.0;
 
-    canvas.drawLine(Offset(left, top), Offset(left + cornerLength, top), cornerPaint);
-    canvas.drawLine(Offset(left, top), Offset(left, top + cornerLength), cornerPaint);
+    canvas.drawLine(
+      Offset(left, top),
+      Offset(left + cornerLength, top),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left, top),
+      Offset(left, top + cornerLength),
+      cornerPaint,
+    );
 
-    canvas.drawLine(Offset(left + centerSquareSize, top),
-        Offset(left + centerSquareSize - cornerLength, top), cornerPaint);
-    canvas.drawLine(Offset(left + centerSquareSize, top),
-        Offset(left + centerSquareSize, top + cornerLength), cornerPaint);
+    canvas.drawLine(
+      Offset(left + centerSquareSize, top),
+      Offset(left + centerSquareSize - cornerLength, top),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left + centerSquareSize, top),
+      Offset(left + centerSquareSize, top + cornerLength),
+      cornerPaint,
+    );
 
-    canvas.drawLine(Offset(left, top + centerSquareSize),
-        Offset(left + cornerLength, top + centerSquareSize), cornerPaint);
-    canvas.drawLine(Offset(left, top + centerSquareSize),
-        Offset(left, top + centerSquareSize - cornerLength), cornerPaint);
+    canvas.drawLine(
+      Offset(left, top + centerSquareSize),
+      Offset(left + cornerLength, top + centerSquareSize),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left, top + centerSquareSize),
+      Offset(left, top + centerSquareSize - cornerLength),
+      cornerPaint,
+    );
 
-    canvas.drawLine(Offset(left + centerSquareSize, top + centerSquareSize),
-        Offset(left + centerSquareSize - cornerLength, top + centerSquareSize),
-        cornerPaint);
-    canvas.drawLine(Offset(left + centerSquareSize, top + centerSquareSize),
-        Offset(left + centerSquareSize, top + centerSquareSize - cornerLength),
-        cornerPaint);
+    canvas.drawLine(
+      Offset(left + centerSquareSize, top + centerSquareSize),
+      Offset(left + centerSquareSize - cornerLength, top + centerSquareSize),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(left + centerSquareSize, top + centerSquareSize),
+      Offset(left + centerSquareSize, top + centerSquareSize - cornerLength),
+      cornerPaint,
+    );
   }
 
   @override

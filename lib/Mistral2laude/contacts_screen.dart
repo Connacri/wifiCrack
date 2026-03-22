@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import 'contact.dart';
 import 'app_provider.dart';
 import 'chat_screen.dart';
@@ -14,13 +15,14 @@ class ContactsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final user = provider.currentUser;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Mes Contacts', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(l10n.myContacts, style: const TextStyle(fontWeight: FontWeight.bold)),
             Text(
               user.pseudo ?? user.deviceId.substring(0, 8),
               style: Theme.of(context).textTheme.bodySmall,
@@ -29,7 +31,7 @@ class ContactsScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            tooltip: 'Mon QR Code',
+            tooltip: l10n.myQrCodeTooltip,
             icon: const Icon(Icons.qr_code),
             onPressed: () => Navigator.push(
               context,
@@ -39,7 +41,7 @@ class ContactsScreen extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Scanner un ami',
+            tooltip: l10n.scanFriendTooltip,
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () async {
               final added = await Navigator.push<bool>(
@@ -53,8 +55,8 @@ class ContactsScreen extends StatelessWidget {
               );
               if (added == true && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('✅ Ami ajouté avec succès !'),
+                  SnackBar(
+                    content: Text(l10n.friendAddedSuccess),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -66,7 +68,7 @@ class ContactsScreen extends StatelessWidget {
               if (value == 'edit_pseudo') _editPseudo(context, provider);
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'edit_pseudo', child: Text('Modifier mon pseudo')),
+              PopupMenuItem(value: 'edit_pseudo', child: Text(l10n.editPseudoMenu)),
             ],
           ),
         ],
@@ -120,27 +122,28 @@ class ContactsScreen extends StatelessWidget {
   }
 
   Future<void> _editPseudo(BuildContext context, AppProvider provider) async {
+    final l10n = AppLocalizations.of(context)!;
     final controller =
         TextEditingController(text: provider.currentUser.pseudo);
     final result = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Mon pseudo'),
+        title: Text(l10n.myPseudoTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Entrez votre pseudo',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: l10n.enterPseudoHint,
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler')),
+              child: Text(l10n.cancel)),
           FilledButton(
               onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: const Text('Sauvegarder')),
+              child: Text(l10n.save)),
         ],
       ),
     );
@@ -159,6 +162,7 @@ class _ContactTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final hasUnread = contact.unreadCount > 0;
 
     return ListTile(
@@ -186,7 +190,7 @@ class _ContactTile extends StatelessWidget {
               ),
             )
           : Text(
-              'Ajouté le ${_formatDate(contact.addedAt)}',
+              '${l10n.addedOn} ${_formatDate(contact.addedAt)}',
               style: theme.textTheme.bodySmall,
             ),
       trailing: hasUnread
@@ -209,6 +213,7 @@ class _EmptyContactsPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -216,14 +221,14 @@ class _EmptyContactsPlaceholder extends StatelessWidget {
           Icon(Icons.people_outline, size: 80,
               color: Theme.of(context).colorScheme.outline),
           const SizedBox(height: 16),
-          Text('Aucun contact', style: Theme.of(context).textTheme.titleLarge),
+          Text(l10n.noContacts, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          const Text('Scannez le QR Code d\'un ami pour commencer'),
+          Text(l10n.scanFriendToStart),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: onScanPressed,
             icon: const Icon(Icons.qr_code_scanner),
-            label: const Text('Scanner un ami'),
+            label: Text(l10n.scanFriendButton),
           ),
         ],
       ),

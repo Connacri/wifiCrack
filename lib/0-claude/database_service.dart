@@ -255,8 +255,8 @@ class DatabaseService {
       try {
         jsonDecode(message.encryptedContent);
         conversation.lastMessagePreview = message.isSentByMe
-            ? 'Vous: [Message chiffré]'
-            : '[Message chiffré]';
+            ? '[ENCRYPTED_ME]'
+            : '[ENCRYPTED]';
       } catch (e) {
         conversation.lastMessagePreview =
         message.encryptedContent.length > 50
@@ -265,8 +265,8 @@ class DatabaseService {
       }
     } else {
       conversation.lastMessagePreview = message.isSentByMe
-          ? 'Vous: ${_getMessageTypeLabel(message.type)}'
-          : _getMessageTypeLabel(message.type);
+          ? '[${message.type.name.toUpperCase()}_ME]'
+          : '[${message.type.name.toUpperCase()}]';
     }
 
     conversation.lastMessageTime = message.timestamp;

@@ -8,6 +8,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../commerce_config.dart';
 import '../models/cart_item.dart';
 import '../models/commerce_enums.dart';
@@ -103,12 +104,15 @@ class _CommerceViewState extends State<_CommerceView> {
     if (phone.isEmpty || address.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone and address are required.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.phoneAddressRequired),
+        ),
       );
       return;
     }
 
     setState(() => _placingOrder = true);
+    final l10n = AppLocalizations.of(context)!;
     try {
       final orderId = await provider.placeOrder(
         phone: phone,
@@ -121,7 +125,7 @@ class _CommerceViewState extends State<_CommerceView> {
       if (orderId == null) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Order failed.')));
+        ).showSnackBar(SnackBar(content: Text(l10n.orderFailedLong)));
         return;
       }
 
@@ -131,13 +135,13 @@ class _CommerceViewState extends State<_CommerceView> {
 
       // Basculer vers l'onglet des commandes (index 1)
       DefaultTabController.of(context).animateTo(1);
-      
+
       // Rafraîchir la liste des commandes
       _refreshOrders();
 
       final message = orderId.trim().isEmpty
-          ? 'Order created.'
-          : 'Order created: $orderId';
+          ? l10n.orderCreated
+          : l10n.orderCreatedLong(orderId);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
@@ -145,7 +149,7 @@ class _CommerceViewState extends State<_CommerceView> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Order failed.')));
+      ).showSnackBar(SnackBar(content: Text(l10n.orderFailedLong)));
     } finally {
       if (mounted) setState(() => _placingOrder = false);
     }
@@ -158,6 +162,7 @@ class _CommerceViewState extends State<_CommerceView> {
     if (_openingProductForm) return;
     _openingProductForm = true;
     final isNew = product == null;
+    final l10n = AppLocalizations.of(context)!;
     try {
       final saved = await showModalBottomSheet<bool>(
         context: context,
@@ -170,7 +175,7 @@ class _CommerceViewState extends State<_CommerceView> {
       if (saved == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isNew ? 'Product created.' : 'Product updated.'),
+            content: Text(isNew ? l10n.productCreated : l10n.productUpdated),
           ),
         );
       }
@@ -183,19 +188,20 @@ class _CommerceViewState extends State<_CommerceView> {
     CommerceProvider provider,
     Product product,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete product'),
-        content: Text('Delete "${product.name}"?'),
+        title: Text(l10n.deleteProductTitle),
+        content: Text(l10n.deleteProductConfirm(product.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -205,7 +211,9 @@ class _CommerceViewState extends State<_CommerceView> {
     final deleted = await provider.deleteProduct(product.id);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(deleted ? 'Product deleted.' : 'Delete failed.')),
+      SnackBar(
+        content: Text(deleted ? l10n.productDeleted : l10n.deleteFailed),
+      ),
     );
   }
 
@@ -220,14 +228,15 @@ class _CommerceViewState extends State<_CommerceView> {
     final firebaseUser = FirebaseAuth.instance.currentUser;
     // Sur Windows, si widget.userId est null, on tente de récupérer le currentUser actuel
     final effectiveUserId = widget.userId ?? firebaseUser?.uid;
+    final l10n = AppLocalizations.of(context)!;
 
     final tabs = <Tab>[
-      const Tab(text: 'Products'),
+      Tab(text: l10n.productsTab),
       Tab(
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Orders'),
+            Text(l10n.ordersTab),
             if (provider.orders.isNotEmpty) ...[
               const SizedBox(width: 4),
               Badge(
@@ -242,7 +251,7 @@ class _CommerceViewState extends State<_CommerceView> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Cart'),
+            Text(l10n.cartTab),
             if (provider.totalItems > 0) ...[
               const SizedBox(width: 4),
               Badge(
@@ -262,11 +271,11 @@ class _CommerceViewState extends State<_CommerceView> {
           final tabController = DefaultTabController.of(context);
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Commerce'),
+              title: Text(l10n.commerce),
               actions: [
                 if (firebaseUser == null)
                   IconButton(
-                    tooltip: 'Se connecter',
+                    tooltip: l10n.login,
                     icon: const Icon(Icons.login, color: Colors.blue),
                     onPressed: () => Navigator.push(
                       context,
@@ -274,24 +283,22 @@ class _CommerceViewState extends State<_CommerceView> {
                     ),
                   ),
                 IconButton(
-                  tooltip: 'Se déconnecter',
+                  tooltip: l10n.logout,
                   icon: const Icon(Icons.logout),
                   onPressed: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text("Déconnexion"),
-                        content: const Text(
-                          "Voulez-vous vous déconnecter du commerce ?",
-                        ),
+                        title: Text(l10n.logout),
+                        content: Text(l10n.commerceDisconnectConfirm),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: const Text("Annuler"),
+                            child: Text(l10n.cancel),
                           ),
                           FilledButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text("Déconnexion"),
+                            child: Text(l10n.logout),
                           ),
                         ],
                       ),
@@ -314,7 +321,9 @@ class _CommerceViewState extends State<_CommerceView> {
                   icon: const Icon(Icons.refresh),
                 ),
                 IconButton(
-                  tooltip: _isAdminMode ? 'Client mode' : 'Admin mode',
+                  tooltip: _isAdminMode
+                      ? l10n.clientModeTooltip
+                      : l10n.adminModeTooltip,
                   icon: Icon(
                     _isAdminMode
                         ? Icons.admin_panel_settings
@@ -324,7 +333,7 @@ class _CommerceViewState extends State<_CommerceView> {
                 ),
                 if (_isAdminMode)
                   IconButton(
-                    tooltip: 'Add product',
+                    tooltip: l10n.addProductTooltip,
                     onPressed: () => _openProductForm(provider: provider),
                     icon: const Icon(Icons.add),
                   ),
@@ -386,6 +395,7 @@ class _CommerceViewState extends State<_CommerceView> {
     TabController controller,
     CommerceProvider provider,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
@@ -415,11 +425,11 @@ class _CommerceViewState extends State<_CommerceView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${provider.totalItems} items',
+                        l10n.itemsCount(provider.totalItems),
                         style: Theme.of(context).textTheme.labelMedium,
                       ),
                       Text(
-                        'Total ${provider.total.toStringAsFixed(2)} DZD',
+                        l10n.orderTotal(provider.total.toStringAsFixed(2)),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
@@ -427,7 +437,7 @@ class _CommerceViewState extends State<_CommerceView> {
                 ),
                 FilledButton(
                   onPressed: () => controller.animateTo(cartIndex),
-                  child: const Text('Commander'),
+                  child: Text(l10n.placeOrderButton),
                 ),
               ],
             ),

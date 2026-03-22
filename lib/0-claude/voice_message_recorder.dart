@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app_provider.dart';
 import 'audio_recording_service.dart';
+import '../l10n/app_localizations.dart';
 
 class VoiceMessageRecorder extends StatefulWidget {
   final Function(String path, int duration) onRecordingComplete;
@@ -53,8 +54,9 @@ class _VoiceMessageRecorderState extends State<VoiceMessageRecorder>
       });
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text(l10n.errorWithDetails(e.toString()))),
         );
         widget.onCancel();
       }

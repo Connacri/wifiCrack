@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../l10n/app_localizations.dart';
 import 'add_friend_link.dart';
 import 'user.dart';
 
@@ -18,18 +19,19 @@ class QRGeneratorScreen extends StatelessWidget {
     ).toUrl();
 
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mon QR Code'),
+        title: Text(l10n.myQrCodeTooltip),
         actions: [
           IconButton(
-            tooltip: 'Partager le lien',
+            tooltip: l10n.shareLinkTooltip,
             icon: const Icon(Icons.share),
             onPressed: () => SharePlus.instance.share(
               ShareParams(
-                text: 'Ajoute-moi sur Mistral2laude P2P !\n$link',
-                subject: 'Invitation Mistral2laude P2P',
+                text: l10n.inviteText(link),
+                subject: l10n.inviteSubject,
               ),
             ),
           ),
@@ -45,7 +47,7 @@ class QRGeneratorScreen extends StatelessWidget {
                 radius: 32,
                 backgroundColor: theme.colorScheme.primaryContainer,
                 child: Text(
-                  (user.pseudo ?? 'U')[0].toUpperCase(),
+                  (user.pseudo ?? l10n.user)[0].toUpperCase(),
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: theme.colorScheme.onPrimaryContainer,
                   ),
@@ -53,7 +55,7 @@ class QRGeneratorScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                user.pseudo ?? 'Utilisateur',
+                user.pseudo ?? l10n.user,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -79,7 +81,7 @@ class QRGeneratorScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               Text(
-                'Faites scanner ce QR Code\npour vous ajouter en contact',
+                l10n.scanMeText,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.outline,
@@ -90,11 +92,11 @@ class QRGeneratorScreen extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: () => SharePlus.instance.share(
                   ShareParams(
-                    text: 'Ajoute-moi sur Mistral2laude P2P !\n$link',
+                    text: l10n.inviteText(link),
                   ),
                 ),
                 icon: const Icon(Icons.link),
-                label: const Text('Partager le lien'),
+                label: Text(l10n.shareLinkTooltip),
               ),
             ],
           ),

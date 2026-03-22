@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'app_provider.dart';
 import 'conversations_screen.dart';
+import '../l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +18,8 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AppProvider(),
       child: MaterialApp(
-        title: 'P2P Messenger',
+        onGenerateTitle: (context) =>
+            AppLocalizations.of(context)!.p2pMessengerTitle,
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
@@ -27,6 +30,13 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark),
         ),
         themeMode: ThemeMode.system,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         home: const InitializationScreen(),
       ),
     );
@@ -63,6 +73,7 @@ class _InitializationScreenState extends State<InitializationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_error != null) {
       return Scaffold(
         body: Center(
@@ -73,8 +84,8 @@ class _InitializationScreenState extends State<InitializationScreen> {
               children: [
                 const Icon(Icons.error_outline, size: 64, color: Colors.red),
                 const SizedBox(height: 16),
-                const Text('Erreur d\'initialisation',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                Text(l10n.initErrorTitle,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Text(_error!,
                     textAlign: TextAlign.center,
@@ -88,7 +99,7 @@ class _InitializationScreenState extends State<InitializationScreen> {
                     });
                     _initialize();
                   },
-                  child: const Text('Réessayer'),
+                  child: Text(l10n.retry),
                 ),
               ],
             ),
@@ -107,7 +118,7 @@ class _InitializationScreenState extends State<InitializationScreen> {
               children: [
                 const CircularProgressIndicator(),
                 const SizedBox(height: 24),
-                Text('Initialisation...',
+                Text(l10n.loading,
                     style: Theme.of(context).textTheme.titleMedium),
               ],
             ),

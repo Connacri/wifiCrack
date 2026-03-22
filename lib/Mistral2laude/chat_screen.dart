@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../data/sources/supabase_service.dart';
 import 'app_provider.dart';
 import 'message.dart';
@@ -56,6 +57,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _initServices(AppProvider provider) async {
     _objectBox = provider.objectBox;
+    // Capture l10n here for callbacks, assuming context is valid
+    // Note: If language changes, these callbacks might still use the old locale until re-init
+    final l10n = AppLocalizations.of(context)!;
 
     _webrtcService = WebRTCService(
       supabaseService: SupabaseService(),
@@ -70,7 +74,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _webrtcService.onMessageReceived = (content) {
       _saveMessage(content, isMe: false);
       _notifService.showMessageNotification(
-        senderPseudo: widget.friendPseudo ?? 'Ami',
+        senderPseudo: widget.friendPseudo ?? l10n.friendLabel,
         messagePreview: content,
         conversationId: widget.friendDeviceId,
       );
@@ -83,14 +87,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
     _webrtcService.onVoiceReceived = (voiceUrl) {
       _saveMessage(
-        '[🎤 Message vocal]',
+        '[🎤 ${l10n.vocalSigma}]',
         isMe: false,
         isVoice: true,
         voiceUrl: voiceUrl,
       );
       _notifService.showMessageNotification(
-        senderPseudo: widget.friendPseudo ?? 'Ami',
-        messagePreview: '🎤 Message vocal',
+        senderPseudo: widget.friendPseudo ?? l10n.friendLabel,
+        messagePreview: '🎤 ${l10n.vocalSigma}',
         conversationId: widget.friendDeviceId,
       );
     };
@@ -131,6 +135,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
 
     _messageController.clear();
     _saveMessage(text, isMe: true);
@@ -138,27 +143,30 @@ class _ChatScreenState extends State<ChatScreen> {
     final sent = await _webrtcService.sendMessage(text);
     if (!sent && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            '⚠️ Connexion non établie. Message sauvegardé localement.',
+            l10n.connectionNotEstablished,
           ),
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
 
-    context.read<AppProvider>().contactService.updateContactPreview(
-      deviceId: widget.friendDeviceId,
-      preview: text,
-      messageAt: DateTime.now(),
-    );
+    if (mounted) {
+      context.read<AppProvider>().contactService.updateContactPreview(
+            deviceId: widget.friendDeviceId,
+            preview: text,
+            messageAt: DateTime.now(),
+          );
+    }
   }
 
   Future<void> _startRecording() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!await _audioRecorder.hasPermission()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Permission microphone refusée')),
+          SnackBar(content: Text(l10n.microphonePermissionDenied)),
         );
       }
       return;
@@ -179,6 +187,8 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _stopRecording() async {
     final path = await _audioRecorder.stop();
     if (mounted) setState(() => _isRecording = false);
+    
+    final l10n = AppLocalizations.of(context)!;
 
     if (path == null) return;
 
@@ -186,7 +196,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!await file.exists() || await file.length() < 1000) return;
 
     _saveMessage(
-      '[🎤 Message vocal]',
+      '[🎤 ${l10n.vocalSigma}]',
       isMe: true,
       isVoice: true,
       voiceUrl: path,
@@ -205,6 +215,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -247,7 +258,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 if (messages.isEmpty) {
                   return Center(
                     child: Text(
-                      'Aucun message.\nEnvoyez le premier ! 👋',
+                      l10n.noMessagesYet,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
@@ -302,6 +313,7 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final bubbleColor = isMe
         ? theme.colorScheme.primary
         : theme.colorScheme.surfaceContainerHighest;
@@ -339,7 +351,7 @@ class _MessageBubble extends StatelessWidget {
                   children: [
                     Icon(Icons.play_circle_fill, color: textColor, size: 32),
                     const SizedBox(width: 4),
-                    Text('Message vocal', style: TextStyle(color: textColor)),
+                    Text(l10n.vocalSigma, style: TextStyle(color: textColor)),
                   ],
                 ),
               )
@@ -397,24 +409,25 @@ class _ConnectionStatusDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     Color color;
     String label;
     switch (state) {
       case WebRTCState.connected:
         color = Colors.green;
-        label = 'Connecté';
+        label = l10n.statusConnected;
         break;
       case WebRTCState.connecting:
         color = Colors.orange;
-        label = 'Connexion...';
+        label = l10n.statusConnecting;
         break;
       case WebRTCState.failed:
         color = Colors.red;
-        label = 'Échec';
+        label = l10n.statusFailed;
         break;
       default:
         color = Colors.grey;
-        label = 'Hors ligne';
+        label = l10n.statusOffline;
     }
     return Row(
       children: [
@@ -449,6 +462,7 @@ class _InputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
@@ -486,10 +500,10 @@ class _InputBar extends StatelessWidget {
                 onSubmitted: (_) => onSend(),
                 decoration: InputDecoration(
                   hintText: isRecording
-                      ? '🔴 Enregistrement...'
+                      ? l10n.recordingHint
                       : isReady
-                      ? 'Message...'
-                      : 'Connexion en cours...',
+                      ? l10n.messageHint
+                      : l10n.connectingHint,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,

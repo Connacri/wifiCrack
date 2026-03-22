@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
+
+import '../l10n/app_localizations.dart';
 import 'messaging_provider.dart';
 
 class AddFriendScreen extends StatefulWidget {
@@ -22,9 +24,10 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ajouter un ami'),
+        title: Text(l10n.addFriendTitle),
         actions: [
           // FIX: mobile_scanner ≥ 5 — MobileScannerController étend
           //      ValueNotifier<MobileScannerState>. torchState n'est plus un
@@ -47,10 +50,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _scannerController,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _scannerController, onDetect: _onDetect),
           _buildOverlay(),
         ],
       ),
@@ -58,11 +58,10 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
   }
 
   Widget _buildOverlay() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       // FIX: withOpacity() déprécié depuis Flutter 3.27 → withValues(alpha:)
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
-      ),
+      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5)),
       child: Column(
         children: [
           const Spacer(),
@@ -86,11 +85,11 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
             color: Colors.black.withValues(alpha: 0.7),
             child: SafeArea(
               child: Text(
-                'Scannez le QR code de votre ami',
+                l10n.scanFriendQr,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: Colors.white),
               ),
             ),
           ),
@@ -101,6 +100,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
 
   void _onDetect(BarcodeCapture capture) async {
     if (_isProcessing) return;
+    final l10n = AppLocalizations.of(context)!;
 
     final barcodes = capture.barcodes;
     if (barcodes.isEmpty) return;
@@ -116,8 +116,8 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ami ajouté avec succès !'),
+          SnackBar(
+            content: Text(l10n.friendAddedSuccess),
             backgroundColor: Colors.green,
           ),
         );
@@ -127,7 +127,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur : ${e.toString()}'),
+            content: Text(l10n.errorWithDetails(e.toString())),
             backgroundColor: Colors.red,
           ),
         );

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'message.dart';
-import 'contact.dart';
+import 'package:provider/provider.dart';
+
+import '../l10n/app_localizations.dart';
 import 'app_provider.dart';
-import 'voice_message_recorder.dart';
 import 'audio_player_widget.dart';
+import 'contact.dart';
+import 'message.dart';
+import 'voice_message_recorder.dart';
 
 class ChatScreen extends StatefulWidget {
   final Contact contact;
@@ -32,7 +34,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadMessages() async {
     final provider = context.read<AppProvider>();
-    final messages = await provider.getConversationMessages(widget.contact.deviceId);
+    final messages = await provider.getConversationMessages(
+      widget.contact.deviceId,
+    );
     setState(() => _messages = messages);
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
@@ -57,18 +61,18 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
 
     _messageController.clear();
-    
+
     final provider = context.read<AppProvider>();
     await provider.sendTextMessage(widget.contact.deviceId, text);
     await provider.sendTyping(widget.contact.deviceId, false);
-    
+
     await _loadMessages();
   }
 
   void _onTextChanged(String text) {
     final provider = context.read<AppProvider>();
     final nowTyping = text.isNotEmpty;
-    
+
     if (nowTyping != _isTyping) {
       _isTyping = nowTyping;
       provider.sendTyping(widget.contact.deviceId, nowTyping);
@@ -80,6 +84,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final provider = context.watch<AppProvider>();
     final isOnline = provider.isContactOnline(widget.contact.deviceId);
     final isTyping = provider.isContactTyping(widget.contact.deviceId);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -111,9 +116,14 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.contact.pseudo, style: const TextStyle(fontSize: 16)),
                   Text(
-                    isOnline ? (isTyping ? 'en train d\'écrire...' : 'en ligne') : 'hors ligne',
+                    widget.contact.pseudo,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  Text(
+                    isOnline
+                        ? (isTyping ? l10n.typingStatus : l10n.online)
+                        : l10n.offline,
                     style: TextStyle(
                       fontSize: 12,
                       color: isTyping ? Colors.green : Colors.grey,
@@ -143,7 +153,11 @@ class _ChatScreenState extends State<ChatScreen> {
             VoiceMessageRecorder(
               onRecordingComplete: (path, duration) async {
                 setState(() => _showRecorder = false);
-                await provider.sendAudioMessage(widget.contact.deviceId, path, duration);
+                await provider.sendAudioMessage(
+                  widget.contact.deviceId,
+                  path,
+                  duration,
+                );
                 await _loadMessages();
               },
               onCancel: () => setState(() => _showRecorder = false),
@@ -183,11 +197,15 @@ class _MessageBubble extends StatelessWidget {
     return Align(
       alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSent ? theme.colorScheme.primaryContainer : theme.colorScheme.secondaryContainer,
+          color: isSent
+              ? theme.colorScheme.primaryContainer
+              : theme.colorScheme.secondaryContainer,
           borderRadius: BorderRadius.circular(16).copyWith(
             bottomRight: isSent ? const Radius.circular(4) : null,
             bottomLeft: !isSent ? const Radius.circular(4) : null,
@@ -198,8 +216,12 @@ class _MessageBubble extends StatelessWidget {
           children: [
             if (message.type == MessageType.text)
               Text(message.encryptedContent)
-            else if (message.type == MessageType.audio && message.localMediaPath != null)
-              AudioPlayerWidget(filePath: message.localMediaPath!, duration: message.audioDuration ?? 0),
+            else if (message.type == MessageType.audio &&
+                message.localMediaPath != null)
+              AudioPlayerWidget(
+                filePath: message.localMediaPath!,
+                duration: message.audioDuration ?? 0,
+              ),
             const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -208,7 +230,10 @@ class _MessageBubble extends StatelessWidget {
                   DateFormat('HH:mm').format(message.timestamp),
                   style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
-                if (isSent) ...[const SizedBox(width: 4), _StatusIcon(status: message.status)],
+                if (isSent) ...[
+                  const SizedBox(width: 4),
+                  _StatusIcon(status: message.status),
+                ],
               ],
             ),
           ],
@@ -227,11 +252,26 @@ class _StatusIcon extends StatelessWidget {
     IconData icon;
     Color color;
     switch (status) {
-      case MessageStatus.sending: icon = Icons.schedule; color = Colors.grey; break;
-      case MessageStatus.sent: icon = Icons.check; color = Colors.grey; break;
-      case MessageStatus.delivered: icon = Icons.done_all; color = Colors.grey; break;
-      case MessageStatus.read: icon = Icons.done_all; color = Colors.blue; break;
-      case MessageStatus.failed: icon = Icons.error_outline; color = Colors.red; break;
+      case MessageStatus.sending:
+        icon = Icons.schedule;
+        color = Colors.grey;
+        break;
+      case MessageStatus.sent:
+        icon = Icons.check;
+        color = Colors.grey;
+        break;
+      case MessageStatus.delivered:
+        icon = Icons.done_all;
+        color = Colors.grey;
+        break;
+      case MessageStatus.read:
+        icon = Icons.done_all;
+        color = Colors.blue;
+        break;
+      case MessageStatus.failed:
+        icon = Icons.error_outline;
+        color = Colors.red;
+        break;
     }
     return Icon(icon, size: 14, color: color);
   }
@@ -252,6 +292,8 @@ class _ChatInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(8),
       child: Row(
@@ -261,10 +303,16 @@ class _ChatInput extends StatelessWidget {
               controller: controller,
               onChanged: onChanged,
               decoration: InputDecoration(
-                hintText: 'Message...',
+                hintText: l10n.messageHint,
                 filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
               ),
               onSubmitted: (_) => onSend(),
             ),

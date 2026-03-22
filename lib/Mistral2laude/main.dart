@@ -2,12 +2,14 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/sources/supabase_service.dart';
 import '../firebase_options.dart';
+import '../l10n/app_localizations.dart';
 import '../objectbox.g.dart';
 import 'app_provider.dart';
 import 'contacts_screen.dart';
@@ -84,9 +86,9 @@ Future<String> _getDeviceModel() async {
       final linux = await info.linuxInfo;
       return linux.prettyName ?? linux.name;
     }
-    return "Mobile Device";
+    return "mobileDevice"; // Key for l10n
   } catch (_) {
-    return 'Unknown';
+    return 'unknown'; // Key for l10n
   }
 }
 
@@ -109,7 +111,7 @@ Future<M2CUser> _initUser({
 
   final newUser = M2CUser(
     deviceId: deviceId,
-    pseudo: 'Utilisateur M2C',
+    pseudo: 'defaultUserPseudo', // Key for l10n
     model: model,
     lastSeen: DateTime.now(),
     coins: 0,
@@ -124,8 +126,18 @@ class MistralApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mistral2laude P2P',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.mistral2laudeTitle,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('fr'),
+      ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF4F46E5),

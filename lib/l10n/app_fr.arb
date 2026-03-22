@@ -1,5 +1,8 @@
 {
   "appTitle": "WiFi Fibre Hack",
+  "@appTitle": {
+    "description": "Le titre de l'application"
+  },
   "home": "Accueil",
   "map": "Carte",
   "scan": "Scanner",
@@ -89,16 +92,47 @@
   "noActivityAvailable": "Aucune activité disponible.",
   "deleteConversation": "Effacer la conversation",
   "confirmDeleteConversation": "Supprimer tous les messages avec {pseudo} ?",
+  "@confirmDeleteConversation": {
+    "placeholders": {
+      "pseudo": {
+        "type": "String"
+      }
+    }
+  },
   "conversationDeleted": "Conversation supprimée localement.",
   "p2pSecure": "P2P Sécurisé",
   "coinsForUser": "Coins pour {pseudo}",
+  "@coinsForUser": {
+    "placeholders": {
+      "pseudo": {
+        "type": "String"
+      }
+    }
+  },
   "coinsAddedToUser": "{amount} coins ajoutés à {pseudo}",
+  "@coinsAddedToUser": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      },
+      "pseudo": {
+        "type": "String"
+      }
+    }
+  },
   "amountLabel": "Montant",
   "addCoins": "Ajouter des Coins",
   "refreshUsers": "Rafraîchir les utilisateurs",
   "changePseudoTooltip": "Changer mon pseudo",
   "userProfile": "Profil",
   "p2pSecureSubtitle": "P2P Sécurisé • {id}...",
+  "@p2pSecureSubtitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "deleteConversationTooltip": "Effacer conversation",
   "addCoinsTooltip": "Donner des coins",
   "coinsToAddLabel": "Nombre de coins à ajouter",
@@ -121,6 +155,13 @@
   "activeSession": "Session active",
   "lastPing": "Dernier ping",
   "agoMin": "il y a {minutes} min",
+  "@agoMin": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "anomalyDetected": "Anomalie détectée",
   "none": "Aucune (heuristique locale)",
   "securityNote": "Note: cet onglet affiche des signaux de sécurité applicatifs basés sur les données disponibles (pas un audit serveur complet).",
@@ -145,6 +186,13 @@
   "bonusAddedText": "Bonus de Coins activé ! (Vidéo vue)",
   "close": "Fermer",
   "copiedToClipboard": "Clé copiée : {text}",
+  "@copiedToClipboard": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "disconnectTooltip": "Déconnecter",
   "connectTooltip": "Calculer & Connecter",
   "audioUnavailable": "Vocal non disponible.",
@@ -158,14 +206,35 @@
   "configureNow": "Configurer Maintenant",
   "accessDenied": "Accès refusé.",
   "sigmaKey": "Clé Sigma: {key}",
+  "@sigmaKey": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "wifiDisabled": "Le WiFi est désactivé.",
   "locationWifiPermsRequired": "Permissions de localisation/WiFi requises.",
   "gpsRequiredAndroid": "Le GPS est requis pour scanner sur Android.",
   "noCompatibleNetworks": "Aucun réseau compatible détecté à proximité.",
   "scanError": "Erreur lors du scan: {error}",
+  "@scanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "scanNotSupported": "Le scan WiFi n'est pas supporté sur cet appareil.",
   "gpsDisabled": "Le GPS est désactivé.",
   "scanUnavailable": "Le scan est indisponible ({status}).",
+  "@scanUnavailable": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "manualKeyEntryNote": "Veuillez entrer la clé manuellement si la connexion échoue.",
   "authRequired": "Authentification requise",
   "chooseRole": "Choisissez votre rôle",
@@ -182,6 +251,13 @@
   "resetEmailSent": "Email de réinitialisation envoyé !",
   "fillAllFields": "Veuillez remplir tous les champs.",
   "googleError": "Erreur Google: {error}",
+  "@googleError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "permsRequiredTitle": "Autorisations Requises",
   "permsRequiredInfo": "Pour utiliser cette application, vous devez impérativement :\n\n",
   "permsFatalNote": "Sans cela, l'application ne peut pas fonctionner.",
@@ -193,5 +269,338 @@
   "client": "Client",
   "vendor": "Vendeur",
   "deliveryPerson": "Livreur",
-  "wholesaler": "Grossiste"
+  "wholesaler": "Grossiste",
+  "vocalSigma": "Vocal Sigma",
+  "defaultMessageContent": "Message",
+  "myContacts": "Mes Contacts",
+  "myQrCodeTooltip": "Mon QR Code",
+  "scanFriendTooltip": "Scanner un ami",
+  "friendAddedSuccess": "✅ Ami ajouté avec succès !",
+  "editPseudoMenu": "Modifier mon pseudo",
+  "myPseudoTitle": "Mon pseudo",
+  "enterPseudoHint": "Entrez votre pseudo",
+  "noContacts": "Aucun contact",
+  "scanFriendToStart": "Scannez le QR Code d'un ami pour commencer",
+  "scanFriendButton": "Scanner un ami",
+  "addedOn": "Ajouté le",
+  "scanQrCodeTitle": "Scanner un QR Code",
+  "qrCodeUnreadable": "QR Code illisible, réessayez.",
+  "invalidMistralQr": "Ce QR Code ne provient pas de Mistral P2P.",
+  "invalidLinkError": "Lien invalide : {error}",
+  "@invalidLinkError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cannotAddSelf": "🚫 Vous ne pouvez pas vous ajouter vous-même !",
+  "friendAlreadyAdded": "ℹ️ Cet ami est déjà dans vos contacts.",
+  "placeQrInFrame": "Placez le QR Code dans le cadre",
+  "retry": "Réessayer",
+  "flashlightTooltip": "Lampe torche",
+  "shareLinkTooltip": "Partager le lien",
+  "inviteText": "Ajoute-moi sur Mistral2laude P2P !\n{link}",
+  "@inviteText": {
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteSubject": "Invitation Mistral2laude P2P",
+  "scanMeText": "Faites scanner ce QR Code\npour vous ajouter en contact",
+  "microphonePermissionDenied": "Permission microphone refusée",
+  "connectionNotEstablished": "⚠️ Connexion non établie. Message sauvegardé localement.",
+  "noMessagesYet": "Aucun message.\nEnvoyez le premier ! 👋",
+  "statusConnected": "Connecté",
+  "statusConnecting": "Connexion...",
+  "statusFailed": "Échec",
+  "statusOffline": "Hors ligne",
+  "recordingHint": "🔴 Enregistrement...",
+  "messageHint": "Message...",
+  "connectingHint": "Connexion en cours...",
+  "initFailed": "Échec d'initialisation",
+  "defaultUserPseudo": "Utilisateur M2C",
+  "mobileDevice": "Appareil Mobile",
+  "unknownDevice": "Inconnu",
+  "productsTab": "Produits",
+  "ordersTab": "Commandes",
+  "cartTab": "Panier",
+  "clientModeTooltip": "Mode Client",
+  "adminModeTooltip": "Mode Admin",
+  "addProductTooltip": "Ajouter produit",
+  "orderCreated": "Commande créée.",
+  "orderFailed": "Échec de la commande.",
+  "productCreated": "Produit créé.",
+  "productUpdated": "Produit mis à jour.",
+  "productDeleted": "Produit supprimé.",
+  "deleteFailed": "Échec de la suppression.",
+  "deleteProductTitle": "Supprimer le produit",
+  "deleteProductConfirm": "Supprimer \"{name}\" ?",
+  "@deleteProductConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "imageUploaded": "Image téléchargée.",
+  "imageUploadFailed": "Échec du téléchargement : {error}",
+  "@imageUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "supabaseBucketNotConfigured": "Le bucket d'images Supabase n'est pas configuré.",
+  "searchProductsPlaceholder": "Rechercher produits ou SKU",
+  "inStockFilter": "En stock",
+  "includeInactiveFilter": "Inclure inactifs",
+  "sortName": "Nom",
+  "sortPriceAsc": "Prix croiss.",
+  "sortPriceDesc": "Prix décroiss.",
+  "sortStockAsc": "Stock croiss.",
+  "sortStockDesc": "Stock décroiss.",
+  "sortPopularity": "Popularité",
+  "gridView": "Grille",
+  "listView": "Liste",
+  "noProductsMatch": "Aucun produit ne correspond.",
+  "clearFilters": "Effacer filtres",
+  "allProductsLoaded": "Tous les produits chargés.",
+  "saveProductTitle": "Enregistrer Produit",
+  "addProductTitle": "Ajouter Produit",
+  "editProductTitle": "Modifier Produit",
+  "productNameLabel": "Nom",
+  "skuLabel": "SKU / Référence",
+  "priceLabel": "Prix (DZD)",
+  "promoPriceLabel": "Prix promo (DZD)",
+  "optionalHelper": "Optionnel",
+  "imageLabel": "URL Image ou Chemin Storage",
+  "uploadImageButton": "Télécharger image",
+  "replaceImageButton": "Remplacer image",
+  "uploadingButton": "Envoi...",
+  "stockLabel": "Stock",
+  "popularityLabel": "Popularité",
+  "activeLabel": "Actif",
+  "saveButton": "Enregistrer",
+  "savingButton": "Enregistrement...",
+  "unavailableStatus": "Indisponible",
+  "outOfStockStatus": "Rupture de stock",
+  "lowStockStatus": "Stock faible",
+  "inactiveStatus": "Inactif",
+  "promoStatus": "Promo",
+  "cartEmpty": "Le panier est vide.",
+  "yourCart": "Votre panier",
+  "clearCart": "Vider",
+  "subtotalLabel": "Sous-total",
+  "deliveryLabel": "Livraison",
+  "totalLabel": "Total",
+  "phoneLabel": "Téléphone",
+  "addressLabel": "Adresse",
+  "noteLabel": "Note",
+  "checkoutButton": "Commander",
+  "orderTotal": "Total {amount} DZD",
+  "@orderTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "itemsCount": "{count} articles",
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orderNumber": "Commande #{id}",
+  "@orderNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "changeRoleTooltip": "Changer de rôle (Simulation)",
+  "orderNotFound": "Commande non trouvée",
+  "globalStatus": "Statut global",
+  "dateLabel": "Date",
+  "customerLabel": "Client",
+  "paymentLabel": "Paiement",
+  "productsLabel": "Produits",
+  "priceXQuantity": "Prix : {price} DZD x {quantity}",
+  "@priceXQuantity": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "noShipmentsYet": "Aucune expédition pour le moment.",
+  "shipmentsCount": "Expéditions ({count})",
+  "@shipmentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "packageNumber": "Colis : {tracking}",
+  "@packageNumber": {
+    "placeholders": {
+      "tracking": {
+        "type": "String"
+      }
+    }
+  },
+  "carrierLabel": "Transporteur : {name}",
+  "@carrierLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "packageId": "ID",
+  "shippedOn": "Expédié le",
+  "itemsInPackage": "Articles dans ce colis :",
+  "confirmOrderButton": "Confirmer la commande",
+  "allocateStockButton": "Allouer le stock",
+  "startPickingButton": "Démarrer le Picking",
+  "packingFinishedButton": "Emballage terminé (Packed)",
+  "shipButton": "Générer étiquette & Expédier",
+  "setInTransitButton": "Mettre en Transit ({tracking})",
+  "@setInTransitButton": {
+    "placeholders": {
+      "tracking": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDeliveryButton": "Confirmer Livraison ({tracking})",
+  "@confirmDeliveryButton": {
+    "placeholders": {
+      "tracking": {
+        "type": "String"
+      }
+    }
+  },
+  "requestReturnButton": "Demander un retour",
+  "newShipmentTitle": "Nouvelle Expédition",
+  "allItemIncludedNote": "Tous les articles seront inclus dans ce colis pour cet exemple.",
+  "trackingNumberLabel": "N° de suivi",
+  "adminStatusTitle": "Administration : Statut",
+  "phoneAddressRequired": "Le téléphone et l'adresse sont requis.",
+  "orderFailedLong": "Échec de la commande.",
+  "orderCreatedLong": "Commande créée : {id}",
+  "@orderCreatedLong": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "placingOrderButton": "Commande en cours...",
+  "placeOrderButton": "Commander",
+  "loadMoreButton": "Charger plus",
+  "searchOrderPlaceholder": "Rechercher une commande...",
+  "allFilter": "Tout",
+  "orderConfirmedStep": "Confirmé",
+  "shippedStep": "Expédié",
+  "deliveredStep": "Livré",
+  "unknownDate": "Inconnue",
+  "p2pMessengerTitle": "Messagerie P2P",
+  "errorWithDetails": "Erreur : {message}",
+  "@errorWithDetails": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "myQrCode": "Mon QR Code",
+  "shareQrCodeTitle": "Partager votre QR Code",
+  "shareQrCodeSubtitle": "Laissez vos amis scanner ce code pour vous ajouter à leurs contacts.",
+  "takeScreenshotToShare": "Prenez une capture d'écran pour partager votre QR Code.",
+  "initErrorTitle": "Erreur d'initialisation",
+  "messagesTitle": "Messages",
+  "addContactTooltip": "Ajouter un contact",
+  "noConversations": "Aucune conversation",
+  "addContactToStart": "Ajoutez un contact pour commencer à discuter",
+  "typingStatus": "écrit...",
+  "sayHello": "Dites bonjour ! 👋",
+  "yesterday": "Hier",
+  "addFriendTitle": "Ajouter un ami",
+  "scanFriendQr": "Scannez le QR Code de votre ami",
+  "addContactTitle": "Ajouter un contact",
+  "yourQrCodeTitle": "Votre QR Code",
+  "yourQrCodeSubtitle": "Montrez ce code à votre ami",
+  "notAvailable": "N/A",
+  "deviceIdLabel": "ID de l'appareil",
+  "contactAddedSuccess": "Contact ajouté avec succès !",
+  "dataChannelDisconnected": "Canal de données déconnecté",
+  "peerNotConnected": "Pair non connecté : {id}",
+  "@peerNotConnected": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "errorParsingMessage": "Erreur lors de l'analyse du message : {error}",
+  "@errorParsingMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidQrCode": "QR Code invalide : {error}",
+  "@invalidQrCode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "missingDeviceId": "ID de l'appareil manquant",
+  "missingPseudo": "Pseudo manquant",
+  "missingPublicKey": "Clé publique manquante",
+  "cannotAddSelfError": "Impossible de s'ajouter soi-même",
+  "invalidPublicKeyFormat": "Format de clé publique invalide",
+  "errorParsingQrCode": "Erreur lors de l'analyse du QR Code : {error}",
+  "@errorParsingQrCode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mistral2laudeTitle": "Mistral2laude P2P",
+  "friendLabel": "Ami",
+  "encryptedMessage": "[Message chiffré]",
+  "youEncryptedMessage": "Vous : [Message chiffré]",
+  "imageMessage": "🖼️ Image",
+  "fileMessage": "📎 Fichier",
+  "newMessage": "Nouveau message",
+  "reply": "Répondre",
+  "quickReply": "Réponse rapide",
+  "markAsRead": "Marquer comme lu",
+  "isTyping": "est en train d'écrire...",
+  "typingIndicator": "Écrit...",
+  "vocalMessage": "Message vocal",
+  "gps": "GPS",
+  "permissions": "Autorisations",
+  "trace": "Trace",
+  "mainChannelValue": "WebRTC P2P",
+  "formErrors": "Veuillez corriger les erreurs du formulaire.",
+  "saveFailed": "Échec de l'enregistrement.",
+  "itemsLabel": "Articles"
 }

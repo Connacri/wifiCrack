@@ -1,192 +1,603 @@
 {
-  "appTitle": "WiFi Fibre Hack",
-  "home": "Início",
-  "map": "Mapa",
-  "scan": "Escanear",
-  "settings": "Configurações",
-  "admin": "Admin",
-  "commerce": "Comércio",
-  "p2pChat": "Chat P2P",
-  "publishAd": "Publicar anúncio",
-  "connect": "Conectar",
-  "disconnect": "Desconectar",
-  "copy": "Copiar",
-  "share": "Compartilhar",
-  "cancel": "Cancelar",
-  "confirm": "Confirmar",
-  "delete": "Excluir",
-  "edit": "Editar",
-  "save": "Salvar",
-  "search": "Pesquisar",
-  "loading": "Carregando...",
-  "error": "Erro",
-  "success": "Sucesso",
-  "password": "Senha",
-  "pseudo": "Apelido",
-  "login": "Entrar",
-  "logout": "Sair",
-  "language": "Idioma",
-  "theme": "Tema",
-  "light": "Claro",
-  "dark": "Escuro",
-  "system": "Sistema",
-  "about": "Sobre",
-  "version": "Versão",
-  "profileTooltip": "Perfil",
-  "adminTooltip": "Admin",
-  "chatTooltip": "Chat",
-  "p2pTooltip": "P2P",
-  "scanWifi": "Escanear WiFi",
-  "scanning": "Analisando...",
-  "noNetworks": "Nenhuma rede encontrada",
-  "permissionDenied": "Permissão negada",
-  "fixPermissions": "Corrigir permissões",
-  "detected": "Detetado",
-  "connected": "Conectado",
-  "failed": "Falhou",
-  "coins": "Moedas",
-  "publishAdEarn": "Publicar anúncio e ganhar",
-  "adminDashboardTitle": "Sigma Dashboard Pro",
-  "logoutSnackBar": "Desconectado do administrador.",
-  "logoutTooltip": "Sair localmente",
-  "tabStats": "Estatísticas",
-  "tabAds": "Anúncios",
-  "tabTargets": "Alvos",
-  "tabMap": "Mapa",
-  "tabTraces": "Traces",
-  "tabContacts": "Contactos",
-  "tabConfig": "Config",
-  "securityAdmin": "🔐 Segurança Admin",
-  "changePasswordInfo": "Altere a senha de acesso ao painel. Esta alteração é imediata para todos os dispositivos.",
-  "minPasswordError": "A senha deve ter pelo menos 6 caracteres.",
-  "passwordUpdateSuccess": "✅ Senha de Admin atualizada no Supabase!",
-  "passwordUpdateError": "❌ Erro durante a atualização.",
-  "addCarousel": "📢 Adicionar ao Carrossel",
-  "saveChanges": "Salvar alterações",
-  "newPassword": "Nova senha",
-  "publish": "Publicar",
-  "bannerAdded": "Banner adicionado!",
-  "userSubmissionsManagement": "Gestão de submissões de utilizadores",
-  "unknown": "Desconhecido",
-  "model": "Modelo",
-  "coinsLabel": "Moedas",
-  "chat": "Chat",
-  "giveCoins": "Dar moedas",
-  "coinsAmountLabel": "Número de moedas",
-  "add": "Adicionar",
-  "online": "Online",
-  "offline": "Offline",
-  "searchPlaceholder": "Pesquisar...",
-  "bannerText": "Texto do banner",
-  "imageUrl": "URL da imagem",
-  "externalLink": "Link externo",
-  "editPseudo": "Editar meu Apelido",
-  "newPseudo": "Novo Apelido",
-  "pseudoUpdated": "Apelido atualizado!",
-  "pseudoError": "Apelido indisponível ou erro.",
-  "messengerDashboard": "Sigma Messenger Dashboard",
-  "noUsersFound": "Nenhum utilizador encontrado.",
-  "noActivityAvailable": "Nenhuma atividade disponível.",
-  "deleteConversation": "Apagar conversa",
-  "confirmDeleteConversation": "Excluir todas as mensagens com {pseudo}?",
-  "conversationDeleted": "Conversa excluída localmente.",
-  "p2pSecure": "P2P Seguro",
-  "coinsForUser": "Moedas para {pseudo}",
-  "coinsAddedToUser": "{amount} moedas adicionadas a {pseudo}",
-  "amountLabel": "Montante",
-  "addCoins": "Adicionar moedas",
-  "refreshUsers": "Atualizar utilizadores",
-  "changePseudoTooltip": "Alterar meu apelido",
-  "userProfile": "Perfil",
-  "p2pSecureSubtitle": "P2P Seguro • {id}...",
-  "deleteConversationTooltip": "Apagar conversa",
-  "addCoinsTooltip": "Dar moedas",
-  "coinsToAddLabel": "Número de moedas a adicionar",
-  "messageSigmaPlaceholder": "Mensagem Sigma...",
-  "userProfileTitle": "Perfil de utilizador",
-  "tabInfo": "Infos",
-  "tabActivity": "Atividade",
-  "tabSecurity": "Segurança",
-  "tabNetwork": "Rede",
-  "identity": "Identidade",
-  "deviceAndSession": "Dispositivo e Sessão",
-  "lastActivity": "Última atividade",
-  "createdAt": "Criado em",
-  "activitySummary": "Resumo de atividade",
-  "eventsCollected": "Eventos recolhidos",
-  "validGpsPoints": "Pontos GPS válidos",
-  "maxContactsSeen": "Contactos máx. vistos",
-  "securityStatus": "Estado de segurança",
-  "activeSession": "Sessão ativa",
-  "lastPing": "Último ping",
-  "agoMin": "há {minutes} min",
-  "anomalyDetected": "Anomalia detetada",
-  "none": "Nenhuma (heurística local)",
-  "securityNote": "Nota: este separador apresenta sinais de segurança da aplicação baseados nos dados disponíveis (não é uma auditoria completa do servidor).",
-  "networkStatus": "Estado da rede",
-  "mainChannel": "Canal principal",
-  "presence": "Presença",
-  "available": "Disponível",
-  "unavailable": "Indisponível",
-  "geolocSamples": "Amostras de geolocalização",
-  "rawDebugData": "Dados brutos (debug)",
-  "yes": "Sim",
-  "no": "Não",
-  "sigmaAdProposalTitle": "🚀 Propõe o teu anúncio Sigma",
-  "submitAdSuccess": "✅ Submissão enviada! Aguarda a validação do administrador para as tuas moedas.",
-  "submitAdInfo": "Envia uma imagem, uma descrição e ganha moedas!",
-  "descriptionLabel": "Descrição",
-  "submit": "Submeter",
-  "bonusActivated": "Bónus de Moedas ativado! (Vídeo visto)",
-  "watchVideoBonus": "Ver um vídeo para +50 Moedas de bónus",
-  "languageSelectorTitle": "Select Language / Escolher idioma",
-  "imageLinkUrl": "Link da imagem (URL)",
-  "bonusAddedText": "Bónus de Moedas ativado! (Vídeo visto)",
-  "close": "Fechar",
-  "copiedToClipboard": "Chave copiada: {text}",
-  "disconnectTooltip": "Desconectar",
-  "connectTooltip": "Calcular e Conectar",
-  "audioUnavailable": "Voz não disponível.",
-  "supportSigmaPro": "Suporte Sigma Pro",
-  "p2pEncryptedChat": "Mensagens P2P Encriptadas",
-  "needHelpMessage": "Precisa de ajuda? Envie-nos uma mensagem.",
-  "chooseAdminRole": "Escolha o seu cargo de Admin",
-  "configRequiredTitle": "Configuração Necessária",
-  "configRequiredInfo": "Para funcionar, o Sigma necessita de: \n",
-  "configVisibleNote": "Sem isto, não estará visível no mapa Sigma.",
-  "configureNow": "Configurar Agora",
-  "accessDenied": "Acesso negado.",
-  "sigmaKey": "Chave Sigma: {key}",
-  "wifiDisabled": "O WiFi está desativado.",
-  "locationWifiPermsRequired": "Permissões de localização/WiFi necessárias.",
-  "gpsRequiredAndroid": "O GPS é necessário para escanear no Android.",
-  "noCompatibleNetworks": "Nenhuma rede compatível detetada nas proximidades.",
-  "scanError": "Erro de scan: {error}",
-  "scanNotSupported": "O scan WiFi não é suportado neste dispositivo.",
-  "gpsDisabled": "O GPS está desativado.",
-  "scanUnavailable": "O scan está indisponível ({status}).",
-  "manualKeyEntryNote": "Por favor, insira a chave manualmente se a ligação falhar.",
-  "authRequired": "Autenticação necessária",
-  "chooseRole": "Escolha o seu cargo",
-  "user": "Utilizador",
-  "validate": "Validar",
-  "authTitle": "Autenticação",
-  "commerceLogin": "Login Comércio",
-  "createAccount": "Criar conta",
-  "email": "Email",
-  "forgotPassword": "Esqueceu-se da senha?",
-  "loginGoogle": "Continuar com Google",
-  "noAccount": "Não tem conta? Registe-se",
-  "hasAccount": "Já tem conta? Entrar",
-  "resetEmailSent": "Email de redefinição enviado!",
-  "fillAllFields": "Por favor, preencha todos os campos.",
-  "googleError": "Erro Google: {error}",
-  "permsRequiredTitle": "Permissões Necessárias",
-  "permsRequiredInfo": "Para utilizar esta aplicação, deve imperativamente:\n\n",
-  "permsFatalNote": "Sem isto, a aplicação não pode funcionar.",
-  "understandAndConfigure": "Compreendi, configurar",
-  "commerceDisconnectConfirm": "Deseja desconectar-se do comércio?",
-  "startDiscussion": "Começar a discussão",
-  "yourMessage": "A sua mensagem...",
-  "orderErrorUnidentified": "Imposible encomendar: utilizador não identificado."
+    "appTitle":  "WiFi Fibre Hack",
+    "home":  "Início",
+    "map":  "Mapa",
+    "scan":  "Escanear",
+    "settings":  "Configurações",
+    "admin":  "Admin",
+    "commerce":  "Comércio",
+    "p2pChat":  "Chat P2P",
+    "publishAd":  "Publicar anúncio",
+    "connect":  "Conectar",
+    "disconnect":  "Desconectar",
+    "copy":  "Copiar",
+    "share":  "Compartilhar",
+    "cancel":  "Cancelar",
+    "confirm":  "Confirmar",
+    "delete":  "Excluir",
+    "edit":  "Editar",
+    "save":  "Salvar",
+    "search":  "Pesquisar",
+    "loading":  "Carregando...",
+    "error":  "Erro",
+    "success":  "Sucesso",
+    "password":  "Senha",
+    "pseudo":  "Apelido",
+    "login":  "Entrar",
+    "logout":  "Sair",
+    "language":  "Idioma",
+    "theme":  "Tema",
+    "light":  "Claro",
+    "dark":  "Escuro",
+    "system":  "Sistema",
+    "about":  "Sobre",
+    "version":  "Versão",
+    "profileTooltip":  "Perfil",
+    "adminTooltip":  "Admin",
+    "chatTooltip":  "Chat",
+    "p2pTooltip":  "P2P",
+    "scanWifi":  "Escanear WiFi",
+    "scanning":  "Analisando...",
+    "noNetworks":  "Nenhuma rede encontrada",
+    "permissionDenied":  "Permissão negada",
+    "fixPermissions":  "Corrigir permissões",
+    "detected":  "Detetado",
+    "connected":  "Conectado",
+    "failed":  "Falhou",
+    "coins":  "Moedas",
+    "publishAdEarn":  "Publicar anúncio e ganhar",
+    "adminDashboardTitle":  "Sigma Dashboard Pro",
+    "logoutSnackBar":  "Desconectado do administrador.",
+    "logoutTooltip":  "Sair localmente",
+    "tabStats":  "Estatísticas",
+    "tabAds":  "Anúncios",
+    "tabTargets":  "Alvos",
+    "tabMap":  "Mapa",
+    "tabTraces":  "Traces",
+    "tabContacts":  "Contactos",
+    "tabConfig":  "Config",
+    "securityAdmin":  "🔐 Segurança Admin",
+    "changePasswordInfo":  "Altere a senha de acesso ao painel. Esta alteração é imediata para todos os dispositivos.",
+    "minPasswordError":  "A senha deve ter pelo menos 6 caracteres.",
+    "passwordUpdateSuccess":  "✅ Senha de Admin atualizada no Supabase!",
+    "passwordUpdateError":  "❌ Erro durante a atualização.",
+    "addCarousel":  "📢 Adicionar ao Carrossel",
+    "saveChanges":  "Salvar alterações",
+    "newPassword":  "Nova senha",
+    "publish":  "Publicar",
+    "bannerAdded":  "Banner adicionado!",
+    "userSubmissionsManagement":  "Gestão de submissões de utilizadores",
+    "unknown":  "Desconhecido",
+    "model":  "Modelo",
+    "coinsLabel":  "Moedas",
+    "chat":  "Chat",
+    "giveCoins":  "Dar moedas",
+    "coinsAmountLabel":  "Número de moedas",
+    "add":  "Adicionar",
+    "online":  "Online",
+    "offline":  "Offline",
+    "searchPlaceholder":  "Pesquisar...",
+    "bannerText":  "Texto do banner",
+    "imageUrl":  "URL da imagem",
+    "externalLink":  "Link externo",
+    "editPseudo":  "Editar meu Apelido",
+    "newPseudo":  "Novo Apelido",
+    "pseudoUpdated":  "Apelido atualizado!",
+    "pseudoError":  "Apelido indisponível ou erro.",
+    "messengerDashboard":  "Sigma Messenger Dashboard",
+    "noUsersFound":  "Nenhum utilizador encontrado.",
+    "noActivityAvailable":  "Nenhuma atividade disponível.",
+    "deleteConversation":  "Apagar conversa",
+    "confirmDeleteConversation":  "Excluir todas as mensagens com {pseudo}?",
+    "conversationDeleted":  "Conversa excluída localmente.",
+    "p2pSecure":  "P2P Seguro",
+    "coinsForUser":  "Moedas para {pseudo}",
+    "coinsAddedToUser":  "{amount} moedas adicionadas a {pseudo}",
+    "amountLabel":  "Montante",
+    "addCoins":  "Adicionar moedas",
+    "refreshUsers":  "Atualizar utilizadores",
+    "changePseudoTooltip":  "Alterar meu apelido",
+    "userProfile":  "Perfil",
+    "p2pSecureSubtitle":  "P2P Seguro • {id}...",
+    "deleteConversationTooltip":  "Apagar conversa",
+    "addCoinsTooltip":  "Dar moedas",
+    "coinsToAddLabel":  "Número de moedas a adicionar",
+    "messageSigmaPlaceholder":  "Mensagem Sigma...",
+    "userProfileTitle":  "Perfil de utilizador",
+    "tabInfo":  "Infos",
+    "tabActivity":  "Atividade",
+    "tabSecurity":  "Segurança",
+    "tabNetwork":  "Rede",
+    "identity":  "Identidade",
+    "deviceAndSession":  "Dispositivo e Sessão",
+    "lastActivity":  "Última atividade",
+    "createdAt":  "Criado em",
+    "activitySummary":  "Resumo de atividade",
+    "eventsCollected":  "Eventos recolhidos",
+    "validGpsPoints":  "Pontos GPS válidos",
+    "maxContactsSeen":  "Contactos máx. vistos",
+    "securityStatus":  "Estado de segurança",
+    "activeSession":  "Sessão ativa",
+    "lastPing":  "Último ping",
+    "agoMin":  "há {minutes} min",
+    "anomalyDetected":  "Anomalia detetada",
+    "none":  "Nenhuma (heurística local)",
+    "securityNote":  "Nota: este separador apresenta sinais de segurança da aplicação baseados nos dados disponíveis (não é uma auditoria completa do servidor).",
+    "networkStatus":  "Estado da rede",
+    "mainChannel":  "Canal principal",
+    "presence":  "Presença",
+    "available":  "Disponível",
+    "unavailable":  "Indisponível",
+    "geolocSamples":  "Amostras de geolocalização",
+    "rawDebugData":  "Dados brutos (debug)",
+    "yes":  "Sim",
+    "no":  "Não",
+    "sigmaAdProposalTitle":  "🚀 Propõe o teu anúncio Sigma",
+    "submitAdSuccess":  "✅ Submissão enviada! Aguarda a validação do administrador para as tuas moedas.",
+    "submitAdInfo":  "Envia uma imagem, uma descrição e ganha moedas!",
+    "descriptionLabel":  "Descrição",
+    "submit":  "Submeter",
+    "bonusActivated":  "Bónus de Moedas ativado! (Vídeo visto)",
+    "watchVideoBonus":  "Ver um vídeo para +50 Moedas de bónus",
+    "languageSelectorTitle":  "Select Language / Escolher idioma",
+    "imageLinkUrl":  "Link da imagem (URL)",
+    "bonusAddedText":  "Bónus de Moedas ativado! (Vídeo visto)",
+    "close":  "Fechar",
+    "copiedToClipboard":  "Chave copiada: {text}",
+    "disconnectTooltip":  "Desconectar",
+    "connectTooltip":  "Calcular e Conectar",
+    "audioUnavailable":  "Voz não disponível.",
+    "supportSigmaPro":  "Suporte Sigma Pro",
+    "p2pEncryptedChat":  "Mensagens P2P Encriptadas",
+    "needHelpMessage":  "Precisa de ajuda? Envie-nos uma mensagem.",
+    "chooseAdminRole":  "Escolha o seu cargo de Admin",
+    "configRequiredTitle":  "Configuração Necessária",
+    "configRequiredInfo":  "Para funcionar, o Sigma necessita de: \n",
+    "configVisibleNote":  "Sem isto, não estará visível no mapa Sigma.",
+    "configureNow":  "Configurar Agora",
+    "accessDenied":  "Acesso negado.",
+    "sigmaKey":  "Chave Sigma: {key}",
+    "wifiDisabled":  "O WiFi está desativado.",
+    "locationWifiPermsRequired":  "Permissões de localização/WiFi necessárias.",
+    "gpsRequiredAndroid":  "O GPS é necessário para escanear no Android.",
+    "noCompatibleNetworks":  "Nenhuma rede compatível detetada nas proximidades.",
+    "scanError":  "Erro de scan: {error}",
+    "scanNotSupported":  "O scan WiFi não é suportado neste dispositivo.",
+    "gpsDisabled":  "O GPS está desativado.",
+    "scanUnavailable":  "O scan está indisponível ({status}).",
+    "manualKeyEntryNote":  "Por favor, insira a chave manualmente se a ligação falhar.",
+    "authRequired":  "Autenticação necessária",
+    "chooseRole":  "Escolha o seu cargo",
+    "user":  "Utilizador",
+    "validate":  "Validar",
+    "authTitle":  "Autenticação",
+    "commerceLogin":  "Login Comércio",
+    "createAccount":  "Criar conta",
+    "email":  "Email",
+    "forgotPassword":  "Esqueceu-se da senha?",
+    "loginGoogle":  "Continuar com Google",
+    "noAccount":  "Não tem conta? Registe-se",
+    "hasAccount":  "Já tem conta? Entrar",
+    "resetEmailSent":  "Email de redefinição enviado!",
+    "fillAllFields":  "Por favor, preencha todos os campos.",
+    "googleError":  "Erro Google: {error}",
+    "permsRequiredTitle":  "Permissões Necessárias",
+    "permsRequiredInfo":  "Para utilizar esta aplicação, deve imperativamente:\n\n",
+    "permsFatalNote":  "Sem isto, a aplicação não pode funcionar.",
+    "understandAndConfigure":  "Compreendi, configurar",
+    "commerceDisconnectConfirm":  "Deseja desconectar-se do comércio?",
+    "startDiscussion":  "Começar a discussão",
+    "yourMessage":  "A sua mensagem...",
+    "orderErrorUnidentified":  "Imposible encomendar: utilizador não identificado.",
+    "p2pMessengerTitle":  "P2P Messenger",
+    "errorWithDetails":  "Error: {message}",
+    "myQrCode":  "My QR Code",
+    "shareQrCodeTitle":  "Share your QR Code",
+    "shareQrCodeSubtitle":  "Let your friends scan this code to add you to their contacts.",
+    "takeScreenshotToShare":  "Take a screenshot to share your QR Code.",
+    "initErrorTitle":  "Initialization Error",
+    "messagesTitle":  "Messages",
+    "addContactTooltip":  "Add Contact",
+    "noConversations":  "No conversations yet",
+    "addContactToStart":  "Add a contact to start chatting",
+    "typingStatus":  "typing...",
+    "sayHello":  "Say hello! 👋",
+    "yesterday":  "Yesterday",
+    "addFriendTitle":  "Add Friend",
+    "scanFriendQr":  "Scan your friend\u0027s QR Code",
+    "addContactTitle":  "Add Contact",
+    "yourQrCodeTitle":  "Your QR Code",
+    "yourQrCodeSubtitle":  "Show this code to your friend",
+    "notAvailable":  "N/A",
+    "deviceIdLabel":  "Device ID",
+    "contactAddedSuccess":  "Contact added successfully!",
+    "@appTitle":  {
+                      "description":  "The title of the application"
+                  },
+    "@confirmDeleteConversation":  {
+                                       "placeholders":  {
+                                                            "pseudo":  {
+                                                                           "type":  "String"
+                                                                       }
+                                                        }
+                                   },
+    "@coinsForUser":  {
+                          "placeholders":  {
+                                               "pseudo":  {
+                                                              "type":  "String"
+                                                          }
+                                           }
+                      },
+    "@coinsAddedToUser":  {
+                              "placeholders":  {
+                                                   "amount":  {
+                                                                  "type":  "int"
+                                                              },
+                                                   "pseudo":  {
+                                                                  "type":  "String"
+                                                              }
+                                               }
+                          },
+    "@p2pSecureSubtitle":  {
+                               "placeholders":  {
+                                                    "id":  {
+                                                               "type":  "String"
+                                                           }
+                                                }
+                           },
+    "supportChatPlaceholder":  "Message to support...",
+    "@agoMin":  {
+                    "placeholders":  {
+                                         "minutes":  {
+                                                         "type":  "int"
+                                                     }
+                                     }
+                },
+    "@copiedToClipboard":  {
+                               "placeholders":  {
+                                                    "text":  {
+                                                                 "type":  "String"
+                                                             }
+                                                }
+                           },
+    "@sigmaKey":  {
+                      "placeholders":  {
+                                           "key":  {
+                                                       "type":  "String"
+                                                   }
+                                       }
+                  },
+    "@scanError":  {
+                       "placeholders":  {
+                                            "error":  {
+                                                          "type":  "String"
+                                                      }
+                                        }
+                   },
+    "@scanUnavailable":  {
+                             "placeholders":  {
+                                                  "status":  {
+                                                                 "type":  "String"
+                                                             }
+                                              }
+                         },
+    "@googleError":  {
+                         "placeholders":  {
+                                              "error":  {
+                                                            "type":  "String"
+                                                        }
+                                          }
+                     },
+    "client":  "Client",
+    "vendor":  "Vendor",
+    "deliveryPerson":  "Delivery Person",
+    "wholesaler":  "Wholesaler",
+    "vocalSigma":  "Sigma Voice",
+    "defaultMessageContent":  "Message",
+    "myContacts":  "My Contacts",
+    "myQrCodeTooltip":  "My QR Code",
+    "scanFriendTooltip":  "Scan a friend",
+    "friendAddedSuccess":  "✅ Friend added successfully!",
+    "editPseudoMenu":  "Edit my pseudo",
+    "myPseudoTitle":  "My pseudo",
+    "enterPseudoHint":  "Enter your pseudo",
+    "noContacts":  "No contacts",
+    "scanFriendToStart":  "Scan a friend\u0027s QR Code to start",
+    "scanFriendButton":  "Scan a friend",
+    "addedOn":  "Added on",
+    "scanQrCodeTitle":  "Scan a QR Code",
+    "qrCodeUnreadable":  "QR Code unreadable, try again.",
+    "invalidMistralQr":  "This QR Code is not from Mistral P2P.",
+    "invalidLinkError":  "Invalid link: {error}",
+    "@invalidLinkError":  {
+                              "placeholders":  {
+                                                   "error":  {
+                                                                 "type":  "String"
+                                                             }
+                                               }
+                          },
+    "cannotAddSelf":  "🚫 You cannot add yourself!",
+    "friendAlreadyAdded":  "ℹ️ This friend is already in your contacts.",
+    "placeQrInFrame":  "Place the QR Code in the frame",
+    "retry":  "Retry",
+    "flashlightTooltip":  "Flashlight",
+    "shareLinkTooltip":  "Share link",
+    "inviteText":  "Add me on Mistral2laude P2P!\n{link}",
+    "@inviteText":  {
+                        "placeholders":  {
+                                             "link":  {
+                                                          "type":  "String"
+                                                      }
+                                         }
+                    },
+    "inviteSubject":  "Mistral2laude P2P Invitation",
+    "scanMeText":  "Scan this QR Code\nto add me as a contact",
+    "microphonePermissionDenied":  "Microphone permission denied",
+    "connectionNotEstablished":  "⚠️ Connection not established. Message saved locally.",
+    "noMessagesYet":  "No messages.\nSend the first one! 👋",
+    "statusConnected":  "Connected",
+    "statusConnecting":  "Connecting...",
+    "statusFailed":  "Failed",
+    "statusOffline":  "Offline",
+    "recordingHint":  "🔴 Recording...",
+    "messageHint":  "Message...",
+    "connectingHint":  "Connecting...",
+    "initFailed":  "Initialization failed",
+    "defaultUserPseudo":  "M2C User",
+    "mobileDevice":  "Mobile Device",
+    "unknownDevice":  "Unknown Device",
+    "productsTab":  "Products",
+    "ordersTab":  "Orders",
+    "cartTab":  "Cart",
+    "clientModeTooltip":  "Client mode",
+    "adminModeTooltip":  "Admin mode",
+    "addProductTooltip":  "Add product",
+    "orderCreated":  "Order created.",
+    "orderFailed":  "Order failed.",
+    "productCreated":  "Product created.",
+    "productUpdated":  "Product updated.",
+    "productDeleted":  "Product deleted.",
+    "deleteFailed":  "Delete failed.",
+    "deleteProductTitle":  "Delete product",
+    "deleteProductConfirm":  "Delete \"{name}\"?",
+    "@deleteProductConfirm":  {
+                                  "placeholders":  {
+                                                       "name":  {
+                                                                    "type":  "String"
+                                                                }
+                                                   }
+                              },
+    "imageUploaded":  "Image uploaded.",
+    "imageUploadFailed":  "Image upload failed: {error}",
+    "@imageUploadFailed":  {
+                               "placeholders":  {
+                                                    "error":  {
+                                                                  "type":  "String"
+                                                              }
+                                                }
+                           },
+    "supabaseBucketNotConfigured":  "Supabase image bucket is not configured.",
+    "searchProductsPlaceholder":  "Search products or SKU",
+    "inStockFilter":  "In stock",
+    "includeInactiveFilter":  "Include inactive",
+    "sortName":  "Name",
+    "sortPriceAsc":  "Price low-high",
+    "sortPriceDesc":  "Price high-low",
+    "sortStockAsc":  "Stock low-high",
+    "sortStockDesc":  "Stock high-low",
+    "sortPopularity":  "Popularity",
+    "gridView":  "Grid",
+    "listView":  "List",
+    "noProductsMatch":  "No products match your filters.",
+    "clearFilters":  "Clear filters",
+    "allProductsLoaded":  "All products loaded.",
+    "saveProductTitle":  "Save Product",
+    "addProductTitle":  "Add Product",
+    "editProductTitle":  "Edit Product",
+    "productNameLabel":  "Name",
+    "skuLabel":  "SKU / Reference",
+    "priceLabel":  "Price (DZD)",
+    "promoPriceLabel":  "Promo price (DZD)",
+    "optionalHelper":  "Optional",
+    "imageLabel":  "Image URL or Storage path",
+    "uploadImageButton":  "Upload image",
+    "replaceImageButton":  "Replace image",
+    "uploadingButton":  "Uploading...",
+    "stockLabel":  "Stock",
+    "popularityLabel":  "Popularity",
+    "activeLabel":  "Active",
+    "saveButton":  "Save",
+    "savingButton":  "Saving...",
+    "unavailableStatus":  "Unavailable",
+    "outOfStockStatus":  "Out of stock",
+    "lowStockStatus":  "Low stock",
+    "inactiveStatus":  "Inactive",
+    "promoStatus":  "Promo",
+    "cartEmpty":  "Cart is empty.",
+    "yourCart":  "Your cart",
+    "clearCart":  "Clear",
+    "subtotalLabel":  "Subtotal",
+    "deliveryLabel":  "Delivery",
+    "totalLabel":  "Total",
+    "phoneLabel":  "Phone",
+    "addressLabel":  "Address",
+    "noteLabel":  "Note",
+    "checkoutButton":  "Checkout",
+    "orderTotal":  "Total {amount} DZD",
+    "@orderTotal":  {
+                        "placeholders":  {
+                                             "amount":  {
+                                                            "type":  "String"
+                                                        }
+                                         }
+                    },
+    "itemsCount":  "{count} items",
+    "@itemsCount":  {
+                        "placeholders":  {
+                                             "count":  {
+                                                           "type":  "int"
+                                                       }
+                                         }
+                    },
+    "orderNumber":  "Order #{id}",
+    "@orderNumber":  {
+                         "placeholders":  {
+                                              "id":  {
+                                                         "type":  "String"
+                                                     }
+                                          }
+                     },
+    "changeRoleTooltip":  "Change role (Simulation)",
+    "orderNotFound":  "Order not found",
+    "globalStatus":  "Global status",
+    "dateLabel":  "Date",
+    "customerLabel":  "Customer",
+    "paymentLabel":  "Payment",
+    "productsLabel":  "Products",
+    "priceXQuantity":  "Price: {price} DZD x {quantity}",
+    "@priceXQuantity":  {
+                            "placeholders":  {
+                                                 "price":  {
+                                                               "type":  "String"
+                                                           },
+                                                 "quantity":  {
+                                                                  "type":  "int"
+                                                              }
+                                             }
+                        },
+    "noShipmentsYet":  "No shipments yet.",
+    "shipmentsCount":  "Shipments ({count})",
+    "@shipmentsCount":  {
+                            "placeholders":  {
+                                                 "count":  {
+                                                               "type":  "int"
+                                                           }
+                                             }
+                        },
+    "packageNumber":  "Package: {tracking}",
+    "@packageNumber":  {
+                           "placeholders":  {
+                                                "tracking":  {
+                                                                 "type":  "String"
+                                                             }
+                                            }
+                       },
+    "carrierLabel":  "Carrier: {name}",
+    "@carrierLabel":  {
+                          "placeholders":  {
+                                               "name":  {
+                                                            "type":  "String"
+                                                        }
+                                           }
+                      },
+    "packageId":  "ID",
+    "shippedOn":  "Shipped on",
+    "itemsInPackage":  "Items in this package:",
+    "confirmOrderButton":  "Confirm order",
+    "allocateStockButton":  "Allocate stock",
+    "startPickingButton":  "Start Picking",
+    "packingFinishedButton":  "Packing finished (Packed)",
+    "shipButton":  "Label \u0026 Ship",
+    "setInTransitButton":  "Set In Transit ({tracking})",
+    "@setInTransitButton":  {
+                                "placeholders":  {
+                                                     "tracking":  {
+                                                                      "type":  "String"
+                                                                  }
+                                                 }
+                            },
+    "confirmDeliveryButton":  "Confirm Delivery ({tracking})",
+    "@confirmDeliveryButton":  {
+                                   "placeholders":  {
+                                                        "tracking":  {
+                                                                         "type":  "String"
+                                                                     }
+                                                    }
+                               },
+    "requestReturnButton":  "Request a return",
+    "newShipmentTitle":  "New Shipment",
+    "allItemIncludedNote":  "All items will be included in this package for this example.",
+    "trackingNumberLabel":  "Tracking Number",
+    "adminStatusTitle":  "Administration : Status",
+    "phoneAddressRequired":  "Phone and address are required.",
+    "orderFailedLong":  "Order failed.",
+    "orderCreatedLong":  "Order created: {id}",
+    "@orderCreatedLong":  {
+                              "placeholders":  {
+                                                   "id":  {
+                                                              "type":  "String"
+                                                          }
+                                               }
+                          },
+    "placingOrderButton":  "Placing order...",
+    "placeOrderButton":  "Place order",
+    "loadMoreButton":  "Load more",
+    "searchOrderPlaceholder":  "Search an order...",
+    "allFilter":  "All",
+    "orderConfirmedStep":  "Confirmed",
+    "shippedStep":  "Shipped",
+    "deliveredStep":  "Delivered",
+    "unknownDate":  "Unknown",
+    "@errorWithDetails":  {
+                              "placeholders":  {
+                                                   "message":  {
+                                                                   "type":  "String"
+                                                               }
+                                               }
+                          },
+    "dataChannelDisconnected":  "Data channel disconnected",
+    "peerNotConnected":  "Peer not connected: {id}",
+    "@peerNotConnected":  {
+                              "placeholders":  {
+                                                   "id":  {
+                                                              "type":  "String"
+                                                          }
+                                               }
+                          },
+    "errorParsingMessage":  "Error parsing message: {error}",
+    "@errorParsingMessage":  {
+                                 "placeholders":  {
+                                                      "error":  {
+                                                                    "type":  "String"
+                                                                }
+                                                  }
+                             },
+    "invalidQrCode":  "Invalid QR Code: {error}",
+    "@invalidQrCode":  {
+                           "placeholders":  {
+                                                "error":  {
+                                                              "type":  "String"
+                                                          }
+                                            }
+                       },
+    "missingDeviceId":  "Missing Device ID",
+    "missingPseudo":  "Missing Pseudo",
+    "missingPublicKey":  "Missing Public Key",
+    "cannotAddSelfError":  "Cannot add yourself",
+    "invalidPublicKeyFormat":  "Invalid public key format",
+    "errorParsingQrCode":  "Error parsing QR Code: {error}",
+    "@errorParsingQrCode":  {
+                                "placeholders":  {
+                                                     "error":  {
+                                                                   "type":  "String"
+                                                               }
+                                                 }
+                            },
+    "mistral2laudeTitle":  "Mistral2laude P2P",
+    "friendLabel":  "Friend",
+    "encryptedMessage":  "[Encrypted message]",
+    "youEncryptedMessage":  "You: [Encrypted message]",
+    "imageMessage":  "🖼️ Image",
+    "fileMessage":  "📎 File",
+    "newMessage":  "New message",
+    "reply":  "Reply",
+    "quickReply":  "Quick reply",
+    "markAsRead":  "Mark as read",
+    "isTyping":  "is typing...",
+    "typingIndicator":  "Typing...",
+    "vocalMessage":  "Vocal message",
+    "gps":  "GPS",
+    "permissions":  "Permissions",
+    "trace":  "Trace",
+    "mainChannelValue":  "WebRTC P2P"
 }

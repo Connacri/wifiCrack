@@ -347,10 +347,11 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
 
     setState(() => _isSending = true);
     
+    final l10n = AppLocalizations.of(context)!;
     await _messenger.sendP2PMessage(
       widget.userId,
       context.read<UserDataService>().deviceId, 
-      msg.isEmpty ? (type == 'audio' ? 'Vocal Sigma' : 'Message') : msg,
+      msg.isEmpty ? (type == 'audio' ? l10n.vocalSigma : l10n.defaultMessageContent) : msg,
       _p2pService,
       type: type,
       fileUrl: fileUrl,
@@ -375,23 +376,24 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   void _showAddCoinsDialog() {
     final supabase = context.read<SupabaseService>();
     final ctrl = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Coins pour ${widget.pseudo}'),
+        title: Text(l10n.coinsForUser(widget.pseudo)),
         content: TextField(
           controller: ctrl,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Nombre de coins a ajouter',
+          decoration: InputDecoration(
+            labelText: l10n.coinsToAddLabel,
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Annuler'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -404,11 +406,11 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
               Navigator.pop(dialogContext);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('$amount coins ajoutes a ${widget.pseudo}'),
+                  content: Text(l10n.coinsAddedToUser(amount, widget.pseudo)),
                 ),
               );
             },
-            child: const Text('Ajouter'),
+            child: Text(l10n.add),
           ),
         ],
       ),
@@ -416,19 +418,20 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
   }
 
   Future<void> _confirmClearConversation() async {
+    final l10n = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Effacer la conversation'),
-        content: Text('Supprimer tous les messages avec ${widget.pseudo} ?'),
+        title: Text(l10n.deleteConversation),
+        content: Text(l10n.confirmDeleteConversation(widget.pseudo)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Effacer'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -438,19 +441,20 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
     await _messenger.clearConversationWith(widget.userId);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Conversation supprimée localement.')),
+      SnackBar(content: Text(l10n.conversationDeleted)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(widget.pseudo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            Text("P2P Secure • ${widget.userId.substring(0,6)}...", style: const TextStyle(fontSize: 10, color: Colors.greenAccent)),
+            Text(l10n.p2pSecureSubtitle(widget.userId.substring(0,6)), style: const TextStyle(fontSize: 10, color: Colors.greenAccent)),
           ],
         ),
         backgroundColor: Colors.black,
@@ -458,7 +462,7 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-            tooltip: 'Effacer conversation',
+            tooltip: l10n.deleteConversationTooltip,
             onPressed: _confirmClearConversation,
           ),
           IconButton(
@@ -544,6 +548,7 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
 
   Widget _buildInput() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return SafeArea(
       child: Container(
@@ -566,7 +571,7 @@ class _DetailedChatScreenState extends State<DetailedChatScreen> {
                   color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Message Sigma...',
+                  hintText: l10n.messageSigmaPlaceholder,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
                     borderSide: BorderSide.none,

@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'messaging_provider.dart';
+import '../l10n/app_localizations.dart';
 
 class MyQRCodeScreen extends StatelessWidget {
   const MyQRCodeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mon QR Code'),
+        title: Text(l10n.myQrCode),
       ),
       body: Consumer<MessagingProvider>(
         builder: (context, provider, child) {
@@ -23,12 +25,12 @@ class MyQRCodeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Partagez ce QR code',
+                    l10n.shareQrCodeTitle,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Vos amis peuvent le scanner pour vous ajouter',
+                    l10n.shareQrCodeSubtitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -61,13 +63,13 @@ class MyQRCodeScreen extends StatelessWidget {
                     onPressed: () {
                       // TODO: Partager le QR code via Share plugin si nécessaire
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Faites une capture d\'écran pour partager'),
+                        SnackBar(
+                          content: Text(l10n.takeScreenshotToShare),
                         ),
                       );
                     },
                     icon: const Icon(Icons.share),
-                    label: const Text('Partager'),
+                    label: Text(l10n.share),
                   ),
                 ],
               ),

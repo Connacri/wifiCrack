@@ -6,6 +6,7 @@ import 'contact.dart';
 import 'app_provider.dart';
 import 'chat_screen.dart';
 import 'add_contact_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class ConversationsScreen extends StatelessWidget {
   const ConversationsScreen({super.key});
@@ -15,6 +16,7 @@ class ConversationsScreen extends StatelessWidget {
     final provider = context.watch<AppProvider>();
     final conversations = provider.conversations;
     final contacts = provider.contacts;
+    final l10n = AppLocalizations.of(context)!;
 
     // FIX BUG 2 : on construit un Map<deviceId, Contact> à partir de
     // provider.contacts (déjà en mémoire) pour éviter un FutureBuilder
@@ -24,11 +26,11 @@ class ConversationsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Messages'),
+        title: Text(l10n.messagesTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_add),
-            tooltip: 'Ajouter un contact',
+            tooltip: l10n.addContactTooltip,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AddContactScreen()),
@@ -72,6 +74,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -83,14 +86,14 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Aucune conversation',
+            l10n.noConversations,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               color: Theme.of(context).colorScheme.outline,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Ajoutez un contact pour commencer',
+            l10n.addContactToStart,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.outline,
             ),
@@ -99,7 +102,7 @@ class _EmptyState extends StatelessWidget {
           FilledButton.icon(
             onPressed: onAddContact,
             icon: const Icon(Icons.qr_code_scanner),
-            label: const Text('Scanner un QR code'),
+            label: Text(l10n.scanQrCodeTitle),
           ),
         ],
       ),
@@ -123,6 +126,7 @@ class _ConversationTile extends StatelessWidget {
     final provider = context.watch<AppProvider>();
     final isOnline = provider.isContactOnline(contact.deviceId);
     final isTyping = provider.isContactTyping(contact.deviceId);
+    final l10n = AppLocalizations.of(context)!;
 
     // Sous-titre : état de la conversation
     final String subtitle;
@@ -130,16 +134,17 @@ class _ConversationTile extends StatelessWidget {
     final FontStyle subtitleStyle;
 
     if (isTyping) {
-      subtitle = 'en train d\'écrire…';
+      subtitle = l10n.typingStatus;
       subtitleColor = Theme.of(context).colorScheme.primary;
       subtitleStyle = FontStyle.italic;
     } else if (conversation.lastMessagePreview != null) {
-      subtitle = conversation.lastMessagePreview!;
+      final preview = conversation.lastMessagePreview!;
+      subtitle = _getLocalizedPreview(context, preview);
       subtitleColor = Theme.of(context).colorScheme.outline;
       subtitleStyle = FontStyle.normal;
     } else {
       // FIX : conversation vide (contact fraîchement ajouté)
-      subtitle = 'Dites bonjour 👋';
+      subtitle = l10n.sayHello;
       subtitleColor = Theme.of(context).colorScheme.outlineVariant;
       subtitleStyle = FontStyle.italic;
     }
@@ -157,7 +162,7 @@ class _ConversationTile extends StatelessWidget {
           ),
           if (conversation.lastMessageTime != null)
             Text(
-              _formatTime(conversation.lastMessageTime!),
+              _formatTime(context, conversation.lastMessageTime!),
               style: TextStyle(
                 fontSize: 12,
                 color: conversation.unreadCount > 0
@@ -190,16 +195,42 @@ class _ConversationTile extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime time) {
+  String _getLocalizedPreview(BuildContext context, String preview) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (preview) {
+      case '[ENCRYPTED]':
+        return l10n.encryptedMessage;
+      case '[ENCRYPTED_ME]':
+        return l10n.youEncryptedMessage;
+      case '[AUDIO]':
+        return l10n.vocalMessage;
+      case '[AUDIO_ME]':
+        return 'You: ${l10n.vocalMessage}';
+      case '[IMAGE]':
+        return l10n.imageMessage;
+      case '[IMAGE_ME]':
+        return 'You: ${l10n.imageMessage}';
+      case '[FILE]':
+        return l10n.fileMessage;
+      case '[FILE_ME]':
+        return 'You: ${l10n.fileMessage}';
+      default:
+        return preview;
+    }
+  }
+
+  String _formatTime(BuildContext context, DateTime time) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final difference = now.difference(time);
 
     if (difference.inDays == 0) {
       return DateFormat('HH:mm').format(time);
     } else if (difference.inDays == 1) {
-      return 'Hier';
+      return l10n.yesterday;
     } else if (difference.inDays < 7) {
-      return DateFormat('EEEE', 'fr_FR').format(time);
+      final locale = Localizations.localeOf(context).toString();
+      return DateFormat('EEEE', locale).format(time);
     } else {
       return DateFormat('dd/MM/yy').format(time);
     }

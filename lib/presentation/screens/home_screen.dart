@@ -129,8 +129,8 @@ class _HomeScreenState extends State<HomeScreen> {
             content: Text(
               "${l10n.configRequiredInfo}\n"
               "• ${l10n.scanWifi} (WiFi)\n"
-              "• GPS\n"
-              "• Permissions\n\n"
+              "• ${l10n.gps}\n"
+              "• ${l10n.permissions}\n\n"
               "${l10n.configVisibleNote}",
             ),
             actions: [

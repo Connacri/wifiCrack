@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../l10n/app_localizations.dart';
 import 'add_friend_link.dart';
 import 'contact.dart';
 import 'contact_service.dart';
@@ -39,15 +40,16 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
     final barcode = capture.barcodes.firstOrNull;
     final rawValue = barcode?.rawValue;
+    final l10n = AppLocalizations.of(context)!;
 
     if (rawValue == null || rawValue.isEmpty) {
-      setState(() => _errorMessage = 'QR Code illisible, réessayez.');
+      setState(() => _errorMessage = l10n.qrCodeUnreadable);
       return;
     }
 
     if (!AddFriendLink.isValidUrl(rawValue)) {
       setState(
-        () => _errorMessage = 'Ce QR Code ne provient pas de Mistral P2P.',
+        () => _errorMessage = l10n.invalidMistralQr,
       );
       return;
     }
@@ -56,19 +58,19 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     try {
       link = AddFriendLink.fromUrl(rawValue);
     } catch (e) {
-      setState(() => _errorMessage = 'Lien invalide: $e');
+      setState(() => _errorMessage = l10n.invalidLinkError(e.toString()));
       return;
     }
 
     if (link.deviceId == widget.myDeviceId) {
       setState(
-        () => _errorMessage = '🚫 Vous ne pouvez pas vous ajouter vous-même !',
+        () => _errorMessage = l10n.cannotAddSelf,
       );
       return;
     }
 
     if (widget.contactService.isContact(link.deviceId)) {
-      setState(() => _errorMessage = 'ℹ️ Cet ami est déjà dans vos contacts.');
+      setState(() => _errorMessage = l10n.friendAlreadyAdded);
       return;
     }
 
@@ -88,9 +90,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scanner un QR Code'),
+        title: Text(l10n.scanQrCodeTitle),
         actions: [
           // FIX finale pour mobile_scanner v5+ : le controller est lui-même un ValueNotifier<MobileScannerState>
           ValueListenableBuilder<MobileScannerState>(
@@ -98,7 +101,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             builder: (context, state, child) {
               final torchOn = state.torchState == TorchState.on;
               return IconButton(
-                tooltip: 'Lampe torche',
+                tooltip: l10n.flashlightTooltip,
                 icon: Icon(
                   torchOn ? Icons.flash_on : Icons.flash_off,
                 ),
@@ -139,10 +142,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 Positioned(
                   bottom: 24,
                   child: Text(
-                    'Placez le QR Code dans le cadre',
-                    style: TextStyle(
+                    l10n.placeQrInFrame,
+                    style: const TextStyle(
                       color: Colors.white,
-                      shadows: [const Shadow(blurRadius: 4, color: Colors.black54)],
+                      shadows: [Shadow(blurRadius: 4, color: Colors.black54)],
                     ),
                   ),
                 ),
@@ -160,7 +163,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('Réessayer'),
+                label: Text(l10n.retry),
               ),
             ),
         ],

@@ -92,16 +92,47 @@
   "noActivityAvailable": "No activity available.",
   "deleteConversation": "Delete conversation",
   "confirmDeleteConversation": "Delete all messages with {pseudo}?",
+  "@confirmDeleteConversation": {
+    "placeholders": {
+      "pseudo": {
+        "type": "String"
+      }
+    }
+  },
   "conversationDeleted": "Conversation deleted locally.",
   "p2pSecure": "Secure P2P",
   "coinsForUser": "Coins for {pseudo}",
+  "@coinsForUser": {
+    "placeholders": {
+      "pseudo": {
+        "type": "String"
+      }
+    }
+  },
   "coinsAddedToUser": "{amount} coins added to {pseudo}",
+  "@coinsAddedToUser": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      },
+      "pseudo": {
+        "type": "String"
+      }
+    }
+  },
   "amountLabel": "Amount",
   "addCoins": "Add Coins",
   "refreshUsers": "Refresh Users",
   "changePseudoTooltip": "Change my pseudo",
   "userProfile": "Profile",
   "p2pSecureSubtitle": "Secure P2P • {id}...",
+  "@p2pSecureSubtitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "deleteConversationTooltip": "Clear conversation",
   "addCoinsTooltip": "Give coins",
   "coinsToAddLabel": "Number of coins to add",
@@ -124,6 +155,13 @@
   "activeSession": "Active session",
   "lastPing": "Last ping",
   "agoMin": "{minutes} min ago",
+  "@agoMin": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "anomalyDetected": "Anomaly detected",
   "none": "None (local heuristic)",
   "securityNote": "Note: this tab displays application security signals based on available data (not a full server audit).",
@@ -148,6 +186,13 @@
   "bonusAddedText": "Coin Bonus activated! (Video watched)",
   "close": "Close",
   "copiedToClipboard": "Key copied: {text}",
+  "@copiedToClipboard": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "disconnectTooltip": "Disconnect",
   "connectTooltip": "Calculate & Connect",
   "audioUnavailable": "Vocal not available.",
@@ -161,14 +206,35 @@
   "configureNow": "Configure Now",
   "accessDenied": "Access denied.",
   "sigmaKey": "Sigma Key: {key}",
+  "@sigmaKey": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "wifiDisabled": "WiFi is disabled.",
   "locationWifiPermsRequired": "Location/WiFi permissions required.",
   "gpsRequiredAndroid": "GPS is required to scan on Android.",
   "noCompatibleNetworks": "No compatible network detected nearby.",
   "scanError": "Scan error: {error}",
+  "@scanError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "scanNotSupported": "WiFi scan is not supported on this device.",
   "gpsDisabled": "GPS is disabled.",
   "scanUnavailable": "Scan is unavailable ({status}).",
+  "@scanUnavailable": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "manualKeyEntryNote": "Please enter the key manually if connection fails.",
   "authRequired": "Authentication required",
   "chooseRole": "Choose your role",
@@ -185,6 +251,13 @@
   "resetEmailSent": "Reset email sent!",
   "fillAllFields": "Please fill all fields.",
   "googleError": "Google error: {error}",
+  "@googleError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "permsRequiredTitle": "Permissions Required",
   "permsRequiredInfo": "To use this app, you must:\n\n",
   "permsFatalNote": "Without this, the application cannot work.",
@@ -196,5 +269,338 @@
   "client": "Client",
   "vendor": "Vendor",
   "deliveryPerson": "Delivery Person",
-  "wholesaler": "Wholesaler"
+  "wholesaler": "Wholesaler",
+  "vocalSigma": "Sigma Voice",
+  "defaultMessageContent": "Message",
+  "myContacts": "My Contacts",
+  "myQrCodeTooltip": "My QR Code",
+  "scanFriendTooltip": "Scan a friend",
+  "friendAddedSuccess": "✅ Friend added successfully!",
+  "editPseudoMenu": "Edit my pseudo",
+  "myPseudoTitle": "My pseudo",
+  "enterPseudoHint": "Enter your pseudo",
+  "noContacts": "No contacts",
+  "scanFriendToStart": "Scan a friend's QR Code to start",
+  "scanFriendButton": "Scan a friend",
+  "addedOn": "Added on",
+  "scanQrCodeTitle": "Scan a QR Code",
+  "qrCodeUnreadable": "QR Code unreadable, try again.",
+  "invalidMistralQr": "This QR Code is not from Mistral P2P.",
+  "invalidLinkError": "Invalid link: {error}",
+  "@invalidLinkError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cannotAddSelf": "🚫 You cannot add yourself!",
+  "friendAlreadyAdded": "ℹ️ This friend is already in your contacts.",
+  "placeQrInFrame": "Place the QR Code in the frame",
+  "retry": "Retry",
+  "flashlightTooltip": "Flashlight",
+  "shareLinkTooltip": "Share link",
+  "inviteText": "Add me on Mistral2laude P2P!\n{link}",
+  "@inviteText": {
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteSubject": "Mistral2laude P2P Invitation",
+  "scanMeText": "Scan this QR Code\nto add me as a contact",
+  "microphonePermissionDenied": "Microphone permission denied",
+  "connectionNotEstablished": "⚠️ Connection not established. Message saved locally.",
+  "noMessagesYet": "No messages.\nSend the first one! 👋",
+  "statusConnected": "Connected",
+  "statusConnecting": "Connecting...",
+  "statusFailed": "Failed",
+  "statusOffline": "Offline",
+  "recordingHint": "🔴 Recording...",
+  "messageHint": "Message...",
+  "connectingHint": "Connecting...",
+  "initFailed": "Initialization failed",
+  "defaultUserPseudo": "M2C User",
+  "mobileDevice": "Mobile Device",
+  "unknownDevice": "Unknown Device",
+  "productsTab": "Products",
+  "ordersTab": "Orders",
+  "cartTab": "Cart",
+  "clientModeTooltip": "Client mode",
+  "adminModeTooltip": "Admin mode",
+  "addProductTooltip": "Add product",
+  "orderCreated": "Order created.",
+  "orderFailed": "Order failed.",
+  "productCreated": "Product created.",
+  "productUpdated": "Product updated.",
+  "productDeleted": "Product deleted.",
+  "deleteFailed": "Delete failed.",
+  "deleteProductTitle": "Delete product",
+  "deleteProductConfirm": "Delete \"{name}\"?",
+  "@deleteProductConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "imageUploaded": "Image uploaded.",
+  "imageUploadFailed": "Image upload failed: {error}",
+  "@imageUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "supabaseBucketNotConfigured": "Supabase image bucket is not configured.",
+  "searchProductsPlaceholder": "Search products or SKU",
+  "inStockFilter": "In stock",
+  "includeInactiveFilter": "Include inactive",
+  "sortName": "Name",
+  "sortPriceAsc": "Price low-high",
+  "sortPriceDesc": "Price high-low",
+  "sortStockAsc": "Stock low-high",
+  "sortStockDesc": "Stock high-low",
+  "sortPopularity": "Popularity",
+  "gridView": "Grid",
+  "listView": "List",
+  "noProductsMatch": "No products match your filters.",
+  "clearFilters": "Clear filters",
+  "allProductsLoaded": "All products loaded.",
+  "saveProductTitle": "Save Product",
+  "addProductTitle": "Add Product",
+  "editProductTitle": "Edit Product",
+  "productNameLabel": "Name",
+  "skuLabel": "SKU / Reference",
+  "priceLabel": "Price (DZD)",
+  "promoPriceLabel": "Promo price (DZD)",
+  "optionalHelper": "Optional",
+  "imageLabel": "Image URL or Storage path",
+  "uploadImageButton": "Upload image",
+  "replaceImageButton": "Replace image",
+  "uploadingButton": "Uploading...",
+  "stockLabel": "Stock",
+  "popularityLabel": "Popularity",
+  "activeLabel": "Active",
+  "saveButton": "Save",
+  "savingButton": "Saving...",
+  "unavailableStatus": "Unavailable",
+  "outOfStockStatus": "Out of stock",
+  "lowStockStatus": "Low stock",
+  "inactiveStatus": "Inactive",
+  "promoStatus": "Promo",
+  "cartEmpty": "Cart is empty.",
+  "yourCart": "Your cart",
+  "clearCart": "Clear",
+  "subtotalLabel": "Subtotal",
+  "deliveryLabel": "Delivery",
+  "totalLabel": "Total",
+  "phoneLabel": "Phone",
+  "addressLabel": "Address",
+  "noteLabel": "Note",
+  "checkoutButton": "Checkout",
+  "orderTotal": "Total {amount} DZD",
+  "@orderTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "itemsCount": "{count} items",
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orderNumber": "Order #{id}",
+  "@orderNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "changeRoleTooltip": "Change role (Simulation)",
+  "orderNotFound": "Order not found",
+  "globalStatus": "Global status",
+  "dateLabel": "Date",
+  "customerLabel": "Customer",
+  "paymentLabel": "Payment",
+  "productsLabel": "Products",
+  "priceXQuantity": "Price: {price} DZD x {quantity}",
+  "@priceXQuantity": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "noShipmentsYet": "No shipments yet.",
+  "shipmentsCount": "Shipments ({count})",
+  "@shipmentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "packageNumber": "Package: {tracking}",
+  "@packageNumber": {
+    "placeholders": {
+      "tracking": {
+        "type": "String"
+      }
+    }
+  },
+  "carrierLabel": "Carrier: {name}",
+  "@carrierLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "packageId": "ID",
+  "shippedOn": "Shipped on",
+  "itemsInPackage": "Items in this package:",
+  "confirmOrderButton": "Confirm order",
+  "allocateStockButton": "Allocate stock",
+  "startPickingButton": "Start Picking",
+  "packingFinishedButton": "Packing finished (Packed)",
+  "shipButton": "Label & Ship",
+  "setInTransitButton": "Set In Transit ({tracking})",
+  "@setInTransitButton": {
+    "placeholders": {
+      "tracking": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDeliveryButton": "Confirm Delivery ({tracking})",
+  "@confirmDeliveryButton": {
+    "placeholders": {
+      "tracking": {
+        "type": "String"
+      }
+    }
+  },
+  "requestReturnButton": "Request a return",
+  "newShipmentTitle": "New Shipment",
+  "allItemIncludedNote": "All items will be included in this package for this example.",
+  "trackingNumberLabel": "Tracking Number",
+  "adminStatusTitle": "Administration : Status",
+  "phoneAddressRequired": "Phone and address are required.",
+  "orderFailedLong": "Order failed.",
+  "orderCreatedLong": "Order created: {id}",
+  "@orderCreatedLong": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "placingOrderButton": "Placing order...",
+  "placeOrderButton": "Place order",
+  "loadMoreButton": "Load more",
+  "searchOrderPlaceholder": "Search an order...",
+  "allFilter": "All",
+  "orderConfirmedStep": "Confirmed",
+  "shippedStep": "Shipped",
+  "deliveredStep": "Delivered",
+  "unknownDate": "Unknown",
+  "p2pMessengerTitle": "P2P Messenger",
+  "errorWithDetails": "Error: {message}",
+  "@errorWithDetails": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "myQrCode": "My QR Code",
+  "shareQrCodeTitle": "Share your QR Code",
+  "shareQrCodeSubtitle": "Let your friends scan this code to add you to their contacts.",
+  "takeScreenshotToShare": "Take a screenshot to share your QR Code.",
+  "initErrorTitle": "Initialization Error",
+  "messagesTitle": "Messages",
+  "addContactTooltip": "Add Contact",
+  "noConversations": "No conversations yet",
+  "addContactToStart": "Add a contact to start chatting",
+  "typingStatus": "typing...",
+  "sayHello": "Say hello! 👋",
+  "yesterday": "Yesterday",
+  "addFriendTitle": "Add Friend",
+  "scanFriendQr": "Scan your friend's QR Code",
+  "addContactTitle": "Add Contact",
+  "yourQrCodeTitle": "Your QR Code",
+  "yourQrCodeSubtitle": "Show this code to your friend",
+  "notAvailable": "N/A",
+  "deviceIdLabel": "Device ID",
+  "contactAddedSuccess": "Contact added successfully!",
+  "dataChannelDisconnected": "Data channel disconnected",
+  "peerNotConnected": "Peer not connected: {id}",
+  "@peerNotConnected": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "errorParsingMessage": "Error parsing message: {error}",
+  "@errorParsingMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidQrCode": "Invalid QR Code: {error}",
+  "@invalidQrCode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "missingDeviceId": "Missing Device ID",
+  "missingPseudo": "Missing Pseudo",
+  "missingPublicKey": "Missing Public Key",
+  "cannotAddSelfError": "Cannot add yourself",
+  "invalidPublicKeyFormat": "Invalid public key format",
+  "errorParsingQrCode": "Error parsing QR Code: {error}",
+  "@errorParsingQrCode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mistral2laudeTitle": "Mistral2laude P2P",
+  "friendLabel": "Friend",
+  "encryptedMessage": "[Encrypted message]",
+  "youEncryptedMessage": "You: [Encrypted message]",
+  "imageMessage": "🖼️ Image",
+  "fileMessage": "📎 File",
+  "newMessage": "New message",
+  "reply": "Reply",
+  "quickReply": "Quick reply",
+  "markAsRead": "Mark as read",
+  "isTyping": "is typing...",
+  "typingIndicator": "Typing...",
+  "vocalMessage": "Vocal message",
+  "gps": "GPS",
+  "permissions": "Permissions",
+  "trace": "Trace",
+  "mainChannelValue": "WebRTC P2P",
+  "formErrors": "Please fix the form errors.",
+  "saveFailed": "Save failed.",
+  "itemsLabel": "Items"
 }

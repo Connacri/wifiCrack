@@ -652,7 +652,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Delete all messages with {pseudo}?'**
-  String confirmDeleteConversation(Object pseudo);
+  String confirmDeleteConversation(String pseudo);
 
   /// No description provided for @conversationDeleted.
   ///
@@ -670,13 +670,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Coins for {pseudo}'**
-  String coinsForUser(Object pseudo);
+  String coinsForUser(String pseudo);
 
   /// No description provided for @coinsAddedToUser.
   ///
   /// In en, this message translates to:
   /// **'{amount} coins added to {pseudo}'**
-  String coinsAddedToUser(Object amount, Object pseudo);
+  String coinsAddedToUser(int amount, String pseudo);
 
   /// No description provided for @amountLabel.
   ///
@@ -712,7 +712,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Secure P2P • {id}...'**
-  String p2pSecureSubtitle(Object id);
+  String p2pSecureSubtitle(String id);
 
   /// No description provided for @deleteConversationTooltip.
   ///
@@ -844,7 +844,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{minutes} min ago'**
-  String agoMin(Object minutes);
+  String agoMin(int minutes);
 
   /// No description provided for @anomalyDetected.
   ///
@@ -988,7 +988,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Key copied: {text}'**
-  String copiedToClipboard(Object text);
+  String copiedToClipboard(String text);
 
   /// No description provided for @disconnectTooltip.
   ///
@@ -1066,7 +1066,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Sigma Key: {key}'**
-  String sigmaKey(Object key);
+  String sigmaKey(String key);
 
   /// No description provided for @wifiDisabled.
   ///
@@ -1096,7 +1096,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Scan error: {error}'**
-  String scanError(Object error);
+  String scanError(String error);
 
   /// No description provided for @scanNotSupported.
   ///
@@ -1114,7 +1114,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Scan is unavailable ({status}).'**
-  String scanUnavailable(Object status);
+  String scanUnavailable(String status);
 
   /// No description provided for @manualKeyEntryNote.
   ///
@@ -1210,7 +1210,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Google error: {error}'**
-  String googleError(Object error);
+  String googleError(String error);
 
   /// No description provided for @permsRequiredTitle.
   ///
@@ -1283,6 +1283,1188 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wholesaler'**
   String get wholesaler;
+
+  /// No description provided for @vocalSigma.
+  ///
+  /// In en, this message translates to:
+  /// **'Sigma Voice'**
+  String get vocalSigma;
+
+  /// No description provided for @defaultMessageContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get defaultMessageContent;
+
+  /// No description provided for @myContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Contacts'**
+  String get myContacts;
+
+  /// No description provided for @myQrCodeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'My QR Code'**
+  String get myQrCodeTooltip;
+
+  /// No description provided for @scanFriendTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a friend'**
+  String get scanFriendTooltip;
+
+  /// No description provided for @friendAddedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Friend added successfully!'**
+  String get friendAddedSuccess;
+
+  /// No description provided for @editPseudoMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit my pseudo'**
+  String get editPseudoMenu;
+
+  /// No description provided for @myPseudoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My pseudo'**
+  String get myPseudoTitle;
+
+  /// No description provided for @enterPseudoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your pseudo'**
+  String get enterPseudoHint;
+
+  /// No description provided for @noContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts'**
+  String get noContacts;
+
+  /// No description provided for @scanFriendToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a friend\'s QR Code to start'**
+  String get scanFriendToStart;
+
+  /// No description provided for @scanFriendButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a friend'**
+  String get scanFriendButton;
+
+  /// No description provided for @addedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Added on'**
+  String get addedOn;
+
+  /// No description provided for @scanQrCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a QR Code'**
+  String get scanQrCodeTitle;
+
+  /// No description provided for @qrCodeUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'QR Code unreadable, try again.'**
+  String get qrCodeUnreadable;
+
+  /// No description provided for @invalidMistralQr.
+  ///
+  /// In en, this message translates to:
+  /// **'This QR Code is not from Mistral P2P.'**
+  String get invalidMistralQr;
+
+  /// No description provided for @invalidLinkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid link: {error}'**
+  String invalidLinkError(String error);
+
+  /// No description provided for @cannotAddSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'🚫 You cannot add yourself!'**
+  String get cannotAddSelf;
+
+  /// No description provided for @friendAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'ℹ️ This friend is already in your contacts.'**
+  String get friendAlreadyAdded;
+
+  /// No description provided for @placeQrInFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Place the QR Code in the frame'**
+  String get placeQrInFrame;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @flashlightTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Flashlight'**
+  String get flashlightTooltip;
+
+  /// No description provided for @shareLinkTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link'**
+  String get shareLinkTooltip;
+
+  /// No description provided for @inviteText.
+  ///
+  /// In en, this message translates to:
+  /// **'Add me on Mistral2laude P2P!\n{link}'**
+  String inviteText(String link);
+
+  /// No description provided for @inviteSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Mistral2laude P2P Invitation'**
+  String get inviteSubject;
+
+  /// No description provided for @scanMeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this QR Code\nto add me as a contact'**
+  String get scanMeText;
+
+  /// No description provided for @microphonePermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission denied'**
+  String get microphonePermissionDenied;
+
+  /// No description provided for @connectionNotEstablished.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Connection not established. Message saved locally.'**
+  String get connectionNotEstablished;
+
+  /// No description provided for @noMessagesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages.\nSend the first one! 👋'**
+  String get noMessagesYet;
+
+  /// No description provided for @statusConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get statusConnected;
+
+  /// No description provided for @statusConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting...'**
+  String get statusConnecting;
+
+  /// No description provided for @statusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get statusFailed;
+
+  /// No description provided for @statusOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get statusOffline;
+
+  /// No description provided for @recordingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'🔴 Recording...'**
+  String get recordingHint;
+
+  /// No description provided for @messageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message...'**
+  String get messageHint;
+
+  /// No description provided for @connectingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting...'**
+  String get connectingHint;
+
+  /// No description provided for @initFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Initialization failed'**
+  String get initFailed;
+
+  /// No description provided for @defaultUserPseudo.
+  ///
+  /// In en, this message translates to:
+  /// **'M2C User'**
+  String get defaultUserPseudo;
+
+  /// No description provided for @mobileDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Device'**
+  String get mobileDevice;
+
+  /// No description provided for @unknownDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Device'**
+  String get unknownDevice;
+
+  /// No description provided for @productsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get productsTab;
+
+  /// No description provided for @ordersTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get ordersTab;
+
+  /// No description provided for @cartTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get cartTab;
+
+  /// No description provided for @clientModeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Client mode'**
+  String get clientModeTooltip;
+
+  /// No description provided for @adminModeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin mode'**
+  String get adminModeTooltip;
+
+  /// No description provided for @addProductTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add product'**
+  String get addProductTooltip;
+
+  /// No description provided for @orderCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Order created.'**
+  String get orderCreated;
+
+  /// No description provided for @orderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Order failed.'**
+  String get orderFailed;
+
+  /// No description provided for @productCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Product created.'**
+  String get productCreated;
+
+  /// No description provided for @productUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Product updated.'**
+  String get productUpdated;
+
+  /// No description provided for @productDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Product deleted.'**
+  String get productDeleted;
+
+  /// No description provided for @deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed.'**
+  String get deleteFailed;
+
+  /// No description provided for @deleteProductTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete product'**
+  String get deleteProductTitle;
+
+  /// No description provided for @deleteProductConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"?'**
+  String deleteProductConfirm(String name);
+
+  /// No description provided for @imageUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Image uploaded.'**
+  String get imageUploaded;
+
+  /// No description provided for @imageUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Image upload failed: {error}'**
+  String imageUploadFailed(String error);
+
+  /// No description provided for @supabaseBucketNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Supabase image bucket is not configured.'**
+  String get supabaseBucketNotConfigured;
+
+  /// No description provided for @searchProductsPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products or SKU'**
+  String get searchProductsPlaceholder;
+
+  /// No description provided for @inStockFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock'**
+  String get inStockFilter;
+
+  /// No description provided for @includeInactiveFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Include inactive'**
+  String get includeInactiveFilter;
+
+  /// No description provided for @sortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sortName;
+
+  /// No description provided for @sortPriceAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Price low-high'**
+  String get sortPriceAsc;
+
+  /// No description provided for @sortPriceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Price high-low'**
+  String get sortPriceDesc;
+
+  /// No description provided for @sortStockAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock low-high'**
+  String get sortStockAsc;
+
+  /// No description provided for @sortStockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock high-low'**
+  String get sortStockDesc;
+
+  /// No description provided for @sortPopularity.
+  ///
+  /// In en, this message translates to:
+  /// **'Popularity'**
+  String get sortPopularity;
+
+  /// No description provided for @gridView.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get gridView;
+
+  /// No description provided for @listView.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get listView;
+
+  /// No description provided for @noProductsMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No products match your filters.'**
+  String get noProductsMatch;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFilters;
+
+  /// No description provided for @allProductsLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'All products loaded.'**
+  String get allProductsLoaded;
+
+  /// No description provided for @saveProductTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Product'**
+  String get saveProductTitle;
+
+  /// No description provided for @addProductTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Product'**
+  String get addProductTitle;
+
+  /// No description provided for @editProductTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Product'**
+  String get editProductTitle;
+
+  /// No description provided for @productNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get productNameLabel;
+
+  /// No description provided for @skuLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'SKU / Reference'**
+  String get skuLabel;
+
+  /// No description provided for @priceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (DZD)'**
+  String get priceLabel;
+
+  /// No description provided for @promoPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Promo price (DZD)'**
+  String get promoPriceLabel;
+
+  /// No description provided for @optionalHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optionalHelper;
+
+  /// No description provided for @imageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Image URL or Storage path'**
+  String get imageLabel;
+
+  /// No description provided for @uploadImageButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload image'**
+  String get uploadImageButton;
+
+  /// No description provided for @replaceImageButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace image'**
+  String get replaceImageButton;
+
+  /// No description provided for @uploadingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading...'**
+  String get uploadingButton;
+
+  /// No description provided for @stockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get stockLabel;
+
+  /// No description provided for @popularityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Popularity'**
+  String get popularityLabel;
+
+  /// No description provided for @activeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get activeLabel;
+
+  /// No description provided for @saveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveButton;
+
+  /// No description provided for @savingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get savingButton;
+
+  /// No description provided for @unavailableStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get unavailableStatus;
+
+  /// No description provided for @outOfStockStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get outOfStockStatus;
+
+  /// No description provided for @lowStockStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get lowStockStatus;
+
+  /// No description provided for @inactiveStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get inactiveStatus;
+
+  /// No description provided for @promoStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Promo'**
+  String get promoStatus;
+
+  /// No description provided for @cartEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart is empty.'**
+  String get cartEmpty;
+
+  /// No description provided for @yourCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart'**
+  String get yourCart;
+
+  /// No description provided for @clearCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearCart;
+
+  /// No description provided for @subtotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get subtotalLabel;
+
+  /// No description provided for @deliveryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get deliveryLabel;
+
+  /// No description provided for @totalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get totalLabel;
+
+  /// No description provided for @phoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phoneLabel;
+
+  /// No description provided for @addressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get addressLabel;
+
+  /// No description provided for @noteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get noteLabel;
+
+  /// No description provided for @checkoutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get checkoutButton;
+
+  /// No description provided for @orderTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {amount} DZD'**
+  String orderTotal(String amount);
+
+  /// No description provided for @itemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String itemsCount(int count);
+
+  /// No description provided for @orderNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{id}'**
+  String orderNumber(String id);
+
+  /// No description provided for @changeRoleTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Change role (Simulation)'**
+  String get changeRoleTooltip;
+
+  /// No description provided for @orderNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Order not found'**
+  String get orderNotFound;
+
+  /// No description provided for @globalStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Global status'**
+  String get globalStatus;
+
+  /// No description provided for @dateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get dateLabel;
+
+  /// No description provided for @customerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get customerLabel;
+
+  /// No description provided for @paymentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get paymentLabel;
+
+  /// No description provided for @productsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get productsLabel;
+
+  /// No description provided for @priceXQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Price: {price} DZD x {quantity}'**
+  String priceXQuantity(String price, int quantity);
+
+  /// No description provided for @noShipmentsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No shipments yet.'**
+  String get noShipmentsYet;
+
+  /// No description provided for @shipmentsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipments ({count})'**
+  String shipmentsCount(int count);
+
+  /// No description provided for @packageNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Package: {tracking}'**
+  String packageNumber(String tracking);
+
+  /// No description provided for @carrierLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Carrier: {name}'**
+  String carrierLabel(String name);
+
+  /// No description provided for @packageId.
+  ///
+  /// In en, this message translates to:
+  /// **'ID'**
+  String get packageId;
+
+  /// No description provided for @shippedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipped on'**
+  String get shippedOn;
+
+  /// No description provided for @itemsInPackage.
+  ///
+  /// In en, this message translates to:
+  /// **'Items in this package:'**
+  String get itemsInPackage;
+
+  /// No description provided for @confirmOrderButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm order'**
+  String get confirmOrderButton;
+
+  /// No description provided for @allocateStockButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocate stock'**
+  String get allocateStockButton;
+
+  /// No description provided for @startPickingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Picking'**
+  String get startPickingButton;
+
+  /// No description provided for @packingFinishedButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Packing finished (Packed)'**
+  String get packingFinishedButton;
+
+  /// No description provided for @shipButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Label & Ship'**
+  String get shipButton;
+
+  /// No description provided for @setInTransitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Set In Transit ({tracking})'**
+  String setInTransitButton(String tracking);
+
+  /// No description provided for @confirmDeliveryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Delivery ({tracking})'**
+  String confirmDeliveryButton(String tracking);
+
+  /// No description provided for @requestReturnButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a return'**
+  String get requestReturnButton;
+
+  /// No description provided for @newShipmentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Shipment'**
+  String get newShipmentTitle;
+
+  /// No description provided for @allItemIncludedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'All items will be included in this package for this example.'**
+  String get allItemIncludedNote;
+
+  /// No description provided for @trackingNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking Number'**
+  String get trackingNumberLabel;
+
+  /// No description provided for @adminStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Administration : Status'**
+  String get adminStatusTitle;
+
+  /// No description provided for @phoneAddressRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone and address are required.'**
+  String get phoneAddressRequired;
+
+  /// No description provided for @orderFailedLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Order failed.'**
+  String get orderFailedLong;
+
+  /// No description provided for @orderCreatedLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Order created: {id}'**
+  String orderCreatedLong(String id);
+
+  /// No description provided for @placingOrderButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Placing order...'**
+  String get placingOrderButton;
+
+  /// No description provided for @placeOrderButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Place order'**
+  String get placeOrderButton;
+
+  /// No description provided for @loadMoreButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get loadMoreButton;
+
+  /// No description provided for @searchOrderPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search an order...'**
+  String get searchOrderPlaceholder;
+
+  /// No description provided for @allFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allFilter;
+
+  /// No description provided for @orderConfirmedStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get orderConfirmedStep;
+
+  /// No description provided for @shippedStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipped'**
+  String get shippedStep;
+
+  /// No description provided for @deliveredStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get deliveredStep;
+
+  /// No description provided for @unknownDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknownDate;
+
+  /// No description provided for @p2pMessengerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'P2P Messenger'**
+  String get p2pMessengerTitle;
+
+  /// No description provided for @errorWithDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String errorWithDetails(String message);
+
+  /// No description provided for @myQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'My QR Code'**
+  String get myQrCode;
+
+  /// No description provided for @shareQrCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your QR Code'**
+  String get shareQrCodeTitle;
+
+  /// No description provided for @shareQrCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let your friends scan this code to add you to their contacts.'**
+  String get shareQrCodeSubtitle;
+
+  /// No description provided for @takeScreenshotToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a screenshot to share your QR Code.'**
+  String get takeScreenshotToShare;
+
+  /// No description provided for @initErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Initialization Error'**
+  String get initErrorTitle;
+
+  /// No description provided for @messagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messagesTitle;
+
+  /// No description provided for @addContactTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Contact'**
+  String get addContactTooltip;
+
+  /// No description provided for @noConversations.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get noConversations;
+
+  /// No description provided for @addContactToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a contact to start chatting'**
+  String get addContactToStart;
+
+  /// No description provided for @typingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'typing...'**
+  String get typingStatus;
+
+  /// No description provided for @sayHello.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hello! 👋'**
+  String get sayHello;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @addFriendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Friend'**
+  String get addFriendTitle;
+
+  /// No description provided for @scanFriendQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your friend\'s QR Code'**
+  String get scanFriendQr;
+
+  /// No description provided for @addContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Contact'**
+  String get addContactTitle;
+
+  /// No description provided for @yourQrCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your QR Code'**
+  String get yourQrCodeTitle;
+
+  /// No description provided for @yourQrCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show this code to your friend'**
+  String get yourQrCodeSubtitle;
+
+  /// No description provided for @notAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get notAvailable;
+
+  /// No description provided for @deviceIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Device ID'**
+  String get deviceIdLabel;
+
+  /// No description provided for @contactAddedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact added successfully!'**
+  String get contactAddedSuccess;
+
+  /// No description provided for @dataChannelDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Data channel disconnected'**
+  String get dataChannelDisconnected;
+
+  /// No description provided for @peerNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer not connected: {id}'**
+  String peerNotConnected(String id);
+
+  /// No description provided for @errorParsingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error parsing message: {error}'**
+  String errorParsingMessage(String error);
+
+  /// No description provided for @invalidQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid QR Code: {error}'**
+  String invalidQrCode(String error);
+
+  /// No description provided for @missingDeviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing Device ID'**
+  String get missingDeviceId;
+
+  /// No description provided for @missingPseudo.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing Pseudo'**
+  String get missingPseudo;
+
+  /// No description provided for @missingPublicKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing Public Key'**
+  String get missingPublicKey;
+
+  /// No description provided for @cannotAddSelfError.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot add yourself'**
+  String get cannotAddSelfError;
+
+  /// No description provided for @invalidPublicKeyFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid public key format'**
+  String get invalidPublicKeyFormat;
+
+  /// No description provided for @errorParsingQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Error parsing QR Code: {error}'**
+  String errorParsingQrCode(String error);
+
+  /// No description provided for @mistral2laudeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mistral2laude P2P'**
+  String get mistral2laudeTitle;
+
+  /// No description provided for @friendLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend'**
+  String get friendLabel;
+
+  /// No description provided for @encryptedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'[Encrypted message]'**
+  String get encryptedMessage;
+
+  /// No description provided for @youEncryptedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You: [Encrypted message]'**
+  String get youEncryptedMessage;
+
+  /// No description provided for @imageMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'🖼️ Image'**
+  String get imageMessage;
+
+  /// No description provided for @fileMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'📎 File'**
+  String get fileMessage;
+
+  /// No description provided for @newMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'New message'**
+  String get newMessage;
+
+  /// No description provided for @reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get reply;
+
+  /// No description provided for @quickReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick reply'**
+  String get quickReply;
+
+  /// No description provided for @markAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read'**
+  String get markAsRead;
+
+  /// No description provided for @isTyping.
+  ///
+  /// In en, this message translates to:
+  /// **'is typing...'**
+  String get isTyping;
+
+  /// No description provided for @typingIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Typing...'**
+  String get typingIndicator;
+
+  /// No description provided for @vocalMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Vocal message'**
+  String get vocalMessage;
+
+  /// No description provided for @gps.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS'**
+  String get gps;
+
+  /// No description provided for @permissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get permissions;
+
+  /// No description provided for @trace.
+  ///
+  /// In en, this message translates to:
+  /// **'Trace'**
+  String get trace;
+
+  /// No description provided for @mainChannelValue.
+  ///
+  /// In en, this message translates to:
+  /// **'WebRTC P2P'**
+  String get mainChannelValue;
+
+  /// No description provided for @formErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fix the form errors.'**
+  String get formErrors;
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed.'**
+  String get saveFailed;
+
+  /// No description provided for @itemsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get itemsLabel;
 }
 
 class _AppLocalizationsDelegate

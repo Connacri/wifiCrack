@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../objectbox.g.dart';
 import 'app_provider.dart';
 import 'contacts_screen.dart';
@@ -37,9 +38,10 @@ class _Mistral2laudeEntryScreenState extends State<Mistral2laudeEntryScreen> {
     await NotificationService().init();
 
     final deviceId = await _getOrCreateDeviceId(widget.deviceIdOverride);
-    final deviceModel = await _getDeviceModel();
+    final deviceModel = await _getDeviceModel(context);
 
     final user = await _initUser(
+      context: context,
       objectBox: objectBox,
       deviceId: deviceId,
       model: deviceModel,
@@ -99,8 +101,9 @@ class _M2CErrorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Mistral2laude')),
+      appBar: AppBar(title: Text(l10n.mistral2laudeTitle)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -109,15 +112,15 @@ class _M2CErrorScreen extends StatelessWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
               const SizedBox(height: 12),
-              const Text(
-                "Echec d'initialisation",
+              Text(
+                l10n.initFailed,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Reessayer'),
+                label: Text(l10n.retry),
               ),
             ],
           ),
@@ -145,7 +148,8 @@ Future<String> _getOrCreateDeviceId(String? override) async {
   return newId;
 }
 
-Future<String> _getDeviceModel() async {
+Future<String> _getDeviceModel(BuildContext context) async {
+  final l10n = AppLocalizations.of(context)!;
   try {
     final info = DeviceInfoPlugin();
     if (defaultTargetPlatform == TargetPlatform.android) {
@@ -157,14 +161,16 @@ Future<String> _getDeviceModel() async {
       return 'Apple ${ios.utsname.machine}'.trim();
     }
   } catch (_) {}
-  return 'Mobile Device';
+  return l10n.mobileDevice;
 }
 
 Future<M2CUser> _initUser({
+  required BuildContext context,
   required ObjectBoxService objectBox,
   required String deviceId,
   required String model,
 }) async {
+  final l10n = AppLocalizations.of(context)!;
   final existing = objectBox.userBox
       .query(M2CUser_.deviceId.equals(deviceId))
       .build()
@@ -179,7 +185,7 @@ Future<M2CUser> _initUser({
 
   final newUser = M2CUser(
     deviceId: deviceId,
-    pseudo: 'Utilisateur M2C',
+    pseudo: l10n.defaultUserPseudo,
     model: model,
     lastSeen: DateTime.now(),
     coins: 0,
