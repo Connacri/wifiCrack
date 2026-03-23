@@ -1,9 +1,0 @@
-playwright==1.43.0
-beautifulsoup4==4.12.3
-lxml==5.2.1
-aiohttp==3.9.5
-asyncio-throttle==1.0.2
-tqdm==4.66.4
-colorama==0.4.6
-fake-useragent==1.5.1
-python-dotenv==1.0.1
