@@ -982,6 +982,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String amountWithCurrency(String amount) {
+    return '$amount DZD';
+  }
+
+  @override
+  String shipmentItemLine(String name, int quantity) {
+    return '• $name (x$quantity)';
+  }
+
+  @override
   String get noShipmentsYet => 'No shipments yet.';
 
   @override
@@ -1254,4 +1264,214 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemsLabel => 'Items';
+
+  @override
+  String get productInfoSection => 'Info';
+
+  @override
+  String get productImageSection => 'Image';
+
+  @override
+  String get productStockStatusSection => 'Stock & status';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get nameRequired => 'Name is required';
+
+  @override
+  String get priceRequired => 'Price is required';
+
+  @override
+  String get invalidPrice => 'Enter a valid price';
+
+  @override
+  String get invalidPromoPrice => 'Enter a valid promo price';
+
+  @override
+  String get promoLowerThanPrice => 'Promo must be lower than price';
+
+  @override
+  String get invalidStock => 'Enter a valid stock';
+
+  @override
+  String get popularityHelper => 'Higher means more popular';
+
+  @override
+  String get invalidPopularity => 'Enter a valid popularity';
+
+  @override
+  String get addToCart => 'Add to cart';
+
+  @override
+  String get stockUnknown => 'Stock unknown';
+
+  @override
+  String get startChatPrompt => 'Start the conversation';
+
+  @override
+  String get realtimeMessengerTitle => 'Sigma Messenger (Realtime)';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get warehouseRole => 'Warehouse';
+
+  @override
+  String get carrierRole => 'Carrier';
+
+  @override
+  String get supportRole => 'Support';
+
+  @override
+  String get orderStatusCreated => 'Created';
+
+  @override
+  String get orderStatusPendingPayment => 'Pending payment';
+
+  @override
+  String get orderStatusPaid => 'Paid';
+
+  @override
+  String get orderStatusPaymentFailed => 'Payment failed';
+
+  @override
+  String get orderStatusCancelRequested => 'Cancel requested';
+
+  @override
+  String get orderStatusCancelled => 'Cancelled';
+
+  @override
+  String get orderStatusOrderConfirmed => 'Confirmed';
+
+  @override
+  String get orderStatusStockAllocated => 'Stock allocated';
+
+  @override
+  String get orderStatusBackorder => 'Backorder';
+
+  @override
+  String get orderStatusPicking => 'Picking';
+
+  @override
+  String get orderStatusPacked => 'Packed';
+
+  @override
+  String get orderStatusReadyToShip => 'Ready to ship';
+
+  @override
+  String get orderStatusPartiallyShipped => 'Partially shipped';
+
+  @override
+  String get orderStatusShipped => 'Shipped';
+
+  @override
+  String get orderStatusPartiallyDelivered => 'Partially delivered';
+
+  @override
+  String get orderStatusDelivered => 'Delivered';
+
+  @override
+  String get orderStatusDeliveryFailed => 'Delivery failed';
+
+  @override
+  String get orderStatusException => 'Exception';
+
+  @override
+  String get orderStatusReturnRequested => 'Return requested';
+
+  @override
+  String get orderStatusReturnInTransit => 'Return in transit';
+
+  @override
+  String get orderStatusReturnReceived => 'Return received';
+
+  @override
+  String get orderStatusRefundPending => 'Refund pending';
+
+  @override
+  String get orderStatusRefunded => 'Refunded';
+
+  @override
+  String get orderStatusClosed => 'Closed';
+
+  @override
+  String get shipmentStatusLabelCreated => 'Label created';
+
+  @override
+  String get shipmentStatusPickedUp => 'Picked up';
+
+  @override
+  String get shipmentStatusInTransit => 'In transit';
+
+  @override
+  String get shipmentStatusArrivedAtHub => 'Arrived at hub';
+
+  @override
+  String get shipmentStatusCustomsClearance => 'Customs clearance';
+
+  @override
+  String get shipmentStatusOutForDelivery => 'Out for delivery';
+
+  @override
+  String get shipmentStatusDelivered => 'Delivered';
+
+  @override
+  String get shipmentStatusDeliveryFailed => 'Delivery failed';
+
+  @override
+  String get shipmentStatusException => 'Exception';
+
+  @override
+  String get shipmentStatusLost => 'Lost';
+
+  @override
+  String get shipmentStatusDamaged => 'Damaged';
+
+  @override
+  String get shipmentStatusReturnToSender => 'Return to sender';
+
+  @override
+  String get returnStatusRequested => 'Requested';
+
+  @override
+  String get returnStatusAuthorized => 'Authorized';
+
+  @override
+  String get returnStatusLabelIssued => 'Label issued';
+
+  @override
+  String get returnStatusInTransit => 'In transit';
+
+  @override
+  String get returnStatusReceived => 'Received';
+
+  @override
+  String get returnStatusRejected => 'Rejected';
+
+  @override
+  String get returnStatusRefundPending => 'Refund pending';
+
+  @override
+  String get returnStatusRefunded => 'Refunded';
+
+  @override
+  String get paymentStatusPending => 'Pending';
+
+  @override
+  String get paymentStatusAuthorized => 'Authorized';
+
+  @override
+  String get paymentStatusCaptured => 'Captured';
+
+  @override
+  String get paymentStatusVoided => 'Voided';
+
+  @override
+  String get paymentStatusRefunded => 'Refunded';
+
+  @override
+  String get paymentStatusFailed => 'Failed';
 }

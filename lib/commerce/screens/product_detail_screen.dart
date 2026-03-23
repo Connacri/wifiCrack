@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../commerce_config.dart';
 import '../models/product.dart';
 
@@ -10,6 +11,7 @@ class ProductDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final resolvedImageUrl = CommerceConfig.resolveImageUrl(product.imageUrl);
     final price = product.effectivePrice;
     final promo = product.promoPrice;
@@ -71,10 +73,10 @@ class ProductDetailScreen extends StatelessWidget {
                       Chip(
                         label: Text(
                           stock == null
-                              ? 'Stock inconnu'
+                              ? l10n.stockUnknown
                               : stock > 0
-                                  ? 'Stock: $stock'
-                                  : 'Rupture',
+                                  ? '${l10n.stockLabel}: $stock'
+                                  : l10n.outOfStockStatus,
                         ),
                       ),
                       if (product.category != null && product.category!.isNotEmpty)
@@ -85,7 +87,7 @@ class ProductDetailScreen extends StatelessWidget {
                   FilledButton.icon(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.shopping_cart_outlined),
-                    label: const Text('Ajouter au panier'),
+                    label: Text(l10n.addToCart),
                   ),
                 ],
               ),

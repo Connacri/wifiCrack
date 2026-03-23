@@ -77,21 +77,22 @@ if (Test-Path $indexPath) {
     Write-Host "   -> index.html mis a jour avec $newTag."
 }
 
-# 3. Generation de la description basee sur l'historique
-$history = git log -n 5 --pretty=format:"- %s" | Out-String
-$description = "Release $newTag`n`nModifications recentes :`n$history"
-Write-Host "Description preparee."
-# 3. Description manuelle + fallback auto
-#Write-Host "Ecris la description de la release (laisser vide pour auto) :"
-#$userInput = Read-Host
-#
-#if ([string]::IsNullOrWhiteSpace($userInput)) {
-#    Write-Host "Aucune description saisie → génération automatique..."
-#    $history = git log -n 5 --pretty=format:"- %s" | Out-String
-#    $description = "Release $newTag`n`nModifications recentes :`n$history"
-#} else {
-#    $description = "Release $newTag`n`n$userInput"
-#}
+## 3. Generation de la description basee sur l'historique
+#$history = git log -n 5 --pretty=format:"- %s" | Out-String
+#$description = "Release $newTag`n`nModifications recentes :`n$history"
+#Write-Host "Description preparee."
+
+ # 3. Description manuelle + fallback auto
+Write-Host "Ecris la description de la release (laisser vide pour auto) :"
+$userInput = Read-Host
+
+if ([string]::IsNullOrWhiteSpace($userInput)) {
+    Write-Host "Aucune description saisie → génération automatique..."
+    $history = git log -n 5 --pretty=format:"- %s" | Out-String
+    $description = "Release $newTag`n`nModifications recentes :`n$history"
+} else {
+    $description = "Release $newTag`n`n$userInput"
+}
 
 Write-Host "Description prête."
 # 4. Git : Commit & Push

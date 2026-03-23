@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../services/firebase_chat_service.dart';
 import 'firebase_chat_screen.dart';
 
@@ -10,11 +11,12 @@ class FirebaseUserListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sigma Messenger (Realtime)'),
+        title: Text(l10n.realtimeMessengerTitle),
         backgroundColor: Colors.orange,
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
@@ -24,7 +26,7 @@ class FirebaseUserListScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Aucun utilisateur Firestore trouvé.'));
+            return Center(child: Text(l10n.noUsersFound));
           }
 
           final users = snapshot.data!.where((u) => u['id'] != currentUser?.uid).toList();
@@ -33,7 +35,7 @@ class FirebaseUserListScreen extends StatelessWidget {
             itemCount: users.length,
             itemBuilder: (context, index) {
               final user = users[index];
-              final pseudo = user['pseudo'] ?? user['email'] ?? 'Inconnu';
+              final pseudo = user['pseudo'] ?? user['email'] ?? l10n.unknown;
               final userId = user['id'];
 
               return ListTile(

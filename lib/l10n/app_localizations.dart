@@ -1968,6 +1968,18 @@ abstract class AppLocalizations {
   /// **'Price: {price} DZD x {quantity}'**
   String priceXQuantity(String price, int quantity);
 
+  /// No description provided for @amountWithCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} DZD'**
+  String amountWithCurrency(String amount);
+
+  /// No description provided for @shipmentItemLine.
+  ///
+  /// In en, this message translates to:
+  /// **'• {name} (x{quantity})'**
+  String shipmentItemLine(String name, int quantity);
+
   /// No description provided for @noShipmentsYet.
   ///
   /// In en, this message translates to:
@@ -2465,6 +2477,426 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Items'**
   String get itemsLabel;
+
+  /// No description provided for @productInfoSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get productInfoSection;
+
+  /// No description provided for @productImageSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get productImageSection;
+
+  /// No description provided for @productStockStatusSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock & status'**
+  String get productStockStatusSection;
+
+  /// No description provided for @categoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get categoryLabel;
+
+  /// No description provided for @nameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is required'**
+  String get nameRequired;
+
+  /// No description provided for @priceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Price is required'**
+  String get priceRequired;
+
+  /// No description provided for @invalidPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid price'**
+  String get invalidPrice;
+
+  /// No description provided for @invalidPromoPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid promo price'**
+  String get invalidPromoPrice;
+
+  /// No description provided for @promoLowerThanPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Promo must be lower than price'**
+  String get promoLowerThanPrice;
+
+  /// No description provided for @invalidStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid stock'**
+  String get invalidStock;
+
+  /// No description provided for @popularityHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher means more popular'**
+  String get popularityHelper;
+
+  /// No description provided for @invalidPopularity.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid popularity'**
+  String get invalidPopularity;
+
+  /// No description provided for @addToCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to cart'**
+  String get addToCart;
+
+  /// No description provided for @stockUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock unknown'**
+  String get stockUnknown;
+
+  /// No description provided for @startChatPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the conversation'**
+  String get startChatPrompt;
+
+  /// No description provided for @realtimeMessengerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sigma Messenger (Realtime)'**
+  String get realtimeMessengerTitle;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @warehouseRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Warehouse'**
+  String get warehouseRole;
+
+  /// No description provided for @carrierRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Carrier'**
+  String get carrierRole;
+
+  /// No description provided for @supportRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get supportRole;
+
+  /// No description provided for @orderStatusCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get orderStatusCreated;
+
+  /// No description provided for @orderStatusPendingPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending payment'**
+  String get orderStatusPendingPayment;
+
+  /// No description provided for @orderStatusPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get orderStatusPaid;
+
+  /// No description provided for @orderStatusPaymentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment failed'**
+  String get orderStatusPaymentFailed;
+
+  /// No description provided for @orderStatusCancelRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel requested'**
+  String get orderStatusCancelRequested;
+
+  /// No description provided for @orderStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get orderStatusCancelled;
+
+  /// No description provided for @orderStatusOrderConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get orderStatusOrderConfirmed;
+
+  /// No description provided for @orderStatusStockAllocated.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock allocated'**
+  String get orderStatusStockAllocated;
+
+  /// No description provided for @orderStatusBackorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Backorder'**
+  String get orderStatusBackorder;
+
+  /// No description provided for @orderStatusPicking.
+  ///
+  /// In en, this message translates to:
+  /// **'Picking'**
+  String get orderStatusPicking;
+
+  /// No description provided for @orderStatusPacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Packed'**
+  String get orderStatusPacked;
+
+  /// No description provided for @orderStatusReadyToShip.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to ship'**
+  String get orderStatusReadyToShip;
+
+  /// No description provided for @orderStatusPartiallyShipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Partially shipped'**
+  String get orderStatusPartiallyShipped;
+
+  /// No description provided for @orderStatusShipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipped'**
+  String get orderStatusShipped;
+
+  /// No description provided for @orderStatusPartiallyDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Partially delivered'**
+  String get orderStatusPartiallyDelivered;
+
+  /// No description provided for @orderStatusDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get orderStatusDelivered;
+
+  /// No description provided for @orderStatusDeliveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery failed'**
+  String get orderStatusDeliveryFailed;
+
+  /// No description provided for @orderStatusException.
+  ///
+  /// In en, this message translates to:
+  /// **'Exception'**
+  String get orderStatusException;
+
+  /// No description provided for @orderStatusReturnRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Return requested'**
+  String get orderStatusReturnRequested;
+
+  /// No description provided for @orderStatusReturnInTransit.
+  ///
+  /// In en, this message translates to:
+  /// **'Return in transit'**
+  String get orderStatusReturnInTransit;
+
+  /// No description provided for @orderStatusReturnReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Return received'**
+  String get orderStatusReturnReceived;
+
+  /// No description provided for @orderStatusRefundPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund pending'**
+  String get orderStatusRefundPending;
+
+  /// No description provided for @orderStatusRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get orderStatusRefunded;
+
+  /// No description provided for @orderStatusClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get orderStatusClosed;
+
+  /// No description provided for @shipmentStatusLabelCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Label created'**
+  String get shipmentStatusLabelCreated;
+
+  /// No description provided for @shipmentStatusPickedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked up'**
+  String get shipmentStatusPickedUp;
+
+  /// No description provided for @shipmentStatusInTransit.
+  ///
+  /// In en, this message translates to:
+  /// **'In transit'**
+  String get shipmentStatusInTransit;
+
+  /// No description provided for @shipmentStatusArrivedAtHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived at hub'**
+  String get shipmentStatusArrivedAtHub;
+
+  /// No description provided for @shipmentStatusCustomsClearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Customs clearance'**
+  String get shipmentStatusCustomsClearance;
+
+  /// No description provided for @shipmentStatusOutForDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Out for delivery'**
+  String get shipmentStatusOutForDelivery;
+
+  /// No description provided for @shipmentStatusDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get shipmentStatusDelivered;
+
+  /// No description provided for @shipmentStatusDeliveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery failed'**
+  String get shipmentStatusDeliveryFailed;
+
+  /// No description provided for @shipmentStatusException.
+  ///
+  /// In en, this message translates to:
+  /// **'Exception'**
+  String get shipmentStatusException;
+
+  /// No description provided for @shipmentStatusLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost'**
+  String get shipmentStatusLost;
+
+  /// No description provided for @shipmentStatusDamaged.
+  ///
+  /// In en, this message translates to:
+  /// **'Damaged'**
+  String get shipmentStatusDamaged;
+
+  /// No description provided for @shipmentStatusReturnToSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to sender'**
+  String get shipmentStatusReturnToSender;
+
+  /// No description provided for @returnStatusRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get returnStatusRequested;
+
+  /// No description provided for @returnStatusAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorized'**
+  String get returnStatusAuthorized;
+
+  /// No description provided for @returnStatusLabelIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Label issued'**
+  String get returnStatusLabelIssued;
+
+  /// No description provided for @returnStatusInTransit.
+  ///
+  /// In en, this message translates to:
+  /// **'In transit'**
+  String get returnStatusInTransit;
+
+  /// No description provided for @returnStatusReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get returnStatusReceived;
+
+  /// No description provided for @returnStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get returnStatusRejected;
+
+  /// No description provided for @returnStatusRefundPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund pending'**
+  String get returnStatusRefundPending;
+
+  /// No description provided for @returnStatusRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get returnStatusRefunded;
+
+  /// No description provided for @paymentStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get paymentStatusPending;
+
+  /// No description provided for @paymentStatusAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorized'**
+  String get paymentStatusAuthorized;
+
+  /// No description provided for @paymentStatusCaptured.
+  ///
+  /// In en, this message translates to:
+  /// **'Captured'**
+  String get paymentStatusCaptured;
+
+  /// No description provided for @paymentStatusVoided.
+  ///
+  /// In en, this message translates to:
+  /// **'Voided'**
+  String get paymentStatusVoided;
+
+  /// No description provided for @paymentStatusRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get paymentStatusRefunded;
+
+  /// No description provided for @paymentStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get paymentStatusFailed;
 }
 
 class _AppLocalizationsDelegate

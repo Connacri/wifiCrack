@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../services/firebase_chat_service.dart';
 
 class FirebaseChatScreen extends StatefulWidget {
@@ -52,8 +53,9 @@ class _FirebaseChatScreenState extends State<FirebaseChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_currentUserId == null) {
-      return const Scaffold(body: Center(child: Text('Not authenticated')));
+      return Scaffold(body: Center(child: Text(l10n.authRequired)));
     }
 
     return Scaffold(
@@ -72,10 +74,12 @@ class _FirebaseChatScreenState extends State<FirebaseChatScreen> {
                 ),
                 builder: (context, snapshot) {
                   if (snapshot.hasError)
-                    return Center(child: Text('Erreur: ${snapshot.error}'));
+                    return Center(
+                      child: Text(l10n.errorWithDetails('${snapshot.error}')),
+                    );
                   if (!snapshot.hasData ||
                       snapshot.data?.snapshot.value == null) {
-                    return const Center(child: Text('Aucun message.'));
+                    return Center(child: Text(l10n.startChatPrompt));
                   }
 
                   final data = Map<dynamic, dynamic>.from(
@@ -143,7 +147,7 @@ class _FirebaseChatScreenState extends State<FirebaseChatScreen> {
                     child: TextField(
                       controller: _controller,
                       decoration: InputDecoration(
-                        hintText: 'Message...',
+                        hintText: l10n.messageHint,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),

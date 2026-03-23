@@ -24,7 +24,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings => 'Paramètres';
 
   @override
-  String get admin => 'Admin';
+  String get admin => 'Administrateur';
 
   @override
   String get commerce => 'Commerce';
@@ -111,7 +111,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileTooltip => 'Profil';
 
   @override
-  String get adminTooltip => 'Admin';
+  String get adminTooltip => 'Administrateur';
 
   @override
   String get chatTooltip => 'Chat';
@@ -159,10 +159,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logoutTooltip => 'Déconnexion locale';
 
   @override
-  String get tabStats => 'Stats';
+  String get tabStats => 'Statistiques';
 
   @override
-  String get tabAds => 'Ads';
+  String get tabAds => 'Annonces';
 
   @override
   String get tabTargets => 'Cibles';
@@ -177,7 +177,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tabContacts => 'Contacts';
 
   @override
-  String get tabConfig => 'Config';
+  String get tabConfig => 'Configuration';
 
   @override
   String get securityAdmin => '🔐 Sécurité Admin';
@@ -268,7 +268,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pseudoError => 'Pseudo indisponible ou erreur.';
 
   @override
-  String get messengerDashboard => 'Sigma Messenger Dashboard';
+  String get messengerDashboard => 'Tableau de bord Sigma Messenger';
 
   @override
   String get noUsersFound => 'Aucun utilisateur trouvé.';
@@ -449,7 +449,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get watchVideoBonus => 'Regarder une vidéo pour +50 Coins bonus';
 
   @override
-  String get languageSelectorTitle => 'Select Language / Choisir la langue';
+  String get languageSelectorTitle => 'Choisir la langue';
 
   @override
   String get imageLinkUrl => 'Lien de l\'image (URL)';
@@ -565,7 +565,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get createAccount => 'Créer un compte';
 
   @override
-  String get email => 'Email';
+  String get email => 'E-mail';
 
   @override
   String get forgotPassword => 'Mot de passe oublié ?';
@@ -992,6 +992,16 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String amountWithCurrency(String amount) {
+    return '$amount DZD';
+  }
+
+  @override
+  String shipmentItemLine(String name, int quantity) {
+    return '• $name (x$quantity)';
+  }
+
+  @override
   String get noShipmentsYet => 'Aucune expédition pour le moment.';
 
   @override
@@ -1160,7 +1170,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get yourQrCodeSubtitle => 'Montrez ce code à votre ami';
 
   @override
-  String get notAvailable => 'N/A';
+  String get notAvailable => 'N/D';
 
   @override
   String get deviceIdLabel => 'ID de l\'appareil';
@@ -1265,4 +1275,214 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get itemsLabel => 'Articles';
+
+  @override
+  String get productInfoSection => 'Infos';
+
+  @override
+  String get productImageSection => 'Image';
+
+  @override
+  String get productStockStatusSection => 'Stock & statut';
+
+  @override
+  String get categoryLabel => 'Catégorie';
+
+  @override
+  String get nameRequired => 'Le nom est requis';
+
+  @override
+  String get priceRequired => 'Le prix est requis';
+
+  @override
+  String get invalidPrice => 'Entrez un prix valide';
+
+  @override
+  String get invalidPromoPrice => 'Entrez un prix promo valide';
+
+  @override
+  String get promoLowerThanPrice => 'La promo doit être inférieure au prix';
+
+  @override
+  String get invalidStock => 'Entrez un stock valide';
+
+  @override
+  String get popularityHelper => 'Plus élevé = plus populaire';
+
+  @override
+  String get invalidPopularity => 'Entrez une popularité valide';
+
+  @override
+  String get addToCart => 'Ajouter au panier';
+
+  @override
+  String get stockUnknown => 'Stock inconnu';
+
+  @override
+  String get startChatPrompt => 'Commencez la discussion';
+
+  @override
+  String get realtimeMessengerTitle => 'Sigma Messenger (Temps réel)';
+
+  @override
+  String get clear => 'Effacer';
+
+  @override
+  String get warehouseRole => 'Entrepôt';
+
+  @override
+  String get carrierRole => 'Transporteur';
+
+  @override
+  String get supportRole => 'Support';
+
+  @override
+  String get orderStatusCreated => 'Créée';
+
+  @override
+  String get orderStatusPendingPayment => 'Paiement en attente';
+
+  @override
+  String get orderStatusPaid => 'Payée';
+
+  @override
+  String get orderStatusPaymentFailed => 'Échec du paiement';
+
+  @override
+  String get orderStatusCancelRequested => 'Annulation demandée';
+
+  @override
+  String get orderStatusCancelled => 'Annulée';
+
+  @override
+  String get orderStatusOrderConfirmed => 'Confirmée';
+
+  @override
+  String get orderStatusStockAllocated => 'Stock alloué';
+
+  @override
+  String get orderStatusBackorder => 'Reliquat';
+
+  @override
+  String get orderStatusPicking => 'En préparation';
+
+  @override
+  String get orderStatusPacked => 'Emballée';
+
+  @override
+  String get orderStatusReadyToShip => 'Prête à expédier';
+
+  @override
+  String get orderStatusPartiallyShipped => 'Partiellement expédiée';
+
+  @override
+  String get orderStatusShipped => 'Expédiée';
+
+  @override
+  String get orderStatusPartiallyDelivered => 'Partiellement livrée';
+
+  @override
+  String get orderStatusDelivered => 'Livrée';
+
+  @override
+  String get orderStatusDeliveryFailed => 'Échec de livraison';
+
+  @override
+  String get orderStatusException => 'Exception';
+
+  @override
+  String get orderStatusReturnRequested => 'Retour demandé';
+
+  @override
+  String get orderStatusReturnInTransit => 'Retour en transit';
+
+  @override
+  String get orderStatusReturnReceived => 'Retour reçu';
+
+  @override
+  String get orderStatusRefundPending => 'Remboursement en attente';
+
+  @override
+  String get orderStatusRefunded => 'Remboursée';
+
+  @override
+  String get orderStatusClosed => 'Clôturée';
+
+  @override
+  String get shipmentStatusLabelCreated => 'Étiquette créée';
+
+  @override
+  String get shipmentStatusPickedUp => 'Récupérée';
+
+  @override
+  String get shipmentStatusInTransit => 'En transit';
+
+  @override
+  String get shipmentStatusArrivedAtHub => 'Arrivée au hub';
+
+  @override
+  String get shipmentStatusCustomsClearance => 'Dédouanement';
+
+  @override
+  String get shipmentStatusOutForDelivery => 'En cours de livraison';
+
+  @override
+  String get shipmentStatusDelivered => 'Livrée';
+
+  @override
+  String get shipmentStatusDeliveryFailed => 'Échec de livraison';
+
+  @override
+  String get shipmentStatusException => 'Exception';
+
+  @override
+  String get shipmentStatusLost => 'Perdue';
+
+  @override
+  String get shipmentStatusDamaged => 'Endommagée';
+
+  @override
+  String get shipmentStatusReturnToSender => 'Retour à l\'expéditeur';
+
+  @override
+  String get returnStatusRequested => 'Demandé';
+
+  @override
+  String get returnStatusAuthorized => 'Autorisé';
+
+  @override
+  String get returnStatusLabelIssued => 'Étiquette émise';
+
+  @override
+  String get returnStatusInTransit => 'En transit';
+
+  @override
+  String get returnStatusReceived => 'Reçu';
+
+  @override
+  String get returnStatusRejected => 'Refusé';
+
+  @override
+  String get returnStatusRefundPending => 'Remboursement en attente';
+
+  @override
+  String get returnStatusRefunded => 'Remboursé';
+
+  @override
+  String get paymentStatusPending => 'En attente';
+
+  @override
+  String get paymentStatusAuthorized => 'Autorisé';
+
+  @override
+  String get paymentStatusCaptured => 'Capturé';
+
+  @override
+  String get paymentStatusVoided => 'Annulé';
+
+  @override
+  String get paymentStatusRefunded => 'Remboursé';
+
+  @override
+  String get paymentStatusFailed => 'Échoué';
 }

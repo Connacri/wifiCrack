@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
+
 class ChatScreen extends StatefulWidget {
   final String otherUserId;
   final String otherUserName;
@@ -42,6 +44,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(widget.otherUserName)),
       body: Column(
@@ -65,7 +68,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   );
                 }
-                return const Center(child: Text("Commencez la discussion"));
+                return Center(child: Text(l10n.startChatPrompt));
               },
             ),
           ),
@@ -76,9 +79,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _msgCtrl,
-                    decoration: const InputDecoration(
-                      hintText: "Votre message...",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(30))),
+                    decoration: InputDecoration(
+                      hintText: l10n.messageHint,
+                      border: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(30)),
+                      ),
                     ),
                   ),
                 ),

@@ -474,7 +474,7 @@ class _ProductsTab extends StatefulWidget {
 }
 
 class _ProductsTabState extends State<_ProductsTab> {
-  String _selectedCategory = 'All';
+  String? _selectedCategory;
   bool _inStockOnly = false;
   ProductSort _sort = ProductSort.nameAsc;
   bool _gridView = false;
@@ -511,13 +511,13 @@ class _ProductsTabState extends State<_ProductsTab> {
       }
     }
     final list = categories.toList()..sort();
-    return ['All', ...list];
+    return list;
   }
 
-  List<Product> _applyFilters(List<Product> products, String activeCategory) {
+  List<Product> _applyFilters(List<Product> products, String? activeCategory) {
     var filtered = products;
 
-    if (activeCategory != 'All') {
+    if (activeCategory != null) {
       filtered = filtered
           .where((p) => (p.category ?? '').trim() == activeCategory)
           .toList();
@@ -550,30 +550,31 @@ class _ProductsTabState extends State<_ProductsTab> {
     return filtered;
   }
 
-  String _sortLabel(ProductSort sort) {
+  String _sortLabel(AppLocalizations l10n, ProductSort sort) {
     switch (sort) {
       case ProductSort.priceAsc:
-        return 'Price ↑';
+        return l10n.sortPriceAsc;
       case ProductSort.priceDesc:
-        return 'Price ↓';
+        return l10n.sortPriceDesc;
       case ProductSort.stockAsc:
-        return 'Stock ↑';
+        return l10n.sortStockAsc;
       case ProductSort.stockDesc:
-        return 'Stock ↓';
+        return l10n.sortStockDesc;
       case ProductSort.popularityDesc:
-        return 'Popularity';
+        return l10n.sortPopularity;
       case ProductSort.nameAsc:
       default:
-        return 'Name';
+        return l10n.sortName;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final categories = _extractCategories(widget.provider.products);
     final activeCategory = categories.contains(_selectedCategory)
         ? _selectedCategory
-        : 'All';
+        : null;
     final products = _applyFilters(widget.provider.products, activeCategory);
     _maybeAutoFetchMore(products);
 
@@ -587,7 +588,7 @@ class _ProductsTabState extends State<_ProductsTab> {
             onSubmitted: (_) =>
                 widget.provider.loadProducts(query: widget.searchCtrl.text),
             decoration: InputDecoration(
-              hintText: 'Search products or SKU',
+              hintText: l10n.searchProductsPlaceholder,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.arrow_forward),
@@ -607,7 +608,14 @@ class _ProductsTabState extends State<_ProductsTab> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
-                final category = categories[index];
+                if (index == 0) {
+                  return ChoiceChip(
+                    label: Text(l10n.allFilter),
+                    selected: activeCategory == null,
+                    onSelected: (_) => setState(() => _selectedCategory = null),
+                  );
+                }
+                final category = categories[index - 1];
                 return ChoiceChip(
                   label: Text(category),
                   selected: activeCategory == category,
@@ -616,7 +624,7 @@ class _ProductsTabState extends State<_ProductsTab> {
                 );
               },
               separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemCount: categories.length,
+              itemCount: categories.length + 1,
             ),
           ),
         Padding(
@@ -626,13 +634,13 @@ class _ProductsTabState extends State<_ProductsTab> {
             runSpacing: 8,
             children: [
               FilterChip(
-                label: const Text('In stock'),
+                label: Text(l10n.inStockFilter),
                 selected: _inStockOnly,
                 onSelected: (value) => setState(() => _inStockOnly = value),
               ),
               if (widget.isAdmin)
                 FilterChip(
-                  label: const Text('Include inactive'),
+                  label: Text(l10n.includeInactiveFilter),
                   selected: widget.includeInactive,
                   onSelected: widget.onToggleInactive,
                 ),
@@ -640,42 +648,45 @@ class _ProductsTabState extends State<_ProductsTab> {
                 initialValue: _sort,
                 onSelected: (value) => setState(() => _sort = value),
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: ProductSort.nameAsc,
-                    child: Text('Name'),
+                    child: Text(l10n.sortName),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: ProductSort.priceAsc,
-                    child: Text('Price low-high'),
+                    child: Text(l10n.sortPriceAsc),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: ProductSort.priceDesc,
-                    child: Text('Price high-low'),
+                    child: Text(l10n.sortPriceDesc),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: ProductSort.stockAsc,
-                    child: Text('Stock low-high'),
+                    child: Text(l10n.sortStockAsc),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: ProductSort.stockDesc,
-                    child: Text('Stock high-low'),
+                    child: Text(l10n.sortStockDesc),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: ProductSort.popularityDesc,
-                    child: Text('Popularity'),
+                    child: Text(l10n.sortPopularity),
                   ),
                 ],
-                child: _FilterPill(icon: Icons.sort, label: _sortLabel(_sort)),
+                child: _FilterPill(
+                  icon: Icons.sort,
+                  label: _sortLabel(l10n, _sort),
+                ),
               ),
               if (widget.isAdmin && widget.onAddProduct != null)
                 FilledButton.icon(
                   onPressed: widget.onAddProduct,
                   icon: const Icon(Icons.add),
-                  label: const Text('Add product'),
+                  label: Text(l10n.addProductTitle),
                 ),
               _FilterPill(
                 icon: _gridView ? Icons.view_list : Icons.grid_view,
-                label: _gridView ? 'List' : 'Grid',
+                label: _gridView ? l10n.listView : l10n.gridView,
                 onTap: () => setState(() => _gridView = !_gridView),
               ),
             ],
@@ -699,7 +710,7 @@ class _ProductsTabState extends State<_ProductsTab> {
                       onPressed: () => widget.provider.loadProducts(
                         query: widget.searchCtrl.text,
                       ),
-                      child: const Text('Retry'),
+                      child: Text(l10n.retry),
                     ),
                   ],
                 ),
@@ -716,18 +727,18 @@ class _ProductsTabState extends State<_ProductsTab> {
                   children: [
                     const Icon(Icons.inventory_2_outlined, size: 48),
                     const SizedBox(height: 12),
-                    const Text(
-                      'No products match your filters.',
+                    Text(
+                      l10n.noProductsMatch,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(
                       onPressed: () => setState(() {
-                        _selectedCategory = 'All';
+                        _selectedCategory = null;
                         _inStockOnly = false;
                         _sort = ProductSort.nameAsc;
                       }),
-                      child: const Text('Clear filters'),
+                      child: Text(l10n.clearFilters),
                     ),
                   ],
                 ),
@@ -809,6 +820,7 @@ class _ProductList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView.separated(
       controller: controller,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -826,7 +838,7 @@ class _ProductList extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                'All products loaded.',
+                l10n.allProductsLoaded,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelMedium,
               ),
@@ -877,6 +889,7 @@ class _ProductGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final width = MediaQuery.of(context).size.width;
     final count = _crossAxisCount(width);
     final totalItems = products.length + 1;
@@ -899,7 +912,7 @@ class _ProductGrid extends StatelessWidget {
           if (!hasMore) {
             return Center(
               child: Text(
-                'All products loaded.',
+                l10n.allProductsLoaded,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelMedium,
               ),
@@ -975,10 +988,11 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
   }
 
   Future<void> _onSave() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fix the form errors.')),
+        SnackBar(content: Text(l10n.formErrors)),
       );
       return;
     }
@@ -1031,21 +1045,20 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       debugPrint('[Commerce] Product save FAILED.');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Save failed.')));
+      ).showSnackBar(SnackBar(content: Text(l10n.saveFailed)));
     }
   }
 
   Future<void> _pickAndUploadImage() async {
     if (_uploadingImage) return;
+    final l10n = AppLocalizations.of(context)!;
     final bucket = CommerceConfig.supabaseImagesBucket.trim();
     debugPrint('[Commerce] Starting image pick. Bucket: "$bucket"');
 
     if (bucket.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Supabase image bucket is not configured.'),
-        ),
+        SnackBar(content: Text(l10n.supabaseBucketNotConfigured)),
       );
       return;
     }
@@ -1093,13 +1106,13 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       setState(() => _imageCtrl.text = fileName);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Image uploaded.')));
+      ).showSnackBar(SnackBar(content: Text(l10n.imageUploaded)));
     } catch (e) {
       debugPrint('[Commerce] Image upload error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Image upload failed: $e')));
+      ).showSnackBar(SnackBar(content: Text(l10n.imageUploadFailed(e.toString()))));
     } finally {
       if (mounted) setState(() => _uploadingImage = false);
     }
@@ -1128,7 +1141,10 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.product == null ? 'Add product' : 'Edit product';
+    final l10n = AppLocalizations.of(context)!;
+    final title = widget.product == null
+        ? l10n.addProductTitle
+        : l10n.editProductTitle;
     final previewUrl = CommerceConfig.resolveImageUrl(
       _imageCtrl.text.trim().isEmpty ? null : _imageCtrl.text.trim(),
     );
@@ -1150,17 +1166,17 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
               children: [
                 Text(title, style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
-                _SectionHeader(label: 'Info'),
+                _SectionHeader(label: l10n.productInfoSection),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.productNameLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Name is required';
+                      return l10n.nameRequired;
                     }
                     return null;
                   },
@@ -1168,18 +1184,18 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _skuCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'SKU / Reference',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.skuLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _descCtrl,
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.descriptionLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1191,19 +1207,19 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[\d\.,]')),
                   ],
-                  decoration: const InputDecoration(
-                    labelText: 'Price (DZD)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.priceLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Price is required';
+                      return l10n.priceRequired;
                     }
                     final parsed = double.tryParse(
                       value.trim().replaceAll(',', '.'),
                     );
                     if (parsed == null || parsed < 0) {
-                      return 'Enter a valid price';
+                      return l10n.invalidPrice;
                     }
                     return null;
                   },
@@ -1217,10 +1233,10 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[\d\.,]')),
                   ],
-                  decoration: const InputDecoration(
-                    labelText: 'Promo price (DZD)',
-                    border: OutlineInputBorder(),
-                    helperText: 'Optional',
+                  decoration: InputDecoration(
+                    labelText: l10n.promoPriceLabel,
+                    border: const OutlineInputBorder(),
+                    helperText: l10n.optionalHelper,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -1230,26 +1246,26 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                       value.trim().replaceAll(',', '.'),
                     );
                     if (parsed == null || parsed < 0) {
-                      return 'Enter a valid promo price';
+                      return l10n.invalidPromoPrice;
                     }
                     final price = double.tryParse(
                       _priceCtrl.text.trim().replaceAll(',', '.'),
                     );
                     if (price != null && parsed >= price) {
-                      return 'Promo must be lower than price';
+                      return l10n.promoLowerThanPrice;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-                _SectionHeader(label: 'Image'),
+                _SectionHeader(label: l10n.productImageSection),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _imageCtrl,
                   onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    labelText: 'Image URL or Storage path',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.imageLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -1261,10 +1277,10 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                         icon: const Icon(Icons.cloud_upload),
                         label: Text(
                           _uploadingImage
-                              ? 'Uploading...'
+                              ? l10n.uploadingButton
                               : (_imageCtrl.text.trim().isEmpty
-                                    ? 'Upload image'
-                                    : 'Replace image'),
+                                    ? l10n.uploadImageButton
+                                    : l10n.replaceImageButton),
                         ),
                       ),
                     ),
@@ -1275,7 +1291,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                           ? null
                           : () => setState(_imageCtrl.clear),
                       icon: const Icon(Icons.clear),
-                      label: const Text('Clear'),
+                      label: Text(l10n.clear),
                     ),
                   ],
                 ),
@@ -1291,13 +1307,13 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                     ),
                   ),
                 const SizedBox(height: 16),
-                _SectionHeader(label: 'Stock & status'),
+                _SectionHeader(label: l10n.productStockStatusSection),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _categoryCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.categoryLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1305,15 +1321,15 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                   controller: _stockCtrl,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    labelText: 'Stock',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.stockLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return null;
                     final parsed = int.tryParse(value.trim());
                     if (parsed == null || parsed < 0) {
-                      return 'Enter a valid stock';
+                      return l10n.invalidStock;
                     }
                     return null;
                   },
@@ -1323,16 +1339,16 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                   controller: _popularityCtrl,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    labelText: 'Popularity',
-                    border: OutlineInputBorder(),
-                    helperText: 'Higher means more popular',
+                  decoration: InputDecoration(
+                    labelText: l10n.popularityLabel,
+                    border: const OutlineInputBorder(),
+                    helperText: l10n.popularityHelper,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return null;
                     final parsed = int.tryParse(value.trim());
                     if (parsed == null || parsed < 0) {
-                      return 'Enter a valid popularity';
+                      return l10n.invalidPopularity;
                     }
                     return null;
                   },
@@ -1341,7 +1357,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: _isActive,
-                  title: const Text('Active'),
+                  title: Text(l10n.activeLabel),
                   onChanged: (value) => setState(() => _isActive = value),
                 ),
                 const SizedBox(height: 8),
@@ -1349,7 +1365,9 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: (_saving || _uploadingImage) ? null : _onSave,
-                    child: Text(_saving ? 'Saving...' : 'Save'),
+                    child: Text(
+                      _saving ? l10n.savingButton : l10n.saveButton,
+                    ),
                   ),
                 ),
               ],
@@ -1379,6 +1397,7 @@ class _ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final resolvedImageUrl = CommerceConfig.resolveImageUrl(product.imageUrl);
     final hasImage = resolvedImageUrl != null;
     final stock = product.stock;
@@ -1454,14 +1473,14 @@ class _ProductCard extends StatelessWidget {
                             },
                             itemBuilder: (context) => [
                               if (onEdit != null)
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: 'edit',
-                                  child: Text('Edit'),
+                                  child: Text(l10n.edit),
                                 ),
                               if (onDelete != null)
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: 'delete',
-                                  child: Text('Delete'),
+                                  child: Text(l10n.delete),
                                 ),
                             ],
                           ),
@@ -1493,28 +1512,32 @@ class _ProductCard extends StatelessWidget {
                             style: originalPriceStyle,
                           ),
                         if (isOnPromo)
-                          const _StatusBadge(text: 'Promo', color: Colors.pink),
+                          _StatusBadge(
+                            text: l10n.promoStatus,
+                            color: Colors.pink,
+                          ),
                         if (showPopularity)
-                          _Tag(text: 'Popularity: $popularity'),
-                        if (isAdmin && hasSku) _Tag(text: 'SKU: $sku'),
+                          _Tag(text: '${l10n.popularityLabel}: $popularity'),
+                        if (isAdmin && hasSku)
+                          _Tag(text: '${l10n.skuLabel}: $sku'),
                         if (product.category != null &&
                             product.category!.trim().isNotEmpty)
                           _Tag(text: product.category!),
                         if (product.stock != null)
-                          _Tag(text: 'Stock: ${product.stock}'),
+                          _Tag(text: '${l10n.stockLabel}: ${product.stock}'),
                         if (!product.isActive)
-                          const _StatusBadge(
-                            text: 'Inactive',
+                          _StatusBadge(
+                            text: l10n.inactiveStatus,
                             color: Colors.grey,
                           ),
                         if (isOutOfStock)
-                          const _StatusBadge(
-                            text: 'Out of stock',
+                          _StatusBadge(
+                            text: l10n.outOfStockStatus,
                             color: Colors.red,
                           )
                         else if (isLowStock)
-                          const _StatusBadge(
-                            text: 'Low stock',
+                          _StatusBadge(
+                            text: l10n.lowStockStatus,
                             color: Colors.orange,
                           ),
                       ],
@@ -1530,13 +1553,13 @@ class _ProductCard extends StatelessWidget {
                   FilledButton.icon(
                     onPressed: canAdd ? onAdd : null,
                     icon: const Icon(Icons.add_shopping_cart),
-                    label: const Text('Add'),
+                    label: Text(l10n.add),
                   ),
                   if (isOutOfStock)
                     Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
-                        'Unavailable',
+                        l10n.unavailableStatus,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: Colors.red,
                         ),
@@ -1570,6 +1593,7 @@ class _ProductGridCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final resolvedImageUrl = CommerceConfig.resolveImageUrl(product.imageUrl);
     final stock = product.stock;
     final isOutOfStock = stock != null && stock <= 0;
@@ -1640,14 +1664,14 @@ class _ProductGridCard extends StatelessWidget {
                           },
                           itemBuilder: (context) => [
                             if (onEdit != null)
-                              const PopupMenuItem(
+                              PopupMenuItem(
                                 value: 'edit',
-                                child: Text('Edit'),
+                                child: Text(l10n.edit),
                               ),
                             if (onDelete != null)
-                              const PopupMenuItem(
+                              PopupMenuItem(
                                 value: 'delete',
-                                child: Text('Delete'),
+                                child: Text(l10n.delete),
                               ),
                           ],
                         ),
@@ -1681,27 +1705,32 @@ class _ProductGridCard extends StatelessWidget {
                     runSpacing: 4,
                     children: [
                       if (isOnPromo)
-                        const _StatusBadge(text: 'Promo', color: Colors.pink),
-                      if (showPopularity) _Tag(text: 'Popularity: $popularity'),
-                      if (isAdmin && hasSku) _Tag(text: 'SKU: $sku'),
+                        _StatusBadge(
+                          text: l10n.promoStatus,
+                          color: Colors.pink,
+                        ),
+                      if (showPopularity)
+                        _Tag(text: '${l10n.popularityLabel}: $popularity'),
+                      if (isAdmin && hasSku)
+                        _Tag(text: '${l10n.skuLabel}: $sku'),
                       if (product.category != null &&
                           product.category!.trim().isNotEmpty)
                         _Tag(text: product.category!),
                       if (product.stock != null)
-                        _Tag(text: 'Stock: ${product.stock}'),
+                        _Tag(text: '${l10n.stockLabel}: ${product.stock}'),
                       if (!product.isActive)
-                        const _StatusBadge(
-                          text: 'Inactive',
+                        _StatusBadge(
+                          text: l10n.inactiveStatus,
                           color: Colors.grey,
                         ),
                       if (isOutOfStock)
-                        const _StatusBadge(
-                          text: 'Out of stock',
+                        _StatusBadge(
+                          text: l10n.outOfStockStatus,
                           color: Colors.red,
                         )
                       else if (isLowStock)
-                        const _StatusBadge(
-                          text: 'Low stock',
+                        _StatusBadge(
+                          text: l10n.lowStockStatus,
                           color: Colors.orange,
                         ),
                     ],
@@ -1712,7 +1741,7 @@ class _ProductGridCard extends StatelessWidget {
                     child: FilledButton.icon(
                       onPressed: canAdd ? onAdd : null,
                       icon: const Icon(Icons.add_shopping_cart),
-                      label: const Text('Add'),
+                      label: Text(l10n.add),
                     ),
                   ),
                 ],
@@ -1900,8 +1929,9 @@ class _CartTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (provider.cartItems.isEmpty) {
-      return const Center(child: Text('Cart is empty.'));
+      return Center(child: Text(l10n.cartEmpty));
     }
 
     return SingleChildScrollView(
@@ -1911,12 +1941,12 @@ class _CartTab extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('Your cart', style: Theme.of(context).textTheme.titleLarge),
+              Text(l10n.yourCart, style: Theme.of(context).textTheme.titleLarge),
               const Spacer(),
               TextButton.icon(
                 onPressed: provider.clearCart,
                 icon: const Icon(Icons.delete_sweep),
-                label: const Text('Clear'),
+                label: Text(l10n.clearCart),
               ),
             ],
           ),
@@ -1927,17 +1957,17 @@ class _CartTab extends StatelessWidget {
               child: Column(
                 children: [
                   _SummaryLine(
-                    label: 'Items',
+                    label: l10n.itemsLabel,
                     value: provider.totalItems.toString(),
                   ),
                   _SummaryLine(
-                    label: 'Subtotal',
+                    label: l10n.subtotalLabel,
                     value: '${provider.total.toStringAsFixed(2)} DZD',
                   ),
-                  const _SummaryLine(label: 'Delivery', value: '0.00 DZD'),
+                  _SummaryLine(label: l10n.deliveryLabel, value: '0.00 DZD'),
                   const Divider(height: 16),
                   _SummaryLine(
-                    label: 'Total',
+                    label: l10n.totalLabel,
                     value: '${provider.total.toStringAsFixed(2)} DZD',
                     emphasis: true,
                   ),
@@ -1991,26 +2021,26 @@ class _CartTab extends StatelessWidget {
                   TextField(
                     controller: phoneCtrl,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Phone',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.phoneLabel,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: addressCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Address',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.addressLabel,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: noteCtrl,
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Note (optional)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: '${l10n.noteLabel} (${l10n.optionalHelper})',
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ],
@@ -2022,7 +2052,9 @@ class _CartTab extends StatelessWidget {
             width: double.infinity,
             child: FilledButton(
               onPressed: placingOrder ? null : onSubmit,
-              child: Text(placingOrder ? 'Placing order...' : 'Place order'),
+              child: Text(
+                placingOrder ? l10n.placingOrderButton : l10n.placeOrderButton,
+              ),
             ),
           ),
         ],
@@ -2134,7 +2166,7 @@ class _OrdersTab extends StatefulWidget {
 
 class _OrdersTabState extends State<_OrdersTab> {
   final TextEditingController _searchCtrl = TextEditingController();
-  String _statusFilter = 'All';
+  OrderStatus? _statusFilter;
   OrderSort _sort = OrderSort.dateDesc;
 
   @override
@@ -2143,21 +2175,22 @@ class _OrdersTabState extends State<_OrdersTab> {
     super.dispose();
   }
 
-  List<String> _extractStatuses(List<Order> orders) {
-    final statuses = <String>{};
+  List<OrderStatus> _extractStatuses(List<Order> orders) {
+    final statuses = <OrderStatus>{};
     for (final order in orders) {
-      statuses.add(order.status.name);
+      statuses.add(order.status);
     }
-    final list = statuses.toList()..sort();
-    return ['All', ...list];
+    final list = statuses.toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    return list;
   }
 
-  List<Order> _applyFilters(List<Order> orders, String activeStatus) {
+  List<Order> _applyFilters(List<Order> orders, OrderStatus? activeStatus) {
     var filtered = orders;
     final query = _searchCtrl.text.trim().toLowerCase();
 
-    if (activeStatus != 'All') {
-      filtered = filtered.where((o) => o.status.name == activeStatus).toList();
+    if (activeStatus != null) {
+      filtered = filtered.where((o) => o.status == activeStatus).toList();
     }
 
     if (query.isNotEmpty) {
@@ -2191,6 +2224,7 @@ class _OrdersTabState extends State<_OrdersTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.provider.ordersLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -2198,7 +2232,7 @@ class _OrdersTabState extends State<_OrdersTab> {
     final statuses = _extractStatuses(widget.provider.orders);
     final activeStatus = statuses.contains(_statusFilter)
         ? _statusFilter
-        : 'All';
+        : null;
     final orders = _applyFilters(widget.provider.orders, activeStatus);
 
     return RefreshIndicator(
@@ -2210,7 +2244,7 @@ class _OrdersTabState extends State<_OrdersTab> {
             controller: _searchCtrl,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Rechercher une commande...',
+              hintText: l10n.searchOrderPlaceholder,
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -2223,12 +2257,20 @@ class _OrdersTabState extends State<_OrdersTab> {
               height: 40,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: statuses.length,
+                itemCount: statuses.length + 1,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
-                  final s = statuses[index];
+                  if (index == 0) {
+                    return ChoiceChip(
+                      label: Text(l10n.allFilter),
+                      selected: activeStatus == null,
+                      onSelected: (_) =>
+                          setState(() => _statusFilter = null),
+                    );
+                  }
+                  final s = statuses[index - 1];
                   return ChoiceChip(
-                    label: Text(s == 'All' ? 'Tout' : s),
+                    label: Text(s.label(l10n)),
                     selected: activeStatus == s,
                     onSelected: (_) => setState(() => _statusFilter = s),
                   );
@@ -2252,7 +2294,7 @@ class _OrdersTabState extends State<_OrdersTab> {
             Center(
               child: TextButton(
                 onPressed: widget.onLoadMore,
-                child: const Text('Charger plus'),
+                child: Text(l10n.loadMoreButton),
               ),
             ),
         ],
@@ -2270,6 +2312,7 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final statusColor = _statusColor(order.status);
 
     return Card(
@@ -2291,7 +2334,7 @@ class _OrderCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Commande #${order.id.substring(0, 8)}',
+                        l10n.orderNumber(order.id.substring(0, 8)),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -2308,7 +2351,7 @@ class _OrderCard extends StatelessWidget {
                     ],
                   ),
                   _StatusBadge(
-                    text: order.status.label.toUpperCase(),
+                    text: order.status.label(l10n).toUpperCase(),
                     color: statusColor,
                   ),
                 ],
@@ -2322,7 +2365,7 @@ class _OrderCard extends StatelessWidget {
                     color: Colors.blue,
                   ),
                   const SizedBox(width: 8),
-                  Text('${order.items.length} articles'),
+                  Text(l10n.itemsCount(order.items.length)),
                   const Spacer(),
                   Text(
                     '${order.total.toStringAsFixed(2)} DZD',
@@ -2367,6 +2410,7 @@ class _DeliveryProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     int step = 0;
     // Progression : created(0) -> orderConfirmed(1) -> packed(2) -> shipped(3) -> delivered(4)
     if (status == OrderStatus.orderConfirmed)
@@ -2416,9 +2460,9 @@ class _DeliveryProgressBar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Confirmé', style: _stepStyle(context, step >= 0)),
-            Text('Expédié', style: _stepStyle(context, step >= 3)),
-            Text('Livré', style: _stepStyle(context, step >= 4)),
+            Text(l10n.orderConfirmedStep, style: _stepStyle(context, step >= 0)),
+            Text(l10n.shippedStep, style: _stepStyle(context, step >= 3)),
+            Text(l10n.deliveredStep, style: _stepStyle(context, step >= 4)),
           ],
         ),
       ],

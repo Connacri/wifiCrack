@@ -1,3 +1,5 @@
+import '../../l10n/app_localizations.dart';
+
 enum OrderStatus {
   created,
   pendingPayment,
@@ -33,32 +35,32 @@ enum OrderStatus {
     );
   }
 
-  String get label {
+  String label(AppLocalizations l10n) {
     switch (this) {
-      case OrderStatus.created: return 'Créée';
-      case OrderStatus.pendingPayment: return 'Paiement en attente';
-      case OrderStatus.paid: return 'Payée';
-      case OrderStatus.paymentFailed: return 'Échec du paiement';
-      case OrderStatus.cancelRequested: return 'Annulation demandée';
-      case OrderStatus.cancelled: return 'Annulée';
-      case OrderStatus.orderConfirmed: return 'Confirmée';
-      case OrderStatus.stockAllocated: return 'Stock alloué';
-      case OrderStatus.backorder: return 'Reliquat';
-      case OrderStatus.picking: return 'En préparation';
-      case OrderStatus.packed: return 'Emballée';
-      case OrderStatus.readyToShip: return 'Prête à expédier';
-      case OrderStatus.partiallyShipped: return 'Partiellement expédiée';
-      case OrderStatus.shipped: return 'Expédiée';
-      case OrderStatus.partiallyDelivered: return 'Partiellement livrée';
-      case OrderStatus.delivered: return 'Livrée';
-      case OrderStatus.deliveryFailed: return 'Échec de livraison';
-      case OrderStatus.exception: return 'Exception';
-      case OrderStatus.returnRequested: return 'Retour demandé';
-      case OrderStatus.returnInTransit: return 'Retour en transit';
-      case OrderStatus.returnReceived: return 'Retour reçu';
-      case OrderStatus.refundPending: return 'Remboursement en attente';
-      case OrderStatus.refunded: return 'Remboursée';
-      case OrderStatus.closed: return 'Clôturée';
+      case OrderStatus.created: return l10n.orderStatusCreated;
+      case OrderStatus.pendingPayment: return l10n.orderStatusPendingPayment;
+      case OrderStatus.paid: return l10n.orderStatusPaid;
+      case OrderStatus.paymentFailed: return l10n.orderStatusPaymentFailed;
+      case OrderStatus.cancelRequested: return l10n.orderStatusCancelRequested;
+      case OrderStatus.cancelled: return l10n.orderStatusCancelled;
+      case OrderStatus.orderConfirmed: return l10n.orderStatusOrderConfirmed;
+      case OrderStatus.stockAllocated: return l10n.orderStatusStockAllocated;
+      case OrderStatus.backorder: return l10n.orderStatusBackorder;
+      case OrderStatus.picking: return l10n.orderStatusPicking;
+      case OrderStatus.packed: return l10n.orderStatusPacked;
+      case OrderStatus.readyToShip: return l10n.orderStatusReadyToShip;
+      case OrderStatus.partiallyShipped: return l10n.orderStatusPartiallyShipped;
+      case OrderStatus.shipped: return l10n.orderStatusShipped;
+      case OrderStatus.partiallyDelivered: return l10n.orderStatusPartiallyDelivered;
+      case OrderStatus.delivered: return l10n.orderStatusDelivered;
+      case OrderStatus.deliveryFailed: return l10n.orderStatusDeliveryFailed;
+      case OrderStatus.exception: return l10n.orderStatusException;
+      case OrderStatus.returnRequested: return l10n.orderStatusReturnRequested;
+      case OrderStatus.returnInTransit: return l10n.orderStatusReturnInTransit;
+      case OrderStatus.returnReceived: return l10n.orderStatusReturnReceived;
+      case OrderStatus.refundPending: return l10n.orderStatusRefundPending;
+      case OrderStatus.refunded: return l10n.orderStatusRefunded;
+      case OrderStatus.closed: return l10n.orderStatusClosed;
     }
   }
 }
@@ -86,20 +88,20 @@ enum ShipmentStatus {
     );
   }
 
-  String get label {
+  String label(AppLocalizations l10n) {
     switch (this) {
-      case ShipmentStatus.labelCreated: return 'Étiquette créée';
-      case ShipmentStatus.pickedUp: return 'Récupérée';
-      case ShipmentStatus.inTransit: return 'En transit';
-      case ShipmentStatus.arrivedAtHub: return 'Arrivée au hub';
-      case ShipmentStatus.customsClearance: return 'Dédouanement';
-      case ShipmentStatus.outForDelivery: return 'En cours de livraison';
-      case ShipmentStatus.delivered: return 'Livrée';
-      case ShipmentStatus.deliveryFailed: return 'Échec de livraison';
-      case ShipmentStatus.exception: return 'Exception';
-      case ShipmentStatus.lost: return 'Perdue';
-      case ShipmentStatus.damaged: return 'Endommagée';
-      case ShipmentStatus.returnToSender: return 'Retour à l\'expéditeur';
+      case ShipmentStatus.labelCreated: return l10n.shipmentStatusLabelCreated;
+      case ShipmentStatus.pickedUp: return l10n.shipmentStatusPickedUp;
+      case ShipmentStatus.inTransit: return l10n.shipmentStatusInTransit;
+      case ShipmentStatus.arrivedAtHub: return l10n.shipmentStatusArrivedAtHub;
+      case ShipmentStatus.customsClearance: return l10n.shipmentStatusCustomsClearance;
+      case ShipmentStatus.outForDelivery: return l10n.shipmentStatusOutForDelivery;
+      case ShipmentStatus.delivered: return l10n.shipmentStatusDelivered;
+      case ShipmentStatus.deliveryFailed: return l10n.shipmentStatusDeliveryFailed;
+      case ShipmentStatus.exception: return l10n.shipmentStatusException;
+      case ShipmentStatus.lost: return l10n.shipmentStatusLost;
+      case ShipmentStatus.damaged: return l10n.shipmentStatusDamaged;
+      case ShipmentStatus.returnToSender: return l10n.shipmentStatusReturnToSender;
     }
   }
 }
@@ -123,16 +125,16 @@ enum ReturnStatus {
     );
   }
 
-  String get label {
+  String label(AppLocalizations l10n) {
     switch (this) {
-      case ReturnStatus.requested: return 'Demandé';
-      case ReturnStatus.authorized: return 'Autorisé';
-      case ReturnStatus.labelIssued: return 'Étiquette émise';
-      case ReturnStatus.inTransit: return 'En transit';
-      case ReturnStatus.received: return 'Reçu';
-      case ReturnStatus.rejected: return 'Refusé';
-      case ReturnStatus.refundPending: return 'Remboursement en attente';
-      case ReturnStatus.refunded: return 'Remboursé';
+      case ReturnStatus.requested: return l10n.returnStatusRequested;
+      case ReturnStatus.authorized: return l10n.returnStatusAuthorized;
+      case ReturnStatus.labelIssued: return l10n.returnStatusLabelIssued;
+      case ReturnStatus.inTransit: return l10n.returnStatusInTransit;
+      case ReturnStatus.received: return l10n.returnStatusReceived;
+      case ReturnStatus.rejected: return l10n.returnStatusRejected;
+      case ReturnStatus.refundPending: return l10n.returnStatusRefundPending;
+      case ReturnStatus.refunded: return l10n.returnStatusRefunded;
     }
   }
 }
@@ -153,6 +155,17 @@ enum PaymentStatus {
       orElse: () => PaymentStatus.pending,
     );
   }
+
+  String label(AppLocalizations l10n) {
+    switch (this) {
+      case PaymentStatus.pending: return l10n.paymentStatusPending;
+      case PaymentStatus.authorized: return l10n.paymentStatusAuthorized;
+      case PaymentStatus.captured: return l10n.paymentStatusCaptured;
+      case PaymentStatus.voided: return l10n.paymentStatusVoided;
+      case PaymentStatus.refunded: return l10n.paymentStatusRefunded;
+      case PaymentStatus.failed: return l10n.paymentStatusFailed;
+    }
+  }
 }
 
 enum UserRole {
@@ -164,15 +177,15 @@ enum UserRole {
   support,
   admin;
 
-  String get label {
+  String label(AppLocalizations l10n) {
     switch (this) {
-      case UserRole.client: return 'Client';
-      case UserRole.wholesaler: return 'Grossiste';
-      case UserRole.warehouse: return 'Entrepôt';
-      case UserRole.carrier: return 'Transporteur';
-      case UserRole.driver: return 'Livreur';
-      case UserRole.support: return 'Support';
-      case UserRole.admin: return 'Admin';
+      case UserRole.client: return l10n.client;
+      case UserRole.wholesaler: return l10n.wholesaler;
+      case UserRole.warehouse: return l10n.warehouseRole;
+      case UserRole.carrier: return l10n.carrierRole;
+      case UserRole.driver: return l10n.deliveryPerson;
+      case UserRole.support: return l10n.supportRole;
+      case UserRole.admin: return l10n.admin;
     }
   }
 }

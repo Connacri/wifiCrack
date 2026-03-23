@@ -4,7 +4,7 @@
     "map":  "Karte",
     "scan":  "Scannen",
     "settings":  "Einstellungen",
-    "admin":  "Admin",
+    "admin":  "Administrator",
     "commerce":  "Handel",
     "p2pChat":  "P2P-Chat",
     "publishAd":  "Anzeige aufgeben",
@@ -33,7 +33,7 @@
     "about":  "Über",
     "version":  "Version",
     "profileTooltip":  "Profil",
-    "adminTooltip":  "Admin",
+    "adminTooltip":  "Administrator",
     "chatTooltip":  "Chat",
     "p2pTooltip":  "P2P",
     "scanWifi":  "WLAN scannen",
@@ -84,7 +84,7 @@
     "newPseudo":  "Neues Pseudo",
     "pseudoUpdated":  "Pseudo aktualisiert!",
     "pseudoError":  "Pseudo nicht verfügbar oder Fehler.",
-    "messengerDashboard":  "Sigma Messenger Dashboard",
+    "messengerDashboard":  "Sigma Messenger-Dashboard",
     "noUsersFound":  "Keine Benutzer gefunden.",
     "noActivityAvailable":  "Keine Aktivität verfügbar.",
     "deleteConversation":  "Konversation löschen",
@@ -189,28 +189,28 @@
     "startDiscussion":  "Diskussion starten",
     "yourMessage":  "Ihre Nachricht...",
     "orderErrorUnidentified":  "Bestellung nicht möglich: nicht identifizierter Benutzer.",
-    "p2pMessengerTitle":  "P2P Messenger",
-    "errorWithDetails":  "Error: {message}",
-    "myQrCode":  "My QR Code",
-    "shareQrCodeTitle":  "Share your QR Code",
-    "shareQrCodeSubtitle":  "Let your friends scan this code to add you to their contacts.",
-    "takeScreenshotToShare":  "Take a screenshot to share your QR Code.",
-    "initErrorTitle":  "Initialization Error",
-    "messagesTitle":  "Messages",
-    "addContactTooltip":  "Add Contact",
-    "noConversations":  "No conversations yet",
-    "addContactToStart":  "Add a contact to start chatting",
-    "typingStatus":  "typing...",
-    "sayHello":  "Say hello! 👋",
-    "yesterday":  "Yesterday",
-    "addFriendTitle":  "Add Friend",
-    "scanFriendQr":  "Scan your friend\u0027s QR Code",
-    "addContactTitle":  "Add Contact",
-    "yourQrCodeTitle":  "Your QR Code",
-    "yourQrCodeSubtitle":  "Show this code to your friend",
-    "notAvailable":  "N/A",
-    "deviceIdLabel":  "Device ID",
-    "contactAddedSuccess":  "Contact added successfully!",
+    "p2pMessengerTitle":  "P2P-Messenger",
+    "errorWithDetails":  "Fehler: {message}",
+    "myQrCode":  "Mein QR-Code",
+    "shareQrCodeTitle":  "Teile deinen QR-Code",
+    "shareQrCodeSubtitle":  "Lass deine Freunde diesen Code scannen, um dich zu ihren Kontakten hinzuzuf?gen.",
+    "takeScreenshotToShare":  "Mach einen Screenshot, um deinen QR-Code zu teilen.",
+    "initErrorTitle":  "Initialisierungsfehler",
+    "messagesTitle":  "Nachrichten",
+    "addContactTooltip":  "Kontakt hinzuf?gen",
+    "noConversations":  "Noch keine Unterhaltungen",
+    "addContactToStart":  "F?ge einen Kontakt hinzu, um zu chatten",
+    "typingStatus":  "schreibt...",
+    "sayHello":  "Sag hallo! ??",
+    "yesterday":  "Gestern",
+    "addFriendTitle":  "Freund hinzuf?gen",
+    "scanFriendQr":  "Scanne den QR-Code deines Freundes",
+    "addContactTitle":  "Kontakt hinzuf?gen",
+    "yourQrCodeTitle":  "Dein QR-Code",
+    "yourQrCodeSubtitle":  "Zeige diesen Code deinem Freund",
+    "notAvailable":  "k. A.",
+    "deviceIdLabel":  "Geräte-ID",
+    "contactAddedSuccess":  "Kontakt erfolgreich hinzugef?gt!",
     "@appTitle":  {
                       "description":  "The title of the application"
                   },
@@ -245,7 +245,7 @@
                                                            }
                                                 }
                            },
-    "supportChatPlaceholder":  "Message to support...",
+    "supportChatPlaceholder":  "Nachricht an den Support...",
     "@agoMin":  {
                     "placeholders":  {
                                          "minutes":  {
@@ -288,27 +288,27 @@
                                                         }
                                           }
                      },
-    "client":  "Client",
-    "vendor":  "Vendor",
-    "deliveryPerson":  "Delivery Person",
-    "wholesaler":  "Wholesaler",
-    "vocalSigma":  "Sigma Voice",
-    "defaultMessageContent":  "Message",
-    "myContacts":  "My Contacts",
-    "myQrCodeTooltip":  "My QR Code",
-    "scanFriendTooltip":  "Scan a friend",
-    "friendAddedSuccess":  "✅ Friend added successfully!",
-    "editPseudoMenu":  "Edit my pseudo",
-    "myPseudoTitle":  "My pseudo",
-    "enterPseudoHint":  "Enter your pseudo",
-    "noContacts":  "No contacts",
-    "scanFriendToStart":  "Scan a friend\u0027s QR Code to start",
-    "scanFriendButton":  "Scan a friend",
-    "addedOn":  "Added on",
-    "scanQrCodeTitle":  "Scan a QR Code",
-    "qrCodeUnreadable":  "QR Code unreadable, try again.",
-    "invalidMistralQr":  "This QR Code is not from Mistral P2P.",
-    "invalidLinkError":  "Invalid link: {error}",
+    "client":  "Kunde",
+    "vendor":  "Verk?ufer",
+    "deliveryPerson":  "Zusteller",
+    "wholesaler":  "Gro?h?ndler",
+    "vocalSigma":  "Sigma-Stimme",
+    "defaultMessageContent":  "Nachricht",
+    "myContacts":  "Meine Kontakte",
+    "myQrCodeTooltip":  "Mein QR-Code",
+    "scanFriendTooltip":  "Freund scannen",
+    "friendAddedSuccess":  "? Freund erfolgreich hinzugef?gt!",
+    "editPseudoMenu":  "Mein Pseudonym bearbeiten",
+    "myPseudoTitle":  "Mein Pseudonym",
+    "enterPseudoHint":  "Gib dein Pseudonym ein",
+    "noContacts":  "Keine Kontakte",
+    "scanFriendToStart":  "Scanne den QR-Code eines Freundes, um zu starten",
+    "scanFriendButton":  "Freund scannen",
+    "addedOn":  "Hinzugef?gt am",
+    "scanQrCodeTitle":  "QR-Code scannen",
+    "qrCodeUnreadable":  "QR-Code unlesbar, bitte erneut versuchen.",
+    "invalidMistralQr":  "Dieser QR-Code stammt nicht von Mistral P2P.",
+    "invalidLinkError":  "Ung?ltiger Link: {error}",
     "@invalidLinkError":  {
                               "placeholders":  {
                                                    "error":  {
@@ -316,13 +316,13 @@
                                                              }
                                                }
                           },
-    "cannotAddSelf":  "🚫 You cannot add yourself!",
-    "friendAlreadyAdded":  "ℹ️ This friend is already in your contacts.",
-    "placeQrInFrame":  "Place the QR Code in the frame",
-    "retry":  "Retry",
-    "flashlightTooltip":  "Flashlight",
-    "shareLinkTooltip":  "Share link",
-    "inviteText":  "Add me on Mistral2laude P2P!\n{link}",
+    "cannotAddSelf":  "?? Du kannst dich nicht selbst hinzuf?gen!",
+    "friendAlreadyAdded":  "?? Dieser Freund ist bereits in deinen Kontakten.",
+    "placeQrInFrame":  "Platziere den QR-Code im Rahmen",
+    "retry":  "Erneut versuchen",
+    "flashlightTooltip":  "Taschenlampe",
+    "shareLinkTooltip":  "Link teilen",
+    "inviteText":  "F?ge mich bei Mistral2laude P2P hinzu!\n{link}",
     "@inviteText":  {
                         "placeholders":  {
                                              "link":  {
@@ -330,36 +330,36 @@
                                                       }
                                          }
                     },
-    "inviteSubject":  "Mistral2laude P2P Invitation",
-    "scanMeText":  "Scan this QR Code\nto add me as a contact",
-    "microphonePermissionDenied":  "Microphone permission denied",
-    "connectionNotEstablished":  "⚠️ Connection not established. Message saved locally.",
-    "noMessagesYet":  "No messages.\nSend the first one! 👋",
-    "statusConnected":  "Connected",
-    "statusConnecting":  "Connecting...",
-    "statusFailed":  "Failed",
+    "inviteSubject":  "Mistral2laude P2P Einladung",
+    "scanMeText":  "Scanne diesen QR-Code\num mich als Kontakt hinzuzuf?gen",
+    "microphonePermissionDenied":  "Mikrofonberechtigung verweigert",
+    "connectionNotEstablished":  "?? Verbindung nicht hergestellt. Nachricht lokal gespeichert.",
+    "noMessagesYet":  "Keine Nachrichten.\nSende die erste! ??",
+    "statusConnected":  "Verbunden",
+    "statusConnecting":  "Verbinde...",
+    "statusFailed":  "Fehlgeschlagen",
     "statusOffline":  "Offline",
-    "recordingHint":  "🔴 Recording...",
-    "messageHint":  "Message...",
-    "connectingHint":  "Connecting...",
-    "initFailed":  "Initialization failed",
-    "defaultUserPseudo":  "M2C User",
-    "mobileDevice":  "Mobile Device",
-    "unknownDevice":  "Unknown Device",
-    "productsTab":  "Products",
-    "ordersTab":  "Orders",
-    "cartTab":  "Cart",
-    "clientModeTooltip":  "Client mode",
-    "adminModeTooltip":  "Admin mode",
-    "addProductTooltip":  "Add product",
-    "orderCreated":  "Order created.",
-    "orderFailed":  "Order failed.",
-    "productCreated":  "Product created.",
-    "productUpdated":  "Product updated.",
-    "productDeleted":  "Product deleted.",
-    "deleteFailed":  "Delete failed.",
-    "deleteProductTitle":  "Delete product",
-    "deleteProductConfirm":  "Delete \"{name}\"?",
+    "recordingHint":  "?? Aufnahme...",
+    "messageHint":  "Nachricht...",
+    "connectingHint":  "Verbinde...",
+    "initFailed":  "Initialisierung fehlgeschlagen",
+    "defaultUserPseudo":  "M2C Benutzer",
+    "mobileDevice":  "Mobiles Ger?t",
+    "unknownDevice":  "Unbekanntes Ger?t",
+    "productsTab":  "Produkte",
+    "ordersTab":  "Bestellungen",
+    "cartTab":  "Warenkorb",
+    "clientModeTooltip":  "Kundenmodus",
+    "adminModeTooltip":  "Admin-Modus",
+    "addProductTooltip":  "Produkt hinzuf?gen",
+    "orderCreated":  "Bestellung erstellt.",
+    "orderFailed":  "Bestellung fehlgeschlagen.",
+    "productCreated":  "Produkt erstellt.",
+    "productUpdated":  "Produkt aktualisiert.",
+    "productDeleted":  "Produkt gel?scht.",
+    "deleteFailed":  "L?schen fehlgeschlagen.",
+    "deleteProductTitle":  "Produkt l?schen",
+    "deleteProductConfirm":  "\"{name}\" l?schen?",
     "@deleteProductConfirm":  {
                                   "placeholders":  {
                                                        "name":  {
@@ -367,8 +367,8 @@
                                                                 }
                                                    }
                               },
-    "imageUploaded":  "Image uploaded.",
-    "imageUploadFailed":  "Image upload failed: {error}",
+    "imageUploaded":  "Bild hochgeladen.",
+    "imageUploadFailed":  "Bild-Upload fehlgeschlagen: {error}",
     "@imageUploadFailed":  {
                                "placeholders":  {
                                                     "error":  {
@@ -376,54 +376,54 @@
                                                               }
                                                 }
                            },
-    "supabaseBucketNotConfigured":  "Supabase image bucket is not configured.",
-    "searchProductsPlaceholder":  "Search products or SKU",
-    "inStockFilter":  "In stock",
-    "includeInactiveFilter":  "Include inactive",
+    "supabaseBucketNotConfigured":  "Supabase-Bild-Bucket ist nicht konfiguriert.",
+    "searchProductsPlaceholder":  "Produkte oder SKU suchen",
+    "inStockFilter":  "Auf Lager",
+    "includeInactiveFilter":  "Inaktive einschlie?en",
     "sortName":  "Name",
-    "sortPriceAsc":  "Price low-high",
-    "sortPriceDesc":  "Price high-low",
-    "sortStockAsc":  "Stock low-high",
-    "sortStockDesc":  "Stock high-low",
-    "sortPopularity":  "Popularity",
-    "gridView":  "Grid",
-    "listView":  "List",
-    "noProductsMatch":  "No products match your filters.",
-    "clearFilters":  "Clear filters",
-    "allProductsLoaded":  "All products loaded.",
-    "saveProductTitle":  "Save Product",
-    "addProductTitle":  "Add Product",
-    "editProductTitle":  "Edit Product",
+    "sortPriceAsc":  "Preis aufsteigend",
+    "sortPriceDesc":  "Preis absteigend",
+    "sortStockAsc":  "Bestand aufsteigend",
+    "sortStockDesc":  "Bestand absteigend",
+    "sortPopularity":  "Beliebtheit",
+    "gridView":  "Gitter",
+    "listView":  "Liste",
+    "noProductsMatch":  "Keine Produkte passen zu deinen Filtern.",
+    "clearFilters":  "Filter l?schen",
+    "allProductsLoaded":  "Alle Produkte geladen.",
+    "saveProductTitle":  "Produkt speichern",
+    "addProductTitle":  "Produkt hinzuf?gen",
+    "editProductTitle":  "Produkt bearbeiten",
     "productNameLabel":  "Name",
-    "skuLabel":  "SKU / Reference",
-    "priceLabel":  "Price (DZD)",
-    "promoPriceLabel":  "Promo price (DZD)",
+    "skuLabel":  "SKU / Referenz",
+    "priceLabel":  "Preis (DZD)",
+    "promoPriceLabel":  "Aktionspreis (DZD)",
     "optionalHelper":  "Optional",
-    "imageLabel":  "Image URL or Storage path",
-    "uploadImageButton":  "Upload image",
-    "replaceImageButton":  "Replace image",
-    "uploadingButton":  "Uploading...",
-    "stockLabel":  "Stock",
-    "popularityLabel":  "Popularity",
-    "activeLabel":  "Active",
-    "saveButton":  "Save",
-    "savingButton":  "Saving...",
-    "unavailableStatus":  "Unavailable",
-    "outOfStockStatus":  "Out of stock",
-    "lowStockStatus":  "Low stock",
-    "inactiveStatus":  "Inactive",
-    "promoStatus":  "Promo",
-    "cartEmpty":  "Cart is empty.",
-    "yourCart":  "Your cart",
-    "clearCart":  "Clear",
-    "subtotalLabel":  "Subtotal",
-    "deliveryLabel":  "Delivery",
-    "totalLabel":  "Total",
-    "phoneLabel":  "Phone",
-    "addressLabel":  "Address",
-    "noteLabel":  "Note",
-    "checkoutButton":  "Checkout",
-    "orderTotal":  "Total {amount} DZD",
+    "imageLabel":  "Bild-URL oder Storage-Pfad",
+    "uploadImageButton":  "Bild hochladen",
+    "replaceImageButton":  "Bild ersetzen",
+    "uploadingButton":  "Wird hochgeladen...",
+    "stockLabel":  "Bestand",
+    "popularityLabel":  "Beliebtheit",
+    "activeLabel":  "Aktiv",
+    "saveButton":  "Speichern",
+    "savingButton":  "Speichern...",
+    "unavailableStatus":  "Nicht verf?gbar",
+    "outOfStockStatus":  "Nicht auf Lager",
+    "lowStockStatus":  "Niedriger Bestand",
+    "inactiveStatus":  "Inaktiv",
+    "promoStatus":  "Aktion",
+    "cartEmpty":  "Warenkorb ist leer.",
+    "yourCart":  "Dein Warenkorb",
+    "clearCart":  "Leeren",
+    "subtotalLabel":  "Zwischensumme",
+    "deliveryLabel":  "Lieferung",
+    "totalLabel":  "Gesamt",
+    "phoneLabel":  "Telefon",
+    "addressLabel":  "Adresse",
+    "noteLabel":  "Notiz",
+    "checkoutButton":  "Zur Kasse",
+    "orderTotal":  "Gesamt {amount} DZD",
     "@orderTotal":  {
                         "placeholders":  {
                                              "amount":  {
@@ -431,7 +431,7 @@
                                                         }
                                          }
                     },
-    "itemsCount":  "{count} items",
+    "itemsCount":  "{count} Artikel",
     "@itemsCount":  {
                         "placeholders":  {
                                              "count":  {
@@ -439,7 +439,7 @@
                                                        }
                                          }
                     },
-    "orderNumber":  "Order #{id}",
+    "orderNumber":  "Bestellung #{id}",
     "@orderNumber":  {
                          "placeholders":  {
                                               "id":  {
@@ -447,14 +447,14 @@
                                                      }
                                           }
                      },
-    "changeRoleTooltip":  "Change role (Simulation)",
-    "orderNotFound":  "Order not found",
-    "globalStatus":  "Global status",
-    "dateLabel":  "Date",
-    "customerLabel":  "Customer",
-    "paymentLabel":  "Payment",
-    "productsLabel":  "Products",
-    "priceXQuantity":  "Price: {price} DZD x {quantity}",
+    "changeRoleTooltip":  "Rolle ?ndern (Simulation)",
+    "orderNotFound":  "Bestellung nicht gefunden",
+    "globalStatus":  "Gesamtstatus",
+    "dateLabel":  "Datum",
+    "customerLabel":  "Kunde",
+    "paymentLabel":  "Zahlung",
+    "productsLabel":  "Produkte",
+    "priceXQuantity":  "Preis: {price} DZD x {quantity}",
     "@priceXQuantity":  {
                             "placeholders":  {
                                                  "price":  {
@@ -465,8 +465,10 @@
                                                               }
                                              }
                         },
-    "noShipmentsYet":  "No shipments yet.",
-    "shipmentsCount":  "Shipments ({count})",
+  "amountWithCurrency": "{amount} DZD",
+  "shipmentItemLine": "? {name} (x{quantity})",
+    "noShipmentsYet":  "Noch keine Sendungen.",
+    "shipmentsCount":  "Sendungen ({count})",
     "@shipmentsCount":  {
                             "placeholders":  {
                                                  "count":  {
@@ -474,7 +476,7 @@
                                                            }
                                              }
                         },
-    "packageNumber":  "Package: {tracking}",
+    "packageNumber":  "Paket: {tracking}",
     "@packageNumber":  {
                            "placeholders":  {
                                                 "tracking":  {
@@ -482,7 +484,7 @@
                                                              }
                                             }
                        },
-    "carrierLabel":  "Carrier: {name}",
+    "carrierLabel":  "Transporteur: {name}",
     "@carrierLabel":  {
                           "placeholders":  {
                                                "name":  {
@@ -491,14 +493,14 @@
                                            }
                       },
     "packageId":  "ID",
-    "shippedOn":  "Shipped on",
-    "itemsInPackage":  "Items in this package:",
-    "confirmOrderButton":  "Confirm order",
-    "allocateStockButton":  "Allocate stock",
-    "startPickingButton":  "Start Picking",
-    "packingFinishedButton":  "Packing finished (Packed)",
-    "shipButton":  "Label \u0026 Ship",
-    "setInTransitButton":  "Set In Transit ({tracking})",
+    "shippedOn":  "Versandt am",
+    "itemsInPackage":  "Artikel in diesem Paket:",
+    "confirmOrderButton":  "Bestellung best?tigen",
+    "allocateStockButton":  "Bestand zuweisen",
+    "startPickingButton":  "Kommissionierung starten",
+    "packingFinishedButton":  "Packen abgeschlossen (Verpackt)",
+    "shipButton":  "Etikettieren & Versenden",
+    "setInTransitButton":  "In Transit setzen ({tracking})",
     "@setInTransitButton":  {
                                 "placeholders":  {
                                                      "tracking":  {
@@ -506,7 +508,7 @@
                                                                   }
                                                  }
                             },
-    "confirmDeliveryButton":  "Confirm Delivery ({tracking})",
+    "confirmDeliveryButton":  "Lieferung best?tigen ({tracking})",
     "@confirmDeliveryButton":  {
                                    "placeholders":  {
                                                         "tracking":  {
@@ -514,14 +516,14 @@
                                                                      }
                                                     }
                                },
-    "requestReturnButton":  "Request a return",
-    "newShipmentTitle":  "New Shipment",
-    "allItemIncludedNote":  "All items will be included in this package for this example.",
-    "trackingNumberLabel":  "Tracking Number",
-    "adminStatusTitle":  "Administration : Status",
-    "phoneAddressRequired":  "Phone and address are required.",
-    "orderFailedLong":  "Order failed.",
-    "orderCreatedLong":  "Order created: {id}",
+    "requestReturnButton":  "R?cksendung anfordern",
+    "newShipmentTitle":  "Neue Sendung",
+    "allItemIncludedNote":  "Alle Artikel werden in diesem Paket f?r dieses Beispiel enthalten sein.",
+    "trackingNumberLabel":  "Sendungsnummer",
+    "adminStatusTitle":  "Administration: Status",
+    "phoneAddressRequired":  "Telefon und Adresse sind erforderlich.",
+    "orderFailedLong":  "Bestellung fehlgeschlagen.",
+    "orderCreatedLong":  "Bestellung erstellt: {id}",
     "@orderCreatedLong":  {
                               "placeholders":  {
                                                    "id":  {
@@ -529,15 +531,15 @@
                                                           }
                                                }
                           },
-    "placingOrderButton":  "Placing order...",
-    "placeOrderButton":  "Place order",
-    "loadMoreButton":  "Load more",
-    "searchOrderPlaceholder":  "Search an order...",
-    "allFilter":  "All",
-    "orderConfirmedStep":  "Confirmed",
-    "shippedStep":  "Shipped",
-    "deliveredStep":  "Delivered",
-    "unknownDate":  "Unknown",
+    "placingOrderButton":  "Bestellung wird aufgegeben...",
+    "placeOrderButton":  "Bestellung aufgeben",
+    "loadMoreButton":  "Mehr laden",
+    "searchOrderPlaceholder":  "Bestellung suchen...",
+    "allFilter":  "Alle",
+    "orderConfirmedStep":  "Best?tigt",
+    "shippedStep":  "Versandt",
+    "deliveredStep":  "Zugestellt",
+    "unknownDate":  "Unbekannt",
     "@errorWithDetails":  {
                               "placeholders":  {
                                                    "message":  {
@@ -545,8 +547,8 @@
                                                                }
                                                }
                           },
-    "dataChannelDisconnected":  "Data channel disconnected",
-    "peerNotConnected":  "Peer not connected: {id}",
+    "dataChannelDisconnected":  "Datenkanal getrennt",
+    "peerNotConnected":  "Peer nicht verbunden: {id}",
     "@peerNotConnected":  {
                               "placeholders":  {
                                                    "id":  {
@@ -554,7 +556,7 @@
                                                           }
                                                }
                           },
-    "errorParsingMessage":  "Error parsing message: {error}",
+    "errorParsingMessage":  "Fehler beim Parsen der Nachricht: {error}",
     "@errorParsingMessage":  {
                                  "placeholders":  {
                                                       "error":  {
@@ -562,7 +564,7 @@
                                                                 }
                                                   }
                              },
-    "invalidQrCode":  "Invalid QR Code: {error}",
+    "invalidQrCode":  "Ung?ltiger QR-Code: {error}",
     "@invalidQrCode":  {
                            "placeholders":  {
                                                 "error":  {
@@ -570,12 +572,12 @@
                                                           }
                                             }
                        },
-    "missingDeviceId":  "Missing Device ID",
-    "missingPseudo":  "Missing Pseudo",
-    "missingPublicKey":  "Missing Public Key",
-    "cannotAddSelfError":  "Cannot add yourself",
-    "invalidPublicKeyFormat":  "Invalid public key format",
-    "errorParsingQrCode":  "Error parsing QR Code: {error}",
+    "missingDeviceId":  "Fehlende Geräte-ID",
+    "missingPseudo":  "Pseudonym fehlt",
+    "missingPublicKey":  "?ffentlicher Schl?ssel fehlt",
+    "cannotAddSelfError":  "Du kannst dich nicht selbst hinzuf?gen",
+    "invalidPublicKeyFormat":  "Ung?ltiges Format des ?ffentlichen Schl?ssels",
+    "errorParsingQrCode":  "Fehler beim Parsen des QR-Codes: {error}",
     "@errorParsingQrCode":  {
                                 "placeholders":  {
                                                      "error":  {
@@ -584,20 +586,93 @@
                                                  }
                             },
     "mistral2laudeTitle":  "Mistral2laude P2P",
-    "friendLabel":  "Friend",
-    "encryptedMessage":  "[Encrypted message]",
-    "youEncryptedMessage":  "You: [Encrypted message]",
-    "imageMessage":  "🖼️ Image",
-    "fileMessage":  "📎 File",
-    "newMessage":  "New message",
-    "reply":  "Reply",
-    "quickReply":  "Quick reply",
-    "markAsRead":  "Mark as read",
-    "isTyping":  "is typing...",
-    "typingIndicator":  "Typing...",
-    "vocalMessage":  "Vocal message",
+    "friendLabel":  "Freund",
+    "encryptedMessage":  "[Verschl?sselte Nachricht]",
+    "youEncryptedMessage":  "Du: [Verschl?sselte Nachricht]",
+    "imageMessage":  "??? Bild",
+    "fileMessage":  "?? Datei",
+    "newMessage":  "Neue Nachricht",
+    "reply":  "Antworten",
+    "quickReply":  "Schnelle Antwort",
+    "markAsRead":  "Als gelesen markieren",
+    "isTyping":  "schreibt...",
+    "typingIndicator":  "Tippt...",
+    "vocalMessage":  "Sprachnachricht",
     "gps":  "GPS",
-    "permissions":  "Permissions",
-    "trace":  "Trace",
-    "mainChannelValue":  "WebRTC P2P"
+    "permissions":  "Berechtigungen",
+    "trace":  "Spur",
+    "mainChannelValue":  "WebRTC P2P",
+  "formErrors": "Bitte beheben Sie die Formularfehler.",
+  "saveFailed": "Speichern fehlgeschlagen.",
+  "itemsLabel": "Artikel",
+  "productInfoSection": "Informationen",
+  "productImageSection": "Bild",
+  "productStockStatusSection": "Bestand & Status",
+  "categoryLabel": "Kategorie",
+  "nameRequired": "Name ist erforderlich",
+  "priceRequired": "Preis ist erforderlich",
+  "invalidPrice": "Geben Sie einen gültigen Preis ein",
+  "invalidPromoPrice": "Geben Sie einen gültigen Aktionspreis ein",
+  "promoLowerThanPrice": "Aktionspreis muss niedriger als der Preis sein",
+  "invalidStock": "Geben Sie einen gültigen Bestand ein",
+  "popularityHelper": "Höher bedeutet beliebter",
+  "invalidPopularity": "Geben Sie eine gültige Popularität ein",
+  "addToCart": "In den Warenkorb",
+  "stockUnknown": "Bestand unbekannt",
+  "startChatPrompt": "Starten Sie die Unterhaltung",
+  "realtimeMessengerTitle": "Sigma Messenger (Echtzeit)",
+  "clear": "Leeren",
+  "warehouseRole": "Lager",
+  "carrierRole": "Spediteur",
+  "supportRole": "Support-Team",
+  "orderStatusCreated": "Erstellt",
+  "orderStatusPendingPayment": "Zahlung ausstehend",
+  "orderStatusPaid": "Bezahlt",
+  "orderStatusPaymentFailed": "Zahlung fehlgeschlagen",
+  "orderStatusCancelRequested": "Stornierung angefordert",
+  "orderStatusCancelled": "Storniert",
+  "orderStatusOrderConfirmed": "Bestätigt",
+  "orderStatusStockAllocated": "Bestand zugewiesen",
+  "orderStatusBackorder": "Rückstand",
+  "orderStatusPicking": "Kommissionierung",
+  "orderStatusPacked": "Verpackt",
+  "orderStatusReadyToShip": "Versandbereit",
+  "orderStatusPartiallyShipped": "Teilweise versandt",
+  "orderStatusShipped": "Versandt",
+  "orderStatusPartiallyDelivered": "Teilweise geliefert",
+  "orderStatusDelivered": "Geliefert",
+  "orderStatusDeliveryFailed": "Lieferung fehlgeschlagen",
+  "orderStatusException": "Ausnahme",
+  "orderStatusReturnRequested": "Rücksendung angefordert",
+  "orderStatusReturnInTransit": "Rücksendung unterwegs",
+  "orderStatusReturnReceived": "Rücksendung erhalten",
+  "orderStatusRefundPending": "Rückerstattung ausstehend",
+  "orderStatusRefunded": "Erstattet",
+  "orderStatusClosed": "Abgeschlossen",
+  "shipmentStatusLabelCreated": "Etikett erstellt",
+  "shipmentStatusPickedUp": "Abgeholt",
+  "shipmentStatusInTransit": "Unterwegs",
+  "shipmentStatusArrivedAtHub": "Am Hub angekommen",
+  "shipmentStatusCustomsClearance": "Zollabfertigung",
+  "shipmentStatusOutForDelivery": "In Zustellung",
+  "shipmentStatusDelivered": "Zugestellt",
+  "shipmentStatusDeliveryFailed": "Zustellung fehlgeschlagen",
+  "shipmentStatusException": "Ausnahme",
+  "shipmentStatusLost": "Verloren",
+  "shipmentStatusDamaged": "Beschädigt",
+  "shipmentStatusReturnToSender": "Rücksendung an Absender",
+  "returnStatusRequested": "Angefordert",
+  "returnStatusAuthorized": "Autorisiert",
+  "returnStatusLabelIssued": "Etikett ausgestellt",
+  "returnStatusInTransit": "Unterwegs",
+  "returnStatusReceived": "Erhalten",
+  "returnStatusRejected": "Abgelehnt",
+  "returnStatusRefundPending": "Rückerstattung ausstehend",
+  "returnStatusRefunded": "Erstattet",
+  "paymentStatusPending": "Ausstehend",
+  "paymentStatusAuthorized": "Autorisiert",
+  "paymentStatusCaptured": "Abgebucht",
+  "paymentStatusVoided": "Storniert",
+  "paymentStatusRefunded": "Erstattet",
+  "paymentStatusFailed": "Fehlgeschlagen"
 }

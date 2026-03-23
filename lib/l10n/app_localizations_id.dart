@@ -24,7 +24,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get settings => 'Pengaturan';
 
   @override
-  String get admin => 'Admin';
+  String get admin => 'Administrator';
 
   @override
   String get commerce => 'Perdagangan';
@@ -111,7 +111,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get profileTooltip => 'Profil';
 
   @override
-  String get adminTooltip => 'Admin';
+  String get adminTooltip => 'Administrator';
 
   @override
   String get chatTooltip => 'Obrolan';
@@ -266,7 +266,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get pseudoError => 'Nama samaran tidak tersedia atau kesalahan.';
 
   @override
-  String get messengerDashboard => 'Sigma Messenger Dashboard';
+  String get messengerDashboard => 'Dasbor Sigma Messenger';
 
   @override
   String get noUsersFound => 'Tidak ada pengguna ditemukan.';
@@ -331,7 +331,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get messageSigmaPlaceholder => 'Pesan Sigma...';
 
   @override
-  String get supportChatPlaceholder => 'Message to support...';
+  String get supportChatPlaceholder => 'Pesan ke dukungan...';
 
   @override
   String get userProfileTitle => 'Profil pengguna';
@@ -560,7 +560,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get createAccount => 'Buat akun';
 
   @override
-  String get email => 'Email';
+  String get email => 'Surel';
 
   @override
   String get forgotPassword => 'Lupa kata sandi?';
@@ -613,336 +613,337 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak dapat melakukan pemesanan: pengguna tidak teridentifikasi.';
 
   @override
-  String get client => 'Client';
+  String get client => 'Pelanggan';
 
   @override
-  String get vendor => 'Vendor';
+  String get vendor => 'Penjual';
 
   @override
-  String get deliveryPerson => 'Delivery Person';
+  String get deliveryPerson => 'Kurir';
 
   @override
-  String get wholesaler => 'Wholesaler';
+  String get wholesaler => 'Grosir';
 
   @override
-  String get vocalSigma => 'Sigma Voice';
+  String get vocalSigma => 'Suara Sigma';
 
   @override
-  String get defaultMessageContent => 'Message';
+  String get defaultMessageContent => 'Pesan';
 
   @override
-  String get myContacts => 'My Contacts';
+  String get myContacts => 'Kontak saya';
 
   @override
-  String get myQrCodeTooltip => 'My QR Code';
+  String get myQrCodeTooltip => 'QR Code saya';
 
   @override
-  String get scanFriendTooltip => 'Scan a friend';
+  String get scanFriendTooltip => 'Pindai teman';
 
   @override
-  String get friendAddedSuccess => '✅ Friend added successfully!';
+  String get friendAddedSuccess => '? Teman berhasil ditambahkan!';
 
   @override
-  String get editPseudoMenu => 'Edit my pseudo';
+  String get editPseudoMenu => 'Edit nama samaran saya';
 
   @override
-  String get myPseudoTitle => 'My pseudo';
+  String get myPseudoTitle => 'Nama samaran saya';
 
   @override
-  String get enterPseudoHint => 'Enter your pseudo';
+  String get enterPseudoHint => 'Masukkan nama samaran Anda';
 
   @override
-  String get noContacts => 'No contacts';
+  String get noContacts => 'Tidak ada kontak';
 
   @override
-  String get scanFriendToStart => 'Scan a friend\'s QR Code to start';
+  String get scanFriendToStart => 'Pindai QR Code teman untuk memulai';
 
   @override
-  String get scanFriendButton => 'Scan a friend';
+  String get scanFriendButton => 'Pindai teman';
 
   @override
-  String get addedOn => 'Added on';
+  String get addedOn => 'Ditambahkan pada';
 
   @override
-  String get scanQrCodeTitle => 'Scan a QR Code';
+  String get scanQrCodeTitle => 'Pindai QR Code';
 
   @override
-  String get qrCodeUnreadable => 'QR Code unreadable, try again.';
+  String get qrCodeUnreadable => 'QR Code tidak terbaca, coba lagi.';
 
   @override
-  String get invalidMistralQr => 'This QR Code is not from Mistral P2P.';
+  String get invalidMistralQr => 'QR Code ini bukan dari Mistral P2P.';
 
   @override
   String invalidLinkError(String error) {
-    return 'Invalid link: $error';
+    return 'Tautan tidak valid: $error';
   }
 
   @override
-  String get cannotAddSelf => '🚫 You cannot add yourself!';
+  String get cannotAddSelf => '?? Anda tidak bisa menambahkan diri sendiri!';
 
   @override
-  String get friendAlreadyAdded =>
-      'ℹ️ This friend is already in your contacts.';
+  String get friendAlreadyAdded => '?? Teman ini sudah ada di kontak Anda.';
 
   @override
-  String get placeQrInFrame => 'Place the QR Code in the frame';
+  String get placeQrInFrame => 'Letakkan QR Code di dalam bingkai';
 
   @override
-  String get retry => 'Retry';
+  String get retry => 'Coba lagi';
 
   @override
-  String get flashlightTooltip => 'Flashlight';
+  String get flashlightTooltip => 'Senter';
 
   @override
-  String get shareLinkTooltip => 'Share link';
+  String get shareLinkTooltip => 'Bagikan tautan';
 
   @override
   String inviteText(String link) {
-    return 'Add me on Mistral2laude P2P!\n$link';
+    return 'Tambahkan saya di Mistral2laude P2P!\n$link';
   }
 
   @override
-  String get inviteSubject => 'Mistral2laude P2P Invitation';
+  String get inviteSubject => 'Undangan Mistral2laude P2P';
 
   @override
-  String get scanMeText => 'Scan this QR Code\nto add me as a contact';
+  String get scanMeText =>
+      'Pindai QR Code ini\nuntuk menambahkan saya sebagai kontak';
 
   @override
-  String get microphonePermissionDenied => 'Microphone permission denied';
+  String get microphonePermissionDenied => 'Izin mikrofon ditolak';
 
   @override
   String get connectionNotEstablished =>
-      '⚠️ Connection not established. Message saved locally.';
+      '?? Koneksi belum terhubung. Pesan disimpan secara lokal.';
 
   @override
-  String get noMessagesYet => 'No messages.\nSend the first one! 👋';
+  String get noMessagesYet => 'Belum ada pesan.\nKirim yang pertama! ??';
 
   @override
-  String get statusConnected => 'Connected';
+  String get statusConnected => 'Terhubung';
 
   @override
-  String get statusConnecting => 'Connecting...';
+  String get statusConnecting => 'Menghubungkan...';
 
   @override
-  String get statusFailed => 'Failed';
+  String get statusFailed => 'Gagal';
 
   @override
   String get statusOffline => 'Offline';
 
   @override
-  String get recordingHint => '🔴 Recording...';
+  String get recordingHint => '?? Merekam...';
 
   @override
-  String get messageHint => 'Message...';
+  String get messageHint => 'Pesan...';
 
   @override
-  String get connectingHint => 'Connecting...';
+  String get connectingHint => 'Menghubungkan...';
 
   @override
-  String get initFailed => 'Initialization failed';
+  String get initFailed => 'Inisialisasi gagal';
 
   @override
-  String get defaultUserPseudo => 'M2C User';
+  String get defaultUserPseudo => 'Pengguna M2C';
 
   @override
-  String get mobileDevice => 'Mobile Device';
+  String get mobileDevice => 'Perangkat seluler';
 
   @override
-  String get unknownDevice => 'Unknown Device';
+  String get unknownDevice => 'Perangkat tidak dikenal';
 
   @override
-  String get productsTab => 'Products';
+  String get productsTab => 'Produk';
 
   @override
-  String get ordersTab => 'Orders';
+  String get ordersTab => 'Pesanan';
 
   @override
-  String get cartTab => 'Cart';
+  String get cartTab => 'Keranjang';
 
   @override
-  String get clientModeTooltip => 'Client mode';
+  String get clientModeTooltip => 'Mode pelanggan';
 
   @override
-  String get adminModeTooltip => 'Admin mode';
+  String get adminModeTooltip => 'Mode admin';
 
   @override
-  String get addProductTooltip => 'Add product';
+  String get addProductTooltip => 'Tambah produk';
 
   @override
-  String get orderCreated => 'Order created.';
+  String get orderCreated => 'Pesanan dibuat.';
 
   @override
-  String get orderFailed => 'Order failed.';
+  String get orderFailed => 'Pesanan gagal.';
 
   @override
-  String get productCreated => 'Product created.';
+  String get productCreated => 'Produk dibuat.';
 
   @override
-  String get productUpdated => 'Product updated.';
+  String get productUpdated => 'Produk diperbarui.';
 
   @override
-  String get productDeleted => 'Product deleted.';
+  String get productDeleted => 'Produk dihapus.';
 
   @override
-  String get deleteFailed => 'Delete failed.';
+  String get deleteFailed => 'Gagal menghapus.';
 
   @override
-  String get deleteProductTitle => 'Delete product';
+  String get deleteProductTitle => 'Hapus produk';
 
   @override
   String deleteProductConfirm(String name) {
-    return 'Delete \"$name\"?';
+    return 'Hapus \"$name\"?';
   }
 
   @override
-  String get imageUploaded => 'Image uploaded.';
+  String get imageUploaded => 'Gambar diunggah.';
 
   @override
   String imageUploadFailed(String error) {
-    return 'Image upload failed: $error';
+    return 'Unggah gambar gagal: $error';
   }
 
   @override
   String get supabaseBucketNotConfigured =>
-      'Supabase image bucket is not configured.';
+      'Bucket gambar Supabase belum dikonfigurasi.';
 
   @override
-  String get searchProductsPlaceholder => 'Search products or SKU';
+  String get searchProductsPlaceholder => 'Cari produk atau SKU';
 
   @override
-  String get inStockFilter => 'In stock';
+  String get inStockFilter => 'Tersedia';
 
   @override
-  String get includeInactiveFilter => 'Include inactive';
+  String get includeInactiveFilter => 'Sertakan yang tidak aktif';
 
   @override
-  String get sortName => 'Name';
+  String get sortName => 'Nama';
 
   @override
-  String get sortPriceAsc => 'Price low-high';
+  String get sortPriceAsc => 'Harga rendah-tinggi';
 
   @override
-  String get sortPriceDesc => 'Price high-low';
+  String get sortPriceDesc => 'Harga tinggi-rendah';
 
   @override
-  String get sortStockAsc => 'Stock low-high';
+  String get sortStockAsc => 'Stok rendah-tinggi';
 
   @override
-  String get sortStockDesc => 'Stock high-low';
+  String get sortStockDesc => 'Stok tinggi-rendah';
 
   @override
-  String get sortPopularity => 'Popularity';
+  String get sortPopularity => 'Popularitas';
 
   @override
-  String get gridView => 'Grid';
+  String get gridView => 'Kisi';
 
   @override
-  String get listView => 'List';
+  String get listView => 'Daftar';
 
   @override
-  String get noProductsMatch => 'No products match your filters.';
+  String get noProductsMatch =>
+      'Tidak ada produk yang cocok dengan filter Anda.';
 
   @override
-  String get clearFilters => 'Clear filters';
+  String get clearFilters => 'Bersihkan filter';
 
   @override
-  String get allProductsLoaded => 'All products loaded.';
+  String get allProductsLoaded => 'Semua produk dimuat.';
 
   @override
-  String get saveProductTitle => 'Save Product';
+  String get saveProductTitle => 'Simpan produk';
 
   @override
-  String get addProductTitle => 'Add Product';
+  String get addProductTitle => 'Tambah produk';
 
   @override
-  String get editProductTitle => 'Edit Product';
+  String get editProductTitle => 'Edit produk';
 
   @override
-  String get productNameLabel => 'Name';
+  String get productNameLabel => 'Nama';
 
   @override
-  String get skuLabel => 'SKU / Reference';
+  String get skuLabel => 'SKU / Referensi';
 
   @override
-  String get priceLabel => 'Price (DZD)';
+  String get priceLabel => 'Harga (DZD)';
 
   @override
-  String get promoPriceLabel => 'Promo price (DZD)';
+  String get promoPriceLabel => 'Harga promo (DZD)';
 
   @override
-  String get optionalHelper => 'Optional';
+  String get optionalHelper => 'Opsional';
 
   @override
-  String get imageLabel => 'Image URL or Storage path';
+  String get imageLabel => 'URL gambar atau jalur penyimpanan';
 
   @override
-  String get uploadImageButton => 'Upload image';
+  String get uploadImageButton => 'Unggah gambar';
 
   @override
-  String get replaceImageButton => 'Replace image';
+  String get replaceImageButton => 'Ganti gambar';
 
   @override
-  String get uploadingButton => 'Uploading...';
+  String get uploadingButton => 'Mengunggah...';
 
   @override
-  String get stockLabel => 'Stock';
+  String get stockLabel => 'Stok';
 
   @override
-  String get popularityLabel => 'Popularity';
+  String get popularityLabel => 'Popularitas';
 
   @override
-  String get activeLabel => 'Active';
+  String get activeLabel => 'Aktif';
 
   @override
-  String get saveButton => 'Save';
+  String get saveButton => 'Simpan';
 
   @override
-  String get savingButton => 'Saving...';
+  String get savingButton => 'Menyimpan...';
 
   @override
-  String get unavailableStatus => 'Unavailable';
+  String get unavailableStatus => 'Tidak tersedia';
 
   @override
-  String get outOfStockStatus => 'Out of stock';
+  String get outOfStockStatus => 'Stok habis';
 
   @override
-  String get lowStockStatus => 'Low stock';
+  String get lowStockStatus => 'Stok rendah';
 
   @override
-  String get inactiveStatus => 'Inactive';
+  String get inactiveStatus => 'Tidak aktif';
 
   @override
-  String get promoStatus => 'Promo';
+  String get promoStatus => 'Promosi';
 
   @override
-  String get cartEmpty => 'Cart is empty.';
+  String get cartEmpty => 'Keranjang kosong.';
 
   @override
-  String get yourCart => 'Your cart';
+  String get yourCart => 'Keranjang Anda';
 
   @override
-  String get clearCart => 'Clear';
+  String get clearCart => 'Bersihkan';
 
   @override
   String get subtotalLabel => 'Subtotal';
 
   @override
-  String get deliveryLabel => 'Delivery';
+  String get deliveryLabel => 'Pengiriman';
 
   @override
   String get totalLabel => 'Total';
 
   @override
-  String get phoneLabel => 'Phone';
+  String get phoneLabel => 'Telepon';
 
   @override
-  String get addressLabel => 'Address';
+  String get addressLabel => 'Alamat';
 
   @override
-  String get noteLabel => 'Note';
+  String get noteLabel => 'Catatan';
 
   @override
-  String get checkoutButton => 'Checkout';
+  String get checkoutButton => 'Selesaikan pembelian';
 
   @override
   String orderTotal(String amount) {
@@ -951,311 +952,531 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String itemsCount(int count) {
-    return '$count items';
+    return '$count item';
   }
 
   @override
   String orderNumber(String id) {
-    return 'Order #$id';
+    return 'Pesanan #$id';
   }
 
   @override
-  String get changeRoleTooltip => 'Change role (Simulation)';
+  String get changeRoleTooltip => 'Ubah peran (Simulasi)';
 
   @override
-  String get orderNotFound => 'Order not found';
+  String get orderNotFound => 'Pesanan tidak ditemukan';
 
   @override
-  String get globalStatus => 'Global status';
+  String get globalStatus => 'Status global';
 
   @override
-  String get dateLabel => 'Date';
+  String get dateLabel => 'Tanggal';
 
   @override
-  String get customerLabel => 'Customer';
+  String get customerLabel => 'Pelanggan';
 
   @override
-  String get paymentLabel => 'Payment';
+  String get paymentLabel => 'Pembayaran';
 
   @override
-  String get productsLabel => 'Products';
+  String get productsLabel => 'Produk';
 
   @override
   String priceXQuantity(String price, int quantity) {
-    return 'Price: $price DZD x $quantity';
+    return 'Harga: $price DZD x $quantity';
   }
 
   @override
-  String get noShipmentsYet => 'No shipments yet.';
+  String amountWithCurrency(String amount) {
+    return '$amount DZD';
+  }
+
+  @override
+  String shipmentItemLine(String name, int quantity) {
+    return '? $name (x$quantity)';
+  }
+
+  @override
+  String get noShipmentsYet => 'Belum ada pengiriman.';
 
   @override
   String shipmentsCount(int count) {
-    return 'Shipments ($count)';
+    return 'Pengiriman ($count)';
   }
 
   @override
   String packageNumber(String tracking) {
-    return 'Package: $tracking';
+    return 'Paket: $tracking';
   }
 
   @override
   String carrierLabel(String name) {
-    return 'Carrier: $name';
+    return 'Kurir: $name';
   }
 
   @override
   String get packageId => 'ID';
 
   @override
-  String get shippedOn => 'Shipped on';
+  String get shippedOn => 'Dikirim pada';
 
   @override
-  String get itemsInPackage => 'Items in this package:';
+  String get itemsInPackage => 'Item dalam paket ini:';
 
   @override
-  String get confirmOrderButton => 'Confirm order';
+  String get confirmOrderButton => 'Konfirmasi pesanan';
 
   @override
-  String get allocateStockButton => 'Allocate stock';
+  String get allocateStockButton => 'Alokasikan stok';
 
   @override
-  String get startPickingButton => 'Start Picking';
+  String get startPickingButton => 'Mulai picking';
 
   @override
-  String get packingFinishedButton => 'Packing finished (Packed)';
+  String get packingFinishedButton => 'Pengemasan selesai (Dikemas)';
 
   @override
-  String get shipButton => 'Label & Ship';
+  String get shipButton => 'Label & kirim';
 
   @override
   String setInTransitButton(String tracking) {
-    return 'Set In Transit ($tracking)';
+    return 'Set dalam transit ($tracking)';
   }
 
   @override
   String confirmDeliveryButton(String tracking) {
-    return 'Confirm Delivery ($tracking)';
+    return 'Konfirmasi pengantaran ($tracking)';
   }
 
   @override
-  String get requestReturnButton => 'Request a return';
+  String get requestReturnButton => 'Minta pengembalian';
 
   @override
-  String get newShipmentTitle => 'New Shipment';
+  String get newShipmentTitle => 'Pengiriman baru';
 
   @override
   String get allItemIncludedNote =>
-      'All items will be included in this package for this example.';
+      'Semua item akan disertakan dalam paket ini untuk contoh ini.';
 
   @override
-  String get trackingNumberLabel => 'Tracking Number';
+  String get trackingNumberLabel => 'Nomor pelacakan';
 
   @override
-  String get adminStatusTitle => 'Administration : Status';
+  String get adminStatusTitle => 'Administrasi : Status';
 
   @override
-  String get phoneAddressRequired => 'Phone and address are required.';
+  String get phoneAddressRequired => 'Telepon dan alamat diperlukan.';
 
   @override
-  String get orderFailedLong => 'Order failed.';
+  String get orderFailedLong => 'Pesanan gagal.';
 
   @override
   String orderCreatedLong(String id) {
-    return 'Order created: $id';
+    return 'Pesanan dibuat: $id';
   }
 
   @override
-  String get placingOrderButton => 'Placing order...';
+  String get placingOrderButton => 'Memproses pesanan...';
 
   @override
-  String get placeOrderButton => 'Place order';
+  String get placeOrderButton => 'Buat pesanan';
 
   @override
-  String get loadMoreButton => 'Load more';
+  String get loadMoreButton => 'Muat lebih banyak';
 
   @override
-  String get searchOrderPlaceholder => 'Search an order...';
+  String get searchOrderPlaceholder => 'Cari pesanan...';
 
   @override
-  String get allFilter => 'All';
+  String get allFilter => 'Semua';
 
   @override
-  String get orderConfirmedStep => 'Confirmed';
+  String get orderConfirmedStep => 'Dikonfirmasi';
 
   @override
-  String get shippedStep => 'Shipped';
+  String get shippedStep => 'Dikirim';
 
   @override
-  String get deliveredStep => 'Delivered';
+  String get deliveredStep => 'Dikirimkan';
 
   @override
-  String get unknownDate => 'Unknown';
+  String get unknownDate => 'Tidak diketahui';
 
   @override
-  String get p2pMessengerTitle => 'P2P Messenger';
+  String get p2pMessengerTitle => 'Pesan P2P';
 
   @override
   String errorWithDetails(String message) {
-    return 'Error: $message';
+    return 'Kesalahan: $message';
   }
 
   @override
-  String get myQrCode => 'My QR Code';
+  String get myQrCode => 'QR Code saya';
 
   @override
-  String get shareQrCodeTitle => 'Share your QR Code';
+  String get shareQrCodeTitle => 'Bagikan QR Code Anda';
 
   @override
   String get shareQrCodeSubtitle =>
-      'Let your friends scan this code to add you to their contacts.';
+      'Biarkan teman Anda memindai kode ini untuk menambahkan Anda ke kontak mereka.';
 
   @override
   String get takeScreenshotToShare =>
-      'Take a screenshot to share your QR Code.';
+      'Ambil tangkapan layar untuk membagikan QR Code Anda.';
 
   @override
-  String get initErrorTitle => 'Initialization Error';
+  String get initErrorTitle => 'Kesalahan inisialisasi';
 
   @override
-  String get messagesTitle => 'Messages';
+  String get messagesTitle => 'Pesan';
 
   @override
-  String get addContactTooltip => 'Add Contact';
+  String get addContactTooltip => 'Tambah kontak';
 
   @override
-  String get noConversations => 'No conversations yet';
+  String get noConversations => 'Belum ada percakapan';
 
   @override
-  String get addContactToStart => 'Add a contact to start chatting';
+  String get addContactToStart => 'Tambahkan kontak untuk mulai mengobrol';
 
   @override
-  String get typingStatus => 'typing...';
+  String get typingStatus => 'mengetik...';
 
   @override
-  String get sayHello => 'Say hello! 👋';
+  String get sayHello => 'Sapa! ??';
 
   @override
-  String get yesterday => 'Yesterday';
+  String get yesterday => 'Kemarin';
 
   @override
-  String get addFriendTitle => 'Add Friend';
+  String get addFriendTitle => 'Tambah teman';
 
   @override
-  String get scanFriendQr => 'Scan your friend\'s QR Code';
+  String get scanFriendQr => 'Pindai QR Code teman Anda';
 
   @override
-  String get addContactTitle => 'Add Contact';
+  String get addContactTitle => 'Tambah kontak';
 
   @override
-  String get yourQrCodeTitle => 'Your QR Code';
+  String get yourQrCodeTitle => 'QR Code Anda';
 
   @override
-  String get yourQrCodeSubtitle => 'Show this code to your friend';
+  String get yourQrCodeSubtitle => 'Tunjukkan kode ini kepada teman Anda';
 
   @override
-  String get notAvailable => 'N/A';
+  String get notAvailable => 'Tidak tersedia';
 
   @override
-  String get deviceIdLabel => 'Device ID';
+  String get deviceIdLabel => 'ID Perangkat';
 
   @override
-  String get contactAddedSuccess => 'Contact added successfully!';
+  String get contactAddedSuccess => 'Kontak berhasil ditambahkan!';
 
   @override
-  String get dataChannelDisconnected => 'Data channel disconnected';
+  String get dataChannelDisconnected => 'Saluran data terputus';
 
   @override
   String peerNotConnected(String id) {
-    return 'Peer not connected: $id';
+    return 'Peer tidak terhubung: $id';
   }
 
   @override
   String errorParsingMessage(String error) {
-    return 'Error parsing message: $error';
+    return 'Kesalahan mem-parsing pesan: $error';
   }
 
   @override
   String invalidQrCode(String error) {
-    return 'Invalid QR Code: $error';
+    return 'QR Code tidak valid: $error';
   }
 
   @override
-  String get missingDeviceId => 'Missing Device ID';
+  String get missingDeviceId => 'ID Perangkat tidak ada';
 
   @override
-  String get missingPseudo => 'Missing Pseudo';
+  String get missingPseudo => 'Nama samaran hilang';
 
   @override
-  String get missingPublicKey => 'Missing Public Key';
+  String get missingPublicKey => 'Kunci publik hilang';
 
   @override
-  String get cannotAddSelfError => 'Cannot add yourself';
+  String get cannotAddSelfError => 'Tidak dapat menambahkan diri sendiri';
 
   @override
-  String get invalidPublicKeyFormat => 'Invalid public key format';
+  String get invalidPublicKeyFormat => 'Format kunci publik tidak valid';
 
   @override
   String errorParsingQrCode(String error) {
-    return 'Error parsing QR Code: $error';
+    return 'Kesalahan mem-parsing QR Code: $error';
   }
 
   @override
   String get mistral2laudeTitle => 'Mistral2laude P2P';
 
   @override
-  String get friendLabel => 'Friend';
+  String get friendLabel => 'Teman';
 
   @override
-  String get encryptedMessage => '[Encrypted message]';
+  String get encryptedMessage => '[Pesan terenkripsi]';
 
   @override
-  String get youEncryptedMessage => 'You: [Encrypted message]';
+  String get youEncryptedMessage => 'Anda: [Pesan terenkripsi]';
 
   @override
-  String get imageMessage => '🖼️ Image';
+  String get imageMessage => '??? Gambar';
 
   @override
-  String get fileMessage => '📎 File';
+  String get fileMessage => '?? Berkas';
 
   @override
-  String get newMessage => 'New message';
+  String get newMessage => 'Pesan baru';
 
   @override
-  String get reply => 'Reply';
+  String get reply => 'Balas';
 
   @override
-  String get quickReply => 'Quick reply';
+  String get quickReply => 'Balasan cepat';
 
   @override
-  String get markAsRead => 'Mark as read';
+  String get markAsRead => 'Tandai sudah dibaca';
 
   @override
-  String get isTyping => 'is typing...';
+  String get isTyping => 'sedang mengetik...';
 
   @override
-  String get typingIndicator => 'Typing...';
+  String get typingIndicator => 'Mengetik...';
 
   @override
-  String get vocalMessage => 'Vocal message';
+  String get vocalMessage => 'Pesan suara';
 
   @override
   String get gps => 'GPS';
 
   @override
-  String get permissions => 'Permissions';
+  String get permissions => 'Izin';
 
   @override
-  String get trace => 'Trace';
+  String get trace => 'Jejak';
 
   @override
   String get mainChannelValue => 'WebRTC P2P';
 
   @override
-  String get formErrors => 'Please fix the form errors.';
+  String get formErrors => 'Silakan perbaiki kesalahan pada formulir.';
 
   @override
-  String get saveFailed => 'Save failed.';
+  String get saveFailed => 'Gagal menyimpan.';
 
   @override
-  String get itemsLabel => 'Items';
+  String get itemsLabel => 'Item';
+
+  @override
+  String get productInfoSection => 'Informasi';
+
+  @override
+  String get productImageSection => 'Gambar';
+
+  @override
+  String get productStockStatusSection => 'Stok & status';
+
+  @override
+  String get categoryLabel => 'Kategori';
+
+  @override
+  String get nameRequired => 'Nama wajib diisi';
+
+  @override
+  String get priceRequired => 'Harga wajib diisi';
+
+  @override
+  String get invalidPrice => 'Masukkan harga yang valid';
+
+  @override
+  String get invalidPromoPrice => 'Masukkan harga promo yang valid';
+
+  @override
+  String get promoLowerThanPrice => 'Harga promo harus lebih rendah dari harga';
+
+  @override
+  String get invalidStock => 'Masukkan stok yang valid';
+
+  @override
+  String get popularityHelper => 'Semakin tinggi semakin populer';
+
+  @override
+  String get invalidPopularity => 'Masukkan popularitas yang valid';
+
+  @override
+  String get addToCart => 'Tambah ke keranjang';
+
+  @override
+  String get stockUnknown => 'Stok tidak diketahui';
+
+  @override
+  String get startChatPrompt => 'Mulai percakapan';
+
+  @override
+  String get realtimeMessengerTitle => 'Sigma Messenger (Waktu nyata)';
+
+  @override
+  String get clear => 'Bersihkan';
+
+  @override
+  String get warehouseRole => 'Gudang';
+
+  @override
+  String get carrierRole => 'Pengangkut';
+
+  @override
+  String get supportRole => 'Dukungan';
+
+  @override
+  String get orderStatusCreated => 'Dibuat';
+
+  @override
+  String get orderStatusPendingPayment => 'Pembayaran tertunda';
+
+  @override
+  String get orderStatusPaid => 'Dibayar';
+
+  @override
+  String get orderStatusPaymentFailed => 'Pembayaran gagal';
+
+  @override
+  String get orderStatusCancelRequested => 'Pembatalan diminta';
+
+  @override
+  String get orderStatusCancelled => 'Dibatalkan';
+
+  @override
+  String get orderStatusOrderConfirmed => 'Dikonfirmasi';
+
+  @override
+  String get orderStatusStockAllocated => 'Stok dialokasikan';
+
+  @override
+  String get orderStatusBackorder => 'Pesanan tertunda';
+
+  @override
+  String get orderStatusPicking => 'Pengambilan';
+
+  @override
+  String get orderStatusPacked => 'Dikemas';
+
+  @override
+  String get orderStatusReadyToShip => 'Siap dikirim';
+
+  @override
+  String get orderStatusPartiallyShipped => 'Dikirim sebagian';
+
+  @override
+  String get orderStatusShipped => 'Dikirim';
+
+  @override
+  String get orderStatusPartiallyDelivered => 'Diterima sebagian';
+
+  @override
+  String get orderStatusDelivered => 'Diterima';
+
+  @override
+  String get orderStatusDeliveryFailed => 'Pengiriman gagal';
+
+  @override
+  String get orderStatusException => 'Eksepsi';
+
+  @override
+  String get orderStatusReturnRequested => 'Pengembalian diminta';
+
+  @override
+  String get orderStatusReturnInTransit => 'Pengembalian dalam perjalanan';
+
+  @override
+  String get orderStatusReturnReceived => 'Pengembalian diterima';
+
+  @override
+  String get orderStatusRefundPending => 'Pengembalian dana tertunda';
+
+  @override
+  String get orderStatusRefunded => 'Dikembalikan';
+
+  @override
+  String get orderStatusClosed => 'Ditutup';
+
+  @override
+  String get shipmentStatusLabelCreated => 'Label dibuat';
+
+  @override
+  String get shipmentStatusPickedUp => 'Diambil';
+
+  @override
+  String get shipmentStatusInTransit => 'Dalam perjalanan';
+
+  @override
+  String get shipmentStatusArrivedAtHub => 'Tiba di hub';
+
+  @override
+  String get shipmentStatusCustomsClearance => 'Bea cukai';
+
+  @override
+  String get shipmentStatusOutForDelivery => 'Dalam pengantaran';
+
+  @override
+  String get shipmentStatusDelivered => 'Terkirim';
+
+  @override
+  String get shipmentStatusDeliveryFailed => 'Pengiriman gagal';
+
+  @override
+  String get shipmentStatusException => 'Eksepsi';
+
+  @override
+  String get shipmentStatusLost => 'Hilang';
+
+  @override
+  String get shipmentStatusDamaged => 'Rusak';
+
+  @override
+  String get shipmentStatusReturnToSender => 'Dikembalikan ke pengirim';
+
+  @override
+  String get returnStatusRequested => 'Diminta';
+
+  @override
+  String get returnStatusAuthorized => 'Diotorisasi';
+
+  @override
+  String get returnStatusLabelIssued => 'Label diterbitkan';
+
+  @override
+  String get returnStatusInTransit => 'Dalam perjalanan';
+
+  @override
+  String get returnStatusReceived => 'Diterima';
+
+  @override
+  String get returnStatusRejected => 'Ditolak';
+
+  @override
+  String get returnStatusRefundPending => 'Pengembalian dana tertunda';
+
+  @override
+  String get returnStatusRefunded => 'Dikembalikan';
+
+  @override
+  String get paymentStatusPending => 'Tertunda';
+
+  @override
+  String get paymentStatusAuthorized => 'Diotorisasi';
+
+  @override
+  String get paymentStatusCaptured => 'Ditagih';
+
+  @override
+  String get paymentStatusVoided => 'Dibatalkan';
+
+  @override
+  String get paymentStatusRefunded => 'Dikembalikan';
+
+  @override
+  String get paymentStatusFailed => 'Gagal';
 }

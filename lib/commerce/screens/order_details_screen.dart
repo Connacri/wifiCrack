@@ -64,7 +64,7 @@ class _RoleSelector extends StatelessWidget {
       itemBuilder: (context) => UserRole.values
           .map((r) => PopupMenuItem(
                 value: r,
-                child: Text(r.label),
+                child: Text(r.label(l10n)),
               ))
           .toList(),
     );
@@ -104,7 +104,7 @@ class _OrderStatusCard extends StatelessWidget {
             _InfoRow(label: l10n.addressLabel, value: order.address),
             _InfoRow(
               label: l10n.paymentLabel,
-              value: order.paymentStatus.name.toUpperCase(),
+              value: order.paymentStatus.label(l10n),
               valueColor: order.paymentStatus == PaymentStatus.captured
                   ? Colors.green
                   : Colors.orange,
@@ -115,7 +115,7 @@ class _OrderStatusCard extends StatelessWidget {
               children: [
                 Text(l10n.totalLabel, style: theme.textTheme.titleMedium),
                 Text(
-                  '${order.total.toStringAsFixed(2)} DZD',
+                  l10n.amountWithCurrency(order.total.toStringAsFixed(2)),
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.bold,
@@ -157,7 +157,7 @@ class _OrderItemsCard extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   title: Text(item.name),
                   subtitle: Text(l10n.priceXQuantity(item.price.toStringAsFixed(2), item.quantity)),
-                  trailing: Text('${item.subtotal.toStringAsFixed(2)} DZD',
+                  trailing: Text(l10n.amountWithCurrency(item.subtotal.toStringAsFixed(2)),
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                 );
               },
@@ -231,7 +231,7 @@ class _ShipmentItem extends StatelessWidget {
                     style: Theme.of(context).textTheme.labelLarge),
                 ...shipment.items.map((i) => Padding(
                       padding: const EdgeInsets.only(top: 4),
-                      child: Text('• ${i.name} (x${i.quantity})'),
+                      child: Text(l10n.shipmentItemLine(i.name, i.quantity)),
                     )),
               ],
             ),
@@ -411,6 +411,7 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     Color color;
     switch (status) {
       case OrderStatus.created: color = Colors.blue; break;
@@ -429,7 +430,7 @@ class _StatusBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
-        status.label,
+        status.label(l10n),
         style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
       ),
     );
@@ -443,6 +444,7 @@ class _ShipmentStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -450,7 +452,7 @@ class _ShipmentStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        status.label,
+        status.label(l10n),
         style: const TextStyle(color: Colors.blue, fontSize: 11),
       ),
     );
@@ -516,7 +518,7 @@ class _AdminStatusEditCard extends StatelessWidget {
               ),
               items: OrderStatus.values.map((s) => DropdownMenuItem(
                 value: s,
-                child: Text(s.label),
+                child: Text(s.label(l10n)),
               )).toList(),
               onChanged: (newStatus) {
                 if (newStatus != null && newStatus != order.status) {

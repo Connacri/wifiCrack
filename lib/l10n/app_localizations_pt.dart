@@ -24,7 +24,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settings => 'Configurações';
 
   @override
-  String get admin => 'Admin';
+  String get admin => 'Administrador';
 
   @override
   String get commerce => 'Comércio';
@@ -111,7 +111,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get profileTooltip => 'Perfil';
 
   @override
-  String get adminTooltip => 'Admin';
+  String get adminTooltip => 'Administrador';
 
   @override
   String get chatTooltip => 'Chat';
@@ -171,13 +171,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get tabMap => 'Mapa';
 
   @override
-  String get tabTraces => 'Traces';
+  String get tabTraces => 'Tra?os';
 
   @override
   String get tabContacts => 'Contactos';
 
   @override
-  String get tabConfig => 'Config';
+  String get tabConfig => 'Configura??o';
 
   @override
   String get securityAdmin => '🔐 Segurança Admin';
@@ -237,10 +237,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get add => 'Adicionar';
 
   @override
-  String get online => 'Online';
+  String get online => 'Ligado';
 
   @override
-  String get offline => 'Offline';
+  String get offline => 'Desligado';
 
   @override
   String get searchPlaceholder => 'Pesquisar...';
@@ -267,7 +267,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pseudoError => 'Apelido indisponível ou erro.';
 
   @override
-  String get messengerDashboard => 'Sigma Messenger Dashboard';
+  String get messengerDashboard => 'Painel do Sigma Messenger';
 
   @override
   String get noUsersFound => 'Nenhum utilizador encontrado.';
@@ -332,7 +332,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messageSigmaPlaceholder => 'Mensagem Sigma...';
 
   @override
-  String get supportChatPlaceholder => 'Message to support...';
+  String get supportChatPlaceholder => 'Mensagem para o suporte...';
 
   @override
   String get userProfileTitle => 'Perfil de utilizador';
@@ -562,7 +562,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get createAccount => 'Criar conta';
 
   @override
-  String get email => 'Email';
+  String get email => 'E-mail';
 
   @override
   String get forgotPassword => 'Esqueceu-se da senha?';
@@ -614,336 +614,336 @@ class AppLocalizationsPt extends AppLocalizations {
       'Imposible encomendar: utilizador não identificado.';
 
   @override
-  String get client => 'Client';
+  String get client => 'Cliente';
 
   @override
-  String get vendor => 'Vendor';
+  String get vendor => 'Vendedor';
 
   @override
-  String get deliveryPerson => 'Delivery Person';
+  String get deliveryPerson => 'Estafeta';
 
   @override
-  String get wholesaler => 'Wholesaler';
+  String get wholesaler => 'Grossista';
 
   @override
-  String get vocalSigma => 'Sigma Voice';
+  String get vocalSigma => 'Voz Sigma';
 
   @override
-  String get defaultMessageContent => 'Message';
+  String get defaultMessageContent => 'Mensagem';
 
   @override
-  String get myContacts => 'My Contacts';
+  String get myContacts => 'Os meus contactos';
 
   @override
-  String get myQrCodeTooltip => 'My QR Code';
+  String get myQrCodeTooltip => 'O meu QR Code';
 
   @override
-  String get scanFriendTooltip => 'Scan a friend';
+  String get scanFriendTooltip => 'Scanear um amigo';
 
   @override
-  String get friendAddedSuccess => '✅ Friend added successfully!';
+  String get friendAddedSuccess => '? Amigo adicionado com sucesso!';
 
   @override
-  String get editPseudoMenu => 'Edit my pseudo';
+  String get editPseudoMenu => 'Editar o meu pseudo';
 
   @override
-  String get myPseudoTitle => 'My pseudo';
+  String get myPseudoTitle => 'O meu pseudo';
 
   @override
-  String get enterPseudoHint => 'Enter your pseudo';
+  String get enterPseudoHint => 'Introduza o seu pseudo';
 
   @override
-  String get noContacts => 'No contacts';
+  String get noContacts => 'Sem contactos';
 
   @override
-  String get scanFriendToStart => 'Scan a friend\'s QR Code to start';
+  String get scanFriendToStart => 'Scaneie o QR Code de um amigo para come?ar';
 
   @override
-  String get scanFriendButton => 'Scan a friend';
+  String get scanFriendButton => 'Scanear um amigo';
 
   @override
-  String get addedOn => 'Added on';
+  String get addedOn => 'Adicionado em';
 
   @override
-  String get scanQrCodeTitle => 'Scan a QR Code';
+  String get scanQrCodeTitle => 'Scanear um QR Code';
 
   @override
-  String get qrCodeUnreadable => 'QR Code unreadable, try again.';
+  String get qrCodeUnreadable => 'QR Code ileg?vel, tente novamente.';
 
   @override
-  String get invalidMistralQr => 'This QR Code is not from Mistral P2P.';
+  String get invalidMistralQr => 'Este QR Code n?o ? do Mistral P2P.';
 
   @override
   String invalidLinkError(String error) {
-    return 'Invalid link: $error';
+    return 'Link inv?lido: $error';
   }
 
   @override
-  String get cannotAddSelf => '🚫 You cannot add yourself!';
+  String get cannotAddSelf => '?? N?o pode adicionar-se a si pr?prio!';
 
   @override
-  String get friendAlreadyAdded =>
-      'ℹ️ This friend is already in your contacts.';
+  String get friendAlreadyAdded => '?? Este amigo j? est? nos seus contactos.';
 
   @override
-  String get placeQrInFrame => 'Place the QR Code in the frame';
+  String get placeQrInFrame => 'Coloque o QR Code no enquadramento';
 
   @override
-  String get retry => 'Retry';
+  String get retry => 'Tentar novamente';
 
   @override
-  String get flashlightTooltip => 'Flashlight';
+  String get flashlightTooltip => 'Lanterna';
 
   @override
-  String get shareLinkTooltip => 'Share link';
+  String get shareLinkTooltip => 'Partilhar link';
 
   @override
   String inviteText(String link) {
-    return 'Add me on Mistral2laude P2P!\n$link';
+    return 'Adiciona-me no Mistral2laude P2P!\n$link';
   }
 
   @override
-  String get inviteSubject => 'Mistral2laude P2P Invitation';
+  String get inviteSubject => 'Convite Mistral2laude P2P';
 
   @override
-  String get scanMeText => 'Scan this QR Code\nto add me as a contact';
+  String get scanMeText =>
+      'Scaneie este QR Code\npara me adicionar como contacto';
 
   @override
-  String get microphonePermissionDenied => 'Microphone permission denied';
+  String get microphonePermissionDenied => 'Permiss?o do microfone negada';
 
   @override
   String get connectionNotEstablished =>
-      '⚠️ Connection not established. Message saved locally.';
+      '?? Liga??o n?o estabelecida. Mensagem guardada localmente.';
 
   @override
-  String get noMessagesYet => 'No messages.\nSend the first one! 👋';
+  String get noMessagesYet => 'Sem mensagens.\nEnvie a primeira! ??';
 
   @override
-  String get statusConnected => 'Connected';
+  String get statusConnected => 'Ligado';
 
   @override
-  String get statusConnecting => 'Connecting...';
+  String get statusConnecting => 'A ligar...';
 
   @override
-  String get statusFailed => 'Failed';
+  String get statusFailed => 'Falhou';
 
   @override
-  String get statusOffline => 'Offline';
+  String get statusOffline => 'Desligado';
 
   @override
-  String get recordingHint => '🔴 Recording...';
+  String get recordingHint => '?? A gravar...';
 
   @override
-  String get messageHint => 'Message...';
+  String get messageHint => 'Mensagem...';
 
   @override
-  String get connectingHint => 'Connecting...';
+  String get connectingHint => 'A ligar...';
 
   @override
-  String get initFailed => 'Initialization failed';
+  String get initFailed => 'Falha na inicializa??o';
 
   @override
-  String get defaultUserPseudo => 'M2C User';
+  String get defaultUserPseudo => 'Utilizador M2C';
 
   @override
-  String get mobileDevice => 'Mobile Device';
+  String get mobileDevice => 'Dispositivo m?vel';
 
   @override
-  String get unknownDevice => 'Unknown Device';
+  String get unknownDevice => 'Dispositivo desconhecido';
 
   @override
-  String get productsTab => 'Products';
+  String get productsTab => 'Produtos';
 
   @override
-  String get ordersTab => 'Orders';
+  String get ordersTab => 'Encomendas';
 
   @override
-  String get cartTab => 'Cart';
+  String get cartTab => 'Carrinho';
 
   @override
-  String get clientModeTooltip => 'Client mode';
+  String get clientModeTooltip => 'Modo cliente';
 
   @override
-  String get adminModeTooltip => 'Admin mode';
+  String get adminModeTooltip => 'Modo administrador';
 
   @override
-  String get addProductTooltip => 'Add product';
+  String get addProductTooltip => 'Adicionar produto';
 
   @override
-  String get orderCreated => 'Order created.';
+  String get orderCreated => 'Encomenda criada.';
 
   @override
-  String get orderFailed => 'Order failed.';
+  String get orderFailed => 'Encomenda falhou.';
 
   @override
-  String get productCreated => 'Product created.';
+  String get productCreated => 'Produto criado.';
 
   @override
-  String get productUpdated => 'Product updated.';
+  String get productUpdated => 'Produto atualizado.';
 
   @override
-  String get productDeleted => 'Product deleted.';
+  String get productDeleted => 'Produto eliminado.';
 
   @override
-  String get deleteFailed => 'Delete failed.';
+  String get deleteFailed => 'Falha ao eliminar.';
 
   @override
-  String get deleteProductTitle => 'Delete product';
+  String get deleteProductTitle => 'Eliminar produto';
 
   @override
   String deleteProductConfirm(String name) {
-    return 'Delete \"$name\"?';
+    return 'Eliminar \"$name\"?';
   }
 
   @override
-  String get imageUploaded => 'Image uploaded.';
+  String get imageUploaded => 'Imagem enviada.';
 
   @override
   String imageUploadFailed(String error) {
-    return 'Image upload failed: $error';
+    return 'Falha no envio da imagem: $error';
   }
 
   @override
   String get supabaseBucketNotConfigured =>
-      'Supabase image bucket is not configured.';
+      'O bucket de imagens do Supabase n?o est? configurado.';
 
   @override
-  String get searchProductsPlaceholder => 'Search products or SKU';
+  String get searchProductsPlaceholder => 'Pesquisar produtos ou SKU';
 
   @override
-  String get inStockFilter => 'In stock';
+  String get inStockFilter => 'Em stock';
 
   @override
-  String get includeInactiveFilter => 'Include inactive';
+  String get includeInactiveFilter => 'Incluir inativos';
 
   @override
-  String get sortName => 'Name';
+  String get sortName => 'Nome';
 
   @override
-  String get sortPriceAsc => 'Price low-high';
+  String get sortPriceAsc => 'Pre?o crescente';
 
   @override
-  String get sortPriceDesc => 'Price high-low';
+  String get sortPriceDesc => 'Pre?o decrescente';
 
   @override
-  String get sortStockAsc => 'Stock low-high';
+  String get sortStockAsc => 'Stock crescente';
 
   @override
-  String get sortStockDesc => 'Stock high-low';
+  String get sortStockDesc => 'Stock decrescente';
 
   @override
-  String get sortPopularity => 'Popularity';
+  String get sortPopularity => 'Popularidade';
 
   @override
-  String get gridView => 'Grid';
+  String get gridView => 'Grelha';
 
   @override
-  String get listView => 'List';
+  String get listView => 'Lista';
 
   @override
-  String get noProductsMatch => 'No products match your filters.';
+  String get noProductsMatch => 'Nenhum produto corresponde aos seus filtros.';
 
   @override
-  String get clearFilters => 'Clear filters';
+  String get clearFilters => 'Limpar filtros';
 
   @override
-  String get allProductsLoaded => 'All products loaded.';
+  String get allProductsLoaded => 'Todos os produtos carregados.';
 
   @override
-  String get saveProductTitle => 'Save Product';
+  String get saveProductTitle => 'Guardar produto';
 
   @override
-  String get addProductTitle => 'Add Product';
+  String get addProductTitle => 'Adicionar produto';
 
   @override
-  String get editProductTitle => 'Edit Product';
+  String get editProductTitle => 'Editar produto';
 
   @override
-  String get productNameLabel => 'Name';
+  String get productNameLabel => 'Nome';
 
   @override
-  String get skuLabel => 'SKU / Reference';
+  String get skuLabel => 'SKU / Refer?ncia';
 
   @override
-  String get priceLabel => 'Price (DZD)';
+  String get priceLabel => 'Pre?o (DZD)';
 
   @override
-  String get promoPriceLabel => 'Promo price (DZD)';
+  String get promoPriceLabel => 'Pre?o promocional (DZD)';
 
   @override
-  String get optionalHelper => 'Optional';
+  String get optionalHelper => 'Opcional';
 
   @override
-  String get imageLabel => 'Image URL or Storage path';
+  String get imageLabel => 'URL da imagem ou caminho de armazenamento';
 
   @override
-  String get uploadImageButton => 'Upload image';
+  String get uploadImageButton => 'Enviar imagem';
 
   @override
-  String get replaceImageButton => 'Replace image';
+  String get replaceImageButton => 'Substituir imagem';
 
   @override
-  String get uploadingButton => 'Uploading...';
+  String get uploadingButton => 'A enviar...';
 
   @override
   String get stockLabel => 'Stock';
 
   @override
-  String get popularityLabel => 'Popularity';
+  String get popularityLabel => 'Popularidade';
 
   @override
-  String get activeLabel => 'Active';
+  String get activeLabel => 'Ativo';
 
   @override
-  String get saveButton => 'Save';
+  String get saveButton => 'Guardar';
 
   @override
-  String get savingButton => 'Saving...';
+  String get savingButton => 'A guardar...';
 
   @override
-  String get unavailableStatus => 'Unavailable';
+  String get unavailableStatus => 'Indispon?vel';
 
   @override
-  String get outOfStockStatus => 'Out of stock';
+  String get outOfStockStatus => 'Sem stock';
 
   @override
-  String get lowStockStatus => 'Low stock';
+  String get lowStockStatus => 'Stock baixo';
 
   @override
-  String get inactiveStatus => 'Inactive';
+  String get inactiveStatus => 'Inativo';
 
   @override
-  String get promoStatus => 'Promo';
+  String get promoStatus => 'Promo??o';
 
   @override
-  String get cartEmpty => 'Cart is empty.';
+  String get cartEmpty => 'O carrinho est? vazio.';
 
   @override
-  String get yourCart => 'Your cart';
+  String get yourCart => 'O seu carrinho';
 
   @override
-  String get clearCart => 'Clear';
+  String get clearCart => 'Limpar';
 
   @override
   String get subtotalLabel => 'Subtotal';
 
   @override
-  String get deliveryLabel => 'Delivery';
+  String get deliveryLabel => 'Entrega';
 
   @override
   String get totalLabel => 'Total';
 
   @override
-  String get phoneLabel => 'Phone';
+  String get phoneLabel => 'Telefone';
 
   @override
-  String get addressLabel => 'Address';
+  String get addressLabel => 'Morada';
 
   @override
-  String get noteLabel => 'Note';
+  String get noteLabel => 'Nota';
 
   @override
-  String get checkoutButton => 'Checkout';
+  String get checkoutButton => 'Finalizar compra';
 
   @override
   String orderTotal(String amount) {
@@ -952,311 +952,533 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String itemsCount(int count) {
-    return '$count items';
+    return '$count itens';
   }
 
   @override
   String orderNumber(String id) {
-    return 'Order #$id';
+    return 'Encomenda #$id';
   }
 
   @override
-  String get changeRoleTooltip => 'Change role (Simulation)';
+  String get changeRoleTooltip => 'Alterar fun??o (Simula??o)';
 
   @override
-  String get orderNotFound => 'Order not found';
+  String get orderNotFound => 'Encomenda n?o encontrada';
 
   @override
-  String get globalStatus => 'Global status';
+  String get globalStatus => 'Estado global';
 
   @override
-  String get dateLabel => 'Date';
+  String get dateLabel => 'Data';
 
   @override
-  String get customerLabel => 'Customer';
+  String get customerLabel => 'Cliente';
 
   @override
-  String get paymentLabel => 'Payment';
+  String get paymentLabel => 'Pagamento';
 
   @override
-  String get productsLabel => 'Products';
+  String get productsLabel => 'Produtos';
 
   @override
   String priceXQuantity(String price, int quantity) {
-    return 'Price: $price DZD x $quantity';
+    return 'Pre?o: $price DZD x $quantity';
   }
 
   @override
-  String get noShipmentsYet => 'No shipments yet.';
+  String amountWithCurrency(String amount) {
+    return '$amount DZD';
+  }
+
+  @override
+  String shipmentItemLine(String name, int quantity) {
+    return '? $name (x$quantity)';
+  }
+
+  @override
+  String get noShipmentsYet => 'Ainda sem envios.';
 
   @override
   String shipmentsCount(int count) {
-    return 'Shipments ($count)';
+    return 'Envios ($count)';
   }
 
   @override
   String packageNumber(String tracking) {
-    return 'Package: $tracking';
+    return 'Pacote: $tracking';
   }
 
   @override
   String carrierLabel(String name) {
-    return 'Carrier: $name';
+    return 'Transportadora: $name';
   }
 
   @override
   String get packageId => 'ID';
 
   @override
-  String get shippedOn => 'Shipped on';
+  String get shippedOn => 'Enviado em';
 
   @override
-  String get itemsInPackage => 'Items in this package:';
+  String get itemsInPackage => 'Itens neste pacote:';
 
   @override
-  String get confirmOrderButton => 'Confirm order';
+  String get confirmOrderButton => 'Confirmar encomenda';
 
   @override
-  String get allocateStockButton => 'Allocate stock';
+  String get allocateStockButton => 'Atribuir stock';
 
   @override
-  String get startPickingButton => 'Start Picking';
+  String get startPickingButton => 'Iniciar picking';
 
   @override
-  String get packingFinishedButton => 'Packing finished (Packed)';
+  String get packingFinishedButton => 'Embalagem conclu?da (Embalado)';
 
   @override
-  String get shipButton => 'Label & Ship';
+  String get shipButton => 'Etiquetar e enviar';
 
   @override
   String setInTransitButton(String tracking) {
-    return 'Set In Transit ($tracking)';
+    return 'Colocar em tr?nsito ($tracking)';
   }
 
   @override
   String confirmDeliveryButton(String tracking) {
-    return 'Confirm Delivery ($tracking)';
+    return 'Confirmar entrega ($tracking)';
   }
 
   @override
-  String get requestReturnButton => 'Request a return';
+  String get requestReturnButton => 'Solicitar devolu??o';
 
   @override
-  String get newShipmentTitle => 'New Shipment';
+  String get newShipmentTitle => 'Novo envio';
 
   @override
   String get allItemIncludedNote =>
-      'All items will be included in this package for this example.';
+      'Todos os itens ser?o inclu?dos neste pacote para este exemplo.';
 
   @override
-  String get trackingNumberLabel => 'Tracking Number';
+  String get trackingNumberLabel => 'N?mero de rastreio';
 
   @override
-  String get adminStatusTitle => 'Administration : Status';
+  String get adminStatusTitle => 'Administra??o : Estado';
 
   @override
-  String get phoneAddressRequired => 'Phone and address are required.';
+  String get phoneAddressRequired => 'Telefone e morada s?o obrigat?rios.';
 
   @override
-  String get orderFailedLong => 'Order failed.';
+  String get orderFailedLong => 'Encomenda falhou.';
 
   @override
   String orderCreatedLong(String id) {
-    return 'Order created: $id';
+    return 'Encomenda criada: $id';
   }
 
   @override
-  String get placingOrderButton => 'Placing order...';
+  String get placingOrderButton => 'A fazer encomenda...';
 
   @override
-  String get placeOrderButton => 'Place order';
+  String get placeOrderButton => 'Fazer encomenda';
 
   @override
-  String get loadMoreButton => 'Load more';
+  String get loadMoreButton => 'Carregar mais';
 
   @override
-  String get searchOrderPlaceholder => 'Search an order...';
+  String get searchOrderPlaceholder => 'Pesquisar uma encomenda...';
 
   @override
-  String get allFilter => 'All';
+  String get allFilter => 'Todos';
 
   @override
-  String get orderConfirmedStep => 'Confirmed';
+  String get orderConfirmedStep => 'Confirmado';
 
   @override
-  String get shippedStep => 'Shipped';
+  String get shippedStep => 'Enviado';
 
   @override
-  String get deliveredStep => 'Delivered';
+  String get deliveredStep => 'Entregue';
 
   @override
-  String get unknownDate => 'Unknown';
+  String get unknownDate => 'Desconhecido';
 
   @override
-  String get p2pMessengerTitle => 'P2P Messenger';
+  String get p2pMessengerTitle => 'Mensagens P2P';
 
   @override
   String errorWithDetails(String message) {
-    return 'Error: $message';
+    return 'Erro: $message';
   }
 
   @override
-  String get myQrCode => 'My QR Code';
+  String get myQrCode => 'O meu QR Code';
 
   @override
-  String get shareQrCodeTitle => 'Share your QR Code';
+  String get shareQrCodeTitle => 'Partilhe o seu QR Code';
 
   @override
   String get shareQrCodeSubtitle =>
-      'Let your friends scan this code to add you to their contacts.';
+      'Deixe os seus amigos scanear este c?digo para o adicionar aos contactos.';
 
   @override
   String get takeScreenshotToShare =>
-      'Take a screenshot to share your QR Code.';
+      'Tire uma captura de ecr? para partilhar o seu QR Code.';
 
   @override
-  String get initErrorTitle => 'Initialization Error';
+  String get initErrorTitle => 'Erro de inicializa??o';
 
   @override
-  String get messagesTitle => 'Messages';
+  String get messagesTitle => 'Mensagens';
 
   @override
-  String get addContactTooltip => 'Add Contact';
+  String get addContactTooltip => 'Adicionar contacto';
 
   @override
-  String get noConversations => 'No conversations yet';
+  String get noConversations => 'Sem conversas ainda';
 
   @override
-  String get addContactToStart => 'Add a contact to start chatting';
+  String get addContactToStart =>
+      'Adicione um contacto para come?ar a conversar';
 
   @override
-  String get typingStatus => 'typing...';
+  String get typingStatus => 'a escrever...';
 
   @override
-  String get sayHello => 'Say hello! 👋';
+  String get sayHello => 'Diga ol?! ??';
 
   @override
-  String get yesterday => 'Yesterday';
+  String get yesterday => 'Ontem';
 
   @override
-  String get addFriendTitle => 'Add Friend';
+  String get addFriendTitle => 'Adicionar amigo';
 
   @override
-  String get scanFriendQr => 'Scan your friend\'s QR Code';
+  String get scanFriendQr => 'Scaneie o QR Code do seu amigo';
 
   @override
-  String get addContactTitle => 'Add Contact';
+  String get addContactTitle => 'Adicionar contacto';
 
   @override
-  String get yourQrCodeTitle => 'Your QR Code';
+  String get yourQrCodeTitle => 'O seu QR Code';
 
   @override
-  String get yourQrCodeSubtitle => 'Show this code to your friend';
+  String get yourQrCodeSubtitle => 'Mostre este c?digo ao seu amigo';
 
   @override
-  String get notAvailable => 'N/A';
+  String get notAvailable => 'N/D';
 
   @override
-  String get deviceIdLabel => 'Device ID';
+  String get deviceIdLabel => 'ID do dispositivo';
 
   @override
-  String get contactAddedSuccess => 'Contact added successfully!';
+  String get contactAddedSuccess => 'Contacto adicionado com sucesso!';
 
   @override
-  String get dataChannelDisconnected => 'Data channel disconnected';
+  String get dataChannelDisconnected => 'Canal de dados desconectado';
 
   @override
   String peerNotConnected(String id) {
-    return 'Peer not connected: $id';
+    return 'Par n?o conectado: $id';
   }
 
   @override
   String errorParsingMessage(String error) {
-    return 'Error parsing message: $error';
+    return 'Erro ao analisar mensagem: $error';
   }
 
   @override
   String invalidQrCode(String error) {
-    return 'Invalid QR Code: $error';
+    return 'QR Code inv?lido: $error';
   }
 
   @override
-  String get missingDeviceId => 'Missing Device ID';
+  String get missingDeviceId => 'ID do dispositivo ausente';
 
   @override
-  String get missingPseudo => 'Missing Pseudo';
+  String get missingPseudo => 'Pseudo em falta';
 
   @override
-  String get missingPublicKey => 'Missing Public Key';
+  String get missingPublicKey => 'Chave p?blica em falta';
 
   @override
-  String get cannotAddSelfError => 'Cannot add yourself';
+  String get cannotAddSelfError => 'N?o pode adicionar-se a si pr?prio';
 
   @override
-  String get invalidPublicKeyFormat => 'Invalid public key format';
+  String get invalidPublicKeyFormat => 'Formato de chave p?blica inv?lido';
 
   @override
   String errorParsingQrCode(String error) {
-    return 'Error parsing QR Code: $error';
+    return 'Erro ao analisar QR Code: $error';
   }
 
   @override
   String get mistral2laudeTitle => 'Mistral2laude P2P';
 
   @override
-  String get friendLabel => 'Friend';
+  String get friendLabel => 'Amigo';
 
   @override
-  String get encryptedMessage => '[Encrypted message]';
+  String get encryptedMessage => '[Mensagem encriptada]';
 
   @override
-  String get youEncryptedMessage => 'You: [Encrypted message]';
+  String get youEncryptedMessage => 'Tu: [Mensagem encriptada]';
 
   @override
-  String get imageMessage => '🖼️ Image';
+  String get imageMessage => '??? Imagem';
 
   @override
-  String get fileMessage => '📎 File';
+  String get fileMessage => '?? Ficheiro';
 
   @override
-  String get newMessage => 'New message';
+  String get newMessage => 'Nova mensagem';
 
   @override
-  String get reply => 'Reply';
+  String get reply => 'Responder';
 
   @override
-  String get quickReply => 'Quick reply';
+  String get quickReply => 'Resposta r?pida';
 
   @override
-  String get markAsRead => 'Mark as read';
+  String get markAsRead => 'Marcar como lida';
 
   @override
-  String get isTyping => 'is typing...';
+  String get isTyping => 'est? a escrever...';
 
   @override
-  String get typingIndicator => 'Typing...';
+  String get typingIndicator => 'A escrever...';
 
   @override
-  String get vocalMessage => 'Vocal message';
+  String get vocalMessage => 'Mensagem de voz';
 
   @override
   String get gps => 'GPS';
 
   @override
-  String get permissions => 'Permissions';
+  String get permissions => 'Permiss?es';
 
   @override
-  String get trace => 'Trace';
+  String get trace => 'Rasto';
 
   @override
   String get mainChannelValue => 'WebRTC P2P';
 
   @override
-  String get formErrors => 'Please fix the form errors.';
+  String get formErrors => 'Por favor, corrija os erros do formulário.';
 
   @override
-  String get saveFailed => 'Save failed.';
+  String get saveFailed => 'Falha ao salvar.';
 
   @override
-  String get itemsLabel => 'Items';
+  String get itemsLabel => 'Itens';
+
+  @override
+  String get productInfoSection => 'Informações';
+
+  @override
+  String get productImageSection => 'Imagem';
+
+  @override
+  String get productStockStatusSection => 'Estoque e status';
+
+  @override
+  String get categoryLabel => 'Categoria';
+
+  @override
+  String get nameRequired => 'Nome é obrigatório';
+
+  @override
+  String get priceRequired => 'Preço é obrigatório';
+
+  @override
+  String get invalidPrice => 'Insira um preço válido';
+
+  @override
+  String get invalidPromoPrice => 'Insira um preço promocional válido';
+
+  @override
+  String get promoLowerThanPrice =>
+      'O preço promocional deve ser menor que o preço';
+
+  @override
+  String get invalidStock => 'Insira um estoque válido';
+
+  @override
+  String get popularityHelper => 'Quanto maior, mais popular';
+
+  @override
+  String get invalidPopularity => 'Insira uma popularidade válida';
+
+  @override
+  String get addToCart => 'Adicionar ao carrinho';
+
+  @override
+  String get stockUnknown => 'Estoque desconhecido';
+
+  @override
+  String get startChatPrompt => 'Comece a conversa';
+
+  @override
+  String get realtimeMessengerTitle => 'Sigma Messenger (Tempo real)';
+
+  @override
+  String get clear => 'Limpar';
+
+  @override
+  String get warehouseRole => 'Armazém';
+
+  @override
+  String get carrierRole => 'Transportadora';
+
+  @override
+  String get supportRole => 'Suporte';
+
+  @override
+  String get orderStatusCreated => 'Criada';
+
+  @override
+  String get orderStatusPendingPayment => 'Pagamento pendente';
+
+  @override
+  String get orderStatusPaid => 'Paga';
+
+  @override
+  String get orderStatusPaymentFailed => 'Falha no pagamento';
+
+  @override
+  String get orderStatusCancelRequested => 'Cancelamento solicitado';
+
+  @override
+  String get orderStatusCancelled => 'Cancelada';
+
+  @override
+  String get orderStatusOrderConfirmed => 'Confirmada';
+
+  @override
+  String get orderStatusStockAllocated => 'Estoque alocado';
+
+  @override
+  String get orderStatusBackorder => 'Pedido em espera';
+
+  @override
+  String get orderStatusPicking => 'Separação';
+
+  @override
+  String get orderStatusPacked => 'Embalada';
+
+  @override
+  String get orderStatusReadyToShip => 'Pronta para envio';
+
+  @override
+  String get orderStatusPartiallyShipped => 'Parcialmente enviada';
+
+  @override
+  String get orderStatusShipped => 'Enviada';
+
+  @override
+  String get orderStatusPartiallyDelivered => 'Parcialmente entregue';
+
+  @override
+  String get orderStatusDelivered => 'Entregue';
+
+  @override
+  String get orderStatusDeliveryFailed => 'Falha na entrega';
+
+  @override
+  String get orderStatusException => 'Exceção';
+
+  @override
+  String get orderStatusReturnRequested => 'Devolução solicitada';
+
+  @override
+  String get orderStatusReturnInTransit => 'Devolução em trânsito';
+
+  @override
+  String get orderStatusReturnReceived => 'Devolução recebida';
+
+  @override
+  String get orderStatusRefundPending => 'Reembolso pendente';
+
+  @override
+  String get orderStatusRefunded => 'Reembolsada';
+
+  @override
+  String get orderStatusClosed => 'Encerrada';
+
+  @override
+  String get shipmentStatusLabelCreated => 'Etiqueta criada';
+
+  @override
+  String get shipmentStatusPickedUp => 'Coletado';
+
+  @override
+  String get shipmentStatusInTransit => 'Em trânsito';
+
+  @override
+  String get shipmentStatusArrivedAtHub => 'Chegou ao hub';
+
+  @override
+  String get shipmentStatusCustomsClearance => 'Desembaraço aduaneiro';
+
+  @override
+  String get shipmentStatusOutForDelivery => 'Saiu para entrega';
+
+  @override
+  String get shipmentStatusDelivered => 'Entregue';
+
+  @override
+  String get shipmentStatusDeliveryFailed => 'Falha na entrega';
+
+  @override
+  String get shipmentStatusException => 'Exceção';
+
+  @override
+  String get shipmentStatusLost => 'Perdido';
+
+  @override
+  String get shipmentStatusDamaged => 'Danificado';
+
+  @override
+  String get shipmentStatusReturnToSender => 'Devolvido ao remetente';
+
+  @override
+  String get returnStatusRequested => 'Solicitado';
+
+  @override
+  String get returnStatusAuthorized => 'Autorizado';
+
+  @override
+  String get returnStatusLabelIssued => 'Etiqueta emitida';
+
+  @override
+  String get returnStatusInTransit => 'Em trânsito';
+
+  @override
+  String get returnStatusReceived => 'Recebido';
+
+  @override
+  String get returnStatusRejected => 'Rejeitado';
+
+  @override
+  String get returnStatusRefundPending => 'Reembolso pendente';
+
+  @override
+  String get returnStatusRefunded => 'Reembolsado';
+
+  @override
+  String get paymentStatusPending => 'Pendente';
+
+  @override
+  String get paymentStatusAuthorized => 'Autorizado';
+
+  @override
+  String get paymentStatusCaptured => 'Capturado';
+
+  @override
+  String get paymentStatusVoided => 'Anulado';
+
+  @override
+  String get paymentStatusRefunded => 'Reembolsado';
+
+  @override
+  String get paymentStatusFailed => 'Falhou';
 }

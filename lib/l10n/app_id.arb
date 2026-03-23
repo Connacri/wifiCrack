@@ -4,7 +4,7 @@
     "map":  "Peta",
     "scan":  "Pindai",
     "settings":  "Pengaturan",
-    "admin":  "Admin",
+    "admin":  "Administrator",
     "commerce":  "Perdagangan",
     "p2pChat":  "Obrolan P2P",
     "publishAd":  "Pasang iklan",
@@ -33,7 +33,7 @@
     "about":  "Tentang",
     "version":  "Versi",
     "profileTooltip":  "Profil",
-    "adminTooltip":  "Admin",
+    "adminTooltip":  "Administrator",
     "chatTooltip":  "Obrolan",
     "p2pTooltip":  "P2P",
     "scanWifi":  "Pindai WiFi",
@@ -84,7 +84,7 @@
     "newPseudo":  "Nama Samaran Baru",
     "pseudoUpdated":  "Nama samaran diperbarui!",
     "pseudoError":  "Nama samaran tidak tersedia atau kesalahan.",
-    "messengerDashboard":  "Sigma Messenger Dashboard",
+    "messengerDashboard":  "Dasbor Sigma Messenger",
     "noUsersFound":  "Tidak ada pengguna ditemukan.",
     "noActivityAvailable":  "Tidak ada aktivitas yang tersedia.",
     "deleteConversation":  "Hapus obrolan",
@@ -173,7 +173,7 @@
     "authTitle":  "Autentikasi",
     "commerceLogin":  "Login Perdagangan",
     "createAccount":  "Buat akun",
-    "email":  "Email",
+    "email":  "Surel",
     "forgotPassword":  "Lupa kata sandi?",
     "loginGoogle":  "Lanjutkan dengan Google",
     "noAccount":  "Tidak punya akun? Daftar",
@@ -189,28 +189,28 @@
     "startDiscussion":  "Mulai diskusi",
     "yourMessage":  "Pesan Anda...",
     "orderErrorUnidentified":  "Tidak dapat melakukan pemesanan: pengguna tidak teridentifikasi.",
-    "p2pMessengerTitle":  "P2P Messenger",
-    "errorWithDetails":  "Error: {message}",
-    "myQrCode":  "My QR Code",
-    "shareQrCodeTitle":  "Share your QR Code",
-    "shareQrCodeSubtitle":  "Let your friends scan this code to add you to their contacts.",
-    "takeScreenshotToShare":  "Take a screenshot to share your QR Code.",
-    "initErrorTitle":  "Initialization Error",
-    "messagesTitle":  "Messages",
-    "addContactTooltip":  "Add Contact",
-    "noConversations":  "No conversations yet",
-    "addContactToStart":  "Add a contact to start chatting",
-    "typingStatus":  "typing...",
-    "sayHello":  "Say hello! 👋",
-    "yesterday":  "Yesterday",
-    "addFriendTitle":  "Add Friend",
-    "scanFriendQr":  "Scan your friend\u0027s QR Code",
-    "addContactTitle":  "Add Contact",
-    "yourQrCodeTitle":  "Your QR Code",
-    "yourQrCodeSubtitle":  "Show this code to your friend",
-    "notAvailable":  "N/A",
-    "deviceIdLabel":  "Device ID",
-    "contactAddedSuccess":  "Contact added successfully!",
+    "p2pMessengerTitle":  "Pesan P2P",
+    "errorWithDetails":  "Kesalahan: {message}",
+    "myQrCode":  "QR Code saya",
+    "shareQrCodeTitle":  "Bagikan QR Code Anda",
+    "shareQrCodeSubtitle":  "Biarkan teman Anda memindai kode ini untuk menambahkan Anda ke kontak mereka.",
+    "takeScreenshotToShare":  "Ambil tangkapan layar untuk membagikan QR Code Anda.",
+    "initErrorTitle":  "Kesalahan inisialisasi",
+    "messagesTitle":  "Pesan",
+    "addContactTooltip":  "Tambah kontak",
+    "noConversations":  "Belum ada percakapan",
+    "addContactToStart":  "Tambahkan kontak untuk mulai mengobrol",
+    "typingStatus":  "mengetik...",
+    "sayHello":  "Sapa! ??",
+    "yesterday":  "Kemarin",
+    "addFriendTitle":  "Tambah teman",
+    "scanFriendQr":  "Pindai QR Code teman Anda",
+    "addContactTitle":  "Tambah kontak",
+    "yourQrCodeTitle":  "QR Code Anda",
+    "yourQrCodeSubtitle":  "Tunjukkan kode ini kepada teman Anda",
+    "notAvailable":  "Tidak tersedia",
+    "deviceIdLabel":  "ID Perangkat",
+    "contactAddedSuccess":  "Kontak berhasil ditambahkan!",
     "@appTitle":  {
                       "description":  "The title of the application"
                   },
@@ -245,7 +245,7 @@
                                                            }
                                                 }
                            },
-    "supportChatPlaceholder":  "Message to support...",
+    "supportChatPlaceholder":  "Pesan ke dukungan...",
     "@agoMin":  {
                     "placeholders":  {
                                          "minutes":  {
@@ -288,27 +288,27 @@
                                                         }
                                           }
                      },
-    "client":  "Client",
-    "vendor":  "Vendor",
-    "deliveryPerson":  "Delivery Person",
-    "wholesaler":  "Wholesaler",
-    "vocalSigma":  "Sigma Voice",
-    "defaultMessageContent":  "Message",
-    "myContacts":  "My Contacts",
-    "myQrCodeTooltip":  "My QR Code",
-    "scanFriendTooltip":  "Scan a friend",
-    "friendAddedSuccess":  "✅ Friend added successfully!",
-    "editPseudoMenu":  "Edit my pseudo",
-    "myPseudoTitle":  "My pseudo",
-    "enterPseudoHint":  "Enter your pseudo",
-    "noContacts":  "No contacts",
-    "scanFriendToStart":  "Scan a friend\u0027s QR Code to start",
-    "scanFriendButton":  "Scan a friend",
-    "addedOn":  "Added on",
-    "scanQrCodeTitle":  "Scan a QR Code",
-    "qrCodeUnreadable":  "QR Code unreadable, try again.",
-    "invalidMistralQr":  "This QR Code is not from Mistral P2P.",
-    "invalidLinkError":  "Invalid link: {error}",
+    "client":  "Pelanggan",
+    "vendor":  "Penjual",
+    "deliveryPerson":  "Kurir",
+    "wholesaler":  "Grosir",
+    "vocalSigma":  "Suara Sigma",
+    "defaultMessageContent":  "Pesan",
+    "myContacts":  "Kontak saya",
+    "myQrCodeTooltip":  "QR Code saya",
+    "scanFriendTooltip":  "Pindai teman",
+    "friendAddedSuccess":  "? Teman berhasil ditambahkan!",
+    "editPseudoMenu":  "Edit nama samaran saya",
+    "myPseudoTitle":  "Nama samaran saya",
+    "enterPseudoHint":  "Masukkan nama samaran Anda",
+    "noContacts":  "Tidak ada kontak",
+    "scanFriendToStart":  "Pindai QR Code teman untuk memulai",
+    "scanFriendButton":  "Pindai teman",
+    "addedOn":  "Ditambahkan pada",
+    "scanQrCodeTitle":  "Pindai QR Code",
+    "qrCodeUnreadable":  "QR Code tidak terbaca, coba lagi.",
+    "invalidMistralQr":  "QR Code ini bukan dari Mistral P2P.",
+    "invalidLinkError":  "Tautan tidak valid: {error}",
     "@invalidLinkError":  {
                               "placeholders":  {
                                                    "error":  {
@@ -316,13 +316,13 @@
                                                              }
                                                }
                           },
-    "cannotAddSelf":  "🚫 You cannot add yourself!",
-    "friendAlreadyAdded":  "ℹ️ This friend is already in your contacts.",
-    "placeQrInFrame":  "Place the QR Code in the frame",
-    "retry":  "Retry",
-    "flashlightTooltip":  "Flashlight",
-    "shareLinkTooltip":  "Share link",
-    "inviteText":  "Add me on Mistral2laude P2P!\n{link}",
+    "cannotAddSelf":  "?? Anda tidak bisa menambahkan diri sendiri!",
+    "friendAlreadyAdded":  "?? Teman ini sudah ada di kontak Anda.",
+    "placeQrInFrame":  "Letakkan QR Code di dalam bingkai",
+    "retry":  "Coba lagi",
+    "flashlightTooltip":  "Senter",
+    "shareLinkTooltip":  "Bagikan tautan",
+    "inviteText":  "Tambahkan saya di Mistral2laude P2P!\n{link}",
     "@inviteText":  {
                         "placeholders":  {
                                              "link":  {
@@ -330,36 +330,36 @@
                                                       }
                                          }
                     },
-    "inviteSubject":  "Mistral2laude P2P Invitation",
-    "scanMeText":  "Scan this QR Code\nto add me as a contact",
-    "microphonePermissionDenied":  "Microphone permission denied",
-    "connectionNotEstablished":  "⚠️ Connection not established. Message saved locally.",
-    "noMessagesYet":  "No messages.\nSend the first one! 👋",
-    "statusConnected":  "Connected",
-    "statusConnecting":  "Connecting...",
-    "statusFailed":  "Failed",
+    "inviteSubject":  "Undangan Mistral2laude P2P",
+    "scanMeText":  "Pindai QR Code ini\nuntuk menambahkan saya sebagai kontak",
+    "microphonePermissionDenied":  "Izin mikrofon ditolak",
+    "connectionNotEstablished":  "?? Koneksi belum terhubung. Pesan disimpan secara lokal.",
+    "noMessagesYet":  "Belum ada pesan.\nKirim yang pertama! ??",
+    "statusConnected":  "Terhubung",
+    "statusConnecting":  "Menghubungkan...",
+    "statusFailed":  "Gagal",
     "statusOffline":  "Offline",
-    "recordingHint":  "🔴 Recording...",
-    "messageHint":  "Message...",
-    "connectingHint":  "Connecting...",
-    "initFailed":  "Initialization failed",
-    "defaultUserPseudo":  "M2C User",
-    "mobileDevice":  "Mobile Device",
-    "unknownDevice":  "Unknown Device",
-    "productsTab":  "Products",
-    "ordersTab":  "Orders",
-    "cartTab":  "Cart",
-    "clientModeTooltip":  "Client mode",
-    "adminModeTooltip":  "Admin mode",
-    "addProductTooltip":  "Add product",
-    "orderCreated":  "Order created.",
-    "orderFailed":  "Order failed.",
-    "productCreated":  "Product created.",
-    "productUpdated":  "Product updated.",
-    "productDeleted":  "Product deleted.",
-    "deleteFailed":  "Delete failed.",
-    "deleteProductTitle":  "Delete product",
-    "deleteProductConfirm":  "Delete \"{name}\"?",
+    "recordingHint":  "?? Merekam...",
+    "messageHint":  "Pesan...",
+    "connectingHint":  "Menghubungkan...",
+    "initFailed":  "Inisialisasi gagal",
+    "defaultUserPseudo":  "Pengguna M2C",
+    "mobileDevice":  "Perangkat seluler",
+    "unknownDevice":  "Perangkat tidak dikenal",
+    "productsTab":  "Produk",
+    "ordersTab":  "Pesanan",
+    "cartTab":  "Keranjang",
+    "clientModeTooltip":  "Mode pelanggan",
+    "adminModeTooltip":  "Mode admin",
+    "addProductTooltip":  "Tambah produk",
+    "orderCreated":  "Pesanan dibuat.",
+    "orderFailed":  "Pesanan gagal.",
+    "productCreated":  "Produk dibuat.",
+    "productUpdated":  "Produk diperbarui.",
+    "productDeleted":  "Produk dihapus.",
+    "deleteFailed":  "Gagal menghapus.",
+    "deleteProductTitle":  "Hapus produk",
+    "deleteProductConfirm":  "Hapus \"{name}\"?",
     "@deleteProductConfirm":  {
                                   "placeholders":  {
                                                        "name":  {
@@ -367,8 +367,8 @@
                                                                 }
                                                    }
                               },
-    "imageUploaded":  "Image uploaded.",
-    "imageUploadFailed":  "Image upload failed: {error}",
+    "imageUploaded":  "Gambar diunggah.",
+    "imageUploadFailed":  "Unggah gambar gagal: {error}",
     "@imageUploadFailed":  {
                                "placeholders":  {
                                                     "error":  {
@@ -376,53 +376,53 @@
                                                               }
                                                 }
                            },
-    "supabaseBucketNotConfigured":  "Supabase image bucket is not configured.",
-    "searchProductsPlaceholder":  "Search products or SKU",
-    "inStockFilter":  "In stock",
-    "includeInactiveFilter":  "Include inactive",
-    "sortName":  "Name",
-    "sortPriceAsc":  "Price low-high",
-    "sortPriceDesc":  "Price high-low",
-    "sortStockAsc":  "Stock low-high",
-    "sortStockDesc":  "Stock high-low",
-    "sortPopularity":  "Popularity",
-    "gridView":  "Grid",
-    "listView":  "List",
-    "noProductsMatch":  "No products match your filters.",
-    "clearFilters":  "Clear filters",
-    "allProductsLoaded":  "All products loaded.",
-    "saveProductTitle":  "Save Product",
-    "addProductTitle":  "Add Product",
-    "editProductTitle":  "Edit Product",
-    "productNameLabel":  "Name",
-    "skuLabel":  "SKU / Reference",
-    "priceLabel":  "Price (DZD)",
-    "promoPriceLabel":  "Promo price (DZD)",
-    "optionalHelper":  "Optional",
-    "imageLabel":  "Image URL or Storage path",
-    "uploadImageButton":  "Upload image",
-    "replaceImageButton":  "Replace image",
-    "uploadingButton":  "Uploading...",
-    "stockLabel":  "Stock",
-    "popularityLabel":  "Popularity",
-    "activeLabel":  "Active",
-    "saveButton":  "Save",
-    "savingButton":  "Saving...",
-    "unavailableStatus":  "Unavailable",
-    "outOfStockStatus":  "Out of stock",
-    "lowStockStatus":  "Low stock",
-    "inactiveStatus":  "Inactive",
-    "promoStatus":  "Promo",
-    "cartEmpty":  "Cart is empty.",
-    "yourCart":  "Your cart",
-    "clearCart":  "Clear",
+    "supabaseBucketNotConfigured":  "Bucket gambar Supabase belum dikonfigurasi.",
+    "searchProductsPlaceholder":  "Cari produk atau SKU",
+    "inStockFilter":  "Tersedia",
+    "includeInactiveFilter":  "Sertakan yang tidak aktif",
+    "sortName":  "Nama",
+    "sortPriceAsc":  "Harga rendah-tinggi",
+    "sortPriceDesc":  "Harga tinggi-rendah",
+    "sortStockAsc":  "Stok rendah-tinggi",
+    "sortStockDesc":  "Stok tinggi-rendah",
+    "sortPopularity":  "Popularitas",
+    "gridView":  "Kisi",
+    "listView":  "Daftar",
+    "noProductsMatch":  "Tidak ada produk yang cocok dengan filter Anda.",
+    "clearFilters":  "Bersihkan filter",
+    "allProductsLoaded":  "Semua produk dimuat.",
+    "saveProductTitle":  "Simpan produk",
+    "addProductTitle":  "Tambah produk",
+    "editProductTitle":  "Edit produk",
+    "productNameLabel":  "Nama",
+    "skuLabel":  "SKU / Referensi",
+    "priceLabel":  "Harga (DZD)",
+    "promoPriceLabel":  "Harga promo (DZD)",
+    "optionalHelper":  "Opsional",
+    "imageLabel":  "URL gambar atau jalur penyimpanan",
+    "uploadImageButton":  "Unggah gambar",
+    "replaceImageButton":  "Ganti gambar",
+    "uploadingButton":  "Mengunggah...",
+    "stockLabel":  "Stok",
+    "popularityLabel":  "Popularitas",
+    "activeLabel":  "Aktif",
+    "saveButton":  "Simpan",
+    "savingButton":  "Menyimpan...",
+    "unavailableStatus":  "Tidak tersedia",
+    "outOfStockStatus":  "Stok habis",
+    "lowStockStatus":  "Stok rendah",
+    "inactiveStatus":  "Tidak aktif",
+    "promoStatus":  "Promosi",
+    "cartEmpty":  "Keranjang kosong.",
+    "yourCart":  "Keranjang Anda",
+    "clearCart":  "Bersihkan",
     "subtotalLabel":  "Subtotal",
-    "deliveryLabel":  "Delivery",
+    "deliveryLabel":  "Pengiriman",
     "totalLabel":  "Total",
-    "phoneLabel":  "Phone",
-    "addressLabel":  "Address",
-    "noteLabel":  "Note",
-    "checkoutButton":  "Checkout",
+    "phoneLabel":  "Telepon",
+    "addressLabel":  "Alamat",
+    "noteLabel":  "Catatan",
+    "checkoutButton":  "Selesaikan pembelian",
     "orderTotal":  "Total {amount} DZD",
     "@orderTotal":  {
                         "placeholders":  {
@@ -431,7 +431,7 @@
                                                         }
                                          }
                     },
-    "itemsCount":  "{count} items",
+    "itemsCount":  "{count} item",
     "@itemsCount":  {
                         "placeholders":  {
                                              "count":  {
@@ -439,7 +439,7 @@
                                                        }
                                          }
                     },
-    "orderNumber":  "Order #{id}",
+    "orderNumber":  "Pesanan #{id}",
     "@orderNumber":  {
                          "placeholders":  {
                                               "id":  {
@@ -447,14 +447,14 @@
                                                      }
                                           }
                      },
-    "changeRoleTooltip":  "Change role (Simulation)",
-    "orderNotFound":  "Order not found",
-    "globalStatus":  "Global status",
-    "dateLabel":  "Date",
-    "customerLabel":  "Customer",
-    "paymentLabel":  "Payment",
-    "productsLabel":  "Products",
-    "priceXQuantity":  "Price: {price} DZD x {quantity}",
+    "changeRoleTooltip":  "Ubah peran (Simulasi)",
+    "orderNotFound":  "Pesanan tidak ditemukan",
+    "globalStatus":  "Status global",
+    "dateLabel":  "Tanggal",
+    "customerLabel":  "Pelanggan",
+    "paymentLabel":  "Pembayaran",
+    "productsLabel":  "Produk",
+    "priceXQuantity":  "Harga: {price} DZD x {quantity}",
     "@priceXQuantity":  {
                             "placeholders":  {
                                                  "price":  {
@@ -465,8 +465,10 @@
                                                               }
                                              }
                         },
-    "noShipmentsYet":  "No shipments yet.",
-    "shipmentsCount":  "Shipments ({count})",
+  "amountWithCurrency": "{amount} DZD",
+  "shipmentItemLine": "? {name} (x{quantity})",
+    "noShipmentsYet":  "Belum ada pengiriman.",
+    "shipmentsCount":  "Pengiriman ({count})",
     "@shipmentsCount":  {
                             "placeholders":  {
                                                  "count":  {
@@ -474,7 +476,7 @@
                                                            }
                                              }
                         },
-    "packageNumber":  "Package: {tracking}",
+    "packageNumber":  "Paket: {tracking}",
     "@packageNumber":  {
                            "placeholders":  {
                                                 "tracking":  {
@@ -482,7 +484,7 @@
                                                              }
                                             }
                        },
-    "carrierLabel":  "Carrier: {name}",
+    "carrierLabel":  "Kurir: {name}",
     "@carrierLabel":  {
                           "placeholders":  {
                                                "name":  {
@@ -491,14 +493,14 @@
                                            }
                       },
     "packageId":  "ID",
-    "shippedOn":  "Shipped on",
-    "itemsInPackage":  "Items in this package:",
-    "confirmOrderButton":  "Confirm order",
-    "allocateStockButton":  "Allocate stock",
-    "startPickingButton":  "Start Picking",
-    "packingFinishedButton":  "Packing finished (Packed)",
-    "shipButton":  "Label \u0026 Ship",
-    "setInTransitButton":  "Set In Transit ({tracking})",
+    "shippedOn":  "Dikirim pada",
+    "itemsInPackage":  "Item dalam paket ini:",
+    "confirmOrderButton":  "Konfirmasi pesanan",
+    "allocateStockButton":  "Alokasikan stok",
+    "startPickingButton":  "Mulai picking",
+    "packingFinishedButton":  "Pengemasan selesai (Dikemas)",
+    "shipButton":  "Label & kirim",
+    "setInTransitButton":  "Set dalam transit ({tracking})",
     "@setInTransitButton":  {
                                 "placeholders":  {
                                                      "tracking":  {
@@ -506,7 +508,7 @@
                                                                   }
                                                  }
                             },
-    "confirmDeliveryButton":  "Confirm Delivery ({tracking})",
+    "confirmDeliveryButton":  "Konfirmasi pengantaran ({tracking})",
     "@confirmDeliveryButton":  {
                                    "placeholders":  {
                                                         "tracking":  {
@@ -514,14 +516,14 @@
                                                                      }
                                                     }
                                },
-    "requestReturnButton":  "Request a return",
-    "newShipmentTitle":  "New Shipment",
-    "allItemIncludedNote":  "All items will be included in this package for this example.",
-    "trackingNumberLabel":  "Tracking Number",
-    "adminStatusTitle":  "Administration : Status",
-    "phoneAddressRequired":  "Phone and address are required.",
-    "orderFailedLong":  "Order failed.",
-    "orderCreatedLong":  "Order created: {id}",
+    "requestReturnButton":  "Minta pengembalian",
+    "newShipmentTitle":  "Pengiriman baru",
+    "allItemIncludedNote":  "Semua item akan disertakan dalam paket ini untuk contoh ini.",
+    "trackingNumberLabel":  "Nomor pelacakan",
+    "adminStatusTitle":  "Administrasi : Status",
+    "phoneAddressRequired":  "Telepon dan alamat diperlukan.",
+    "orderFailedLong":  "Pesanan gagal.",
+    "orderCreatedLong":  "Pesanan dibuat: {id}",
     "@orderCreatedLong":  {
                               "placeholders":  {
                                                    "id":  {
@@ -529,15 +531,15 @@
                                                           }
                                                }
                           },
-    "placingOrderButton":  "Placing order...",
-    "placeOrderButton":  "Place order",
-    "loadMoreButton":  "Load more",
-    "searchOrderPlaceholder":  "Search an order...",
-    "allFilter":  "All",
-    "orderConfirmedStep":  "Confirmed",
-    "shippedStep":  "Shipped",
-    "deliveredStep":  "Delivered",
-    "unknownDate":  "Unknown",
+    "placingOrderButton":  "Memproses pesanan...",
+    "placeOrderButton":  "Buat pesanan",
+    "loadMoreButton":  "Muat lebih banyak",
+    "searchOrderPlaceholder":  "Cari pesanan...",
+    "allFilter":  "Semua",
+    "orderConfirmedStep":  "Dikonfirmasi",
+    "shippedStep":  "Dikirim",
+    "deliveredStep":  "Dikirimkan",
+    "unknownDate":  "Tidak diketahui",
     "@errorWithDetails":  {
                               "placeholders":  {
                                                    "message":  {
@@ -545,8 +547,8 @@
                                                                }
                                                }
                           },
-    "dataChannelDisconnected":  "Data channel disconnected",
-    "peerNotConnected":  "Peer not connected: {id}",
+    "dataChannelDisconnected":  "Saluran data terputus",
+    "peerNotConnected":  "Peer tidak terhubung: {id}",
     "@peerNotConnected":  {
                               "placeholders":  {
                                                    "id":  {
@@ -554,7 +556,7 @@
                                                           }
                                                }
                           },
-    "errorParsingMessage":  "Error parsing message: {error}",
+    "errorParsingMessage":  "Kesalahan mem-parsing pesan: {error}",
     "@errorParsingMessage":  {
                                  "placeholders":  {
                                                       "error":  {
@@ -562,7 +564,7 @@
                                                                 }
                                                   }
                              },
-    "invalidQrCode":  "Invalid QR Code: {error}",
+    "invalidQrCode":  "QR Code tidak valid: {error}",
     "@invalidQrCode":  {
                            "placeholders":  {
                                                 "error":  {
@@ -570,12 +572,12 @@
                                                           }
                                             }
                        },
-    "missingDeviceId":  "Missing Device ID",
-    "missingPseudo":  "Missing Pseudo",
-    "missingPublicKey":  "Missing Public Key",
-    "cannotAddSelfError":  "Cannot add yourself",
-    "invalidPublicKeyFormat":  "Invalid public key format",
-    "errorParsingQrCode":  "Error parsing QR Code: {error}",
+    "missingDeviceId":  "ID Perangkat tidak ada",
+    "missingPseudo":  "Nama samaran hilang",
+    "missingPublicKey":  "Kunci publik hilang",
+    "cannotAddSelfError":  "Tidak dapat menambahkan diri sendiri",
+    "invalidPublicKeyFormat":  "Format kunci publik tidak valid",
+    "errorParsingQrCode":  "Kesalahan mem-parsing QR Code: {error}",
     "@errorParsingQrCode":  {
                                 "placeholders":  {
                                                      "error":  {
@@ -584,20 +586,93 @@
                                                  }
                             },
     "mistral2laudeTitle":  "Mistral2laude P2P",
-    "friendLabel":  "Friend",
-    "encryptedMessage":  "[Encrypted message]",
-    "youEncryptedMessage":  "You: [Encrypted message]",
-    "imageMessage":  "🖼️ Image",
-    "fileMessage":  "📎 File",
-    "newMessage":  "New message",
-    "reply":  "Reply",
-    "quickReply":  "Quick reply",
-    "markAsRead":  "Mark as read",
-    "isTyping":  "is typing...",
-    "typingIndicator":  "Typing...",
-    "vocalMessage":  "Vocal message",
+    "friendLabel":  "Teman",
+    "encryptedMessage":  "[Pesan terenkripsi]",
+    "youEncryptedMessage":  "Anda: [Pesan terenkripsi]",
+    "imageMessage":  "??? Gambar",
+    "fileMessage":  "?? Berkas",
+    "newMessage":  "Pesan baru",
+    "reply":  "Balas",
+    "quickReply":  "Balasan cepat",
+    "markAsRead":  "Tandai sudah dibaca",
+    "isTyping":  "sedang mengetik...",
+    "typingIndicator":  "Mengetik...",
+    "vocalMessage":  "Pesan suara",
     "gps":  "GPS",
-    "permissions":  "Permissions",
-    "trace":  "Trace",
-    "mainChannelValue":  "WebRTC P2P"
+    "permissions":  "Izin",
+    "trace":  "Jejak",
+    "mainChannelValue":  "WebRTC P2P",
+  "formErrors": "Silakan perbaiki kesalahan pada formulir.",
+  "saveFailed": "Gagal menyimpan.",
+  "itemsLabel": "Item",
+  "productInfoSection": "Informasi",
+  "productImageSection": "Gambar",
+  "productStockStatusSection": "Stok & status",
+  "categoryLabel": "Kategori",
+  "nameRequired": "Nama wajib diisi",
+  "priceRequired": "Harga wajib diisi",
+  "invalidPrice": "Masukkan harga yang valid",
+  "invalidPromoPrice": "Masukkan harga promo yang valid",
+  "promoLowerThanPrice": "Harga promo harus lebih rendah dari harga",
+  "invalidStock": "Masukkan stok yang valid",
+  "popularityHelper": "Semakin tinggi semakin populer",
+  "invalidPopularity": "Masukkan popularitas yang valid",
+  "addToCart": "Tambah ke keranjang",
+  "stockUnknown": "Stok tidak diketahui",
+  "startChatPrompt": "Mulai percakapan",
+  "realtimeMessengerTitle": "Sigma Messenger (Waktu nyata)",
+  "clear": "Bersihkan",
+  "warehouseRole": "Gudang",
+  "carrierRole": "Pengangkut",
+  "supportRole": "Dukungan",
+  "orderStatusCreated": "Dibuat",
+  "orderStatusPendingPayment": "Pembayaran tertunda",
+  "orderStatusPaid": "Dibayar",
+  "orderStatusPaymentFailed": "Pembayaran gagal",
+  "orderStatusCancelRequested": "Pembatalan diminta",
+  "orderStatusCancelled": "Dibatalkan",
+  "orderStatusOrderConfirmed": "Dikonfirmasi",
+  "orderStatusStockAllocated": "Stok dialokasikan",
+  "orderStatusBackorder": "Pesanan tertunda",
+  "orderStatusPicking": "Pengambilan",
+  "orderStatusPacked": "Dikemas",
+  "orderStatusReadyToShip": "Siap dikirim",
+  "orderStatusPartiallyShipped": "Dikirim sebagian",
+  "orderStatusShipped": "Dikirim",
+  "orderStatusPartiallyDelivered": "Diterima sebagian",
+  "orderStatusDelivered": "Diterima",
+  "orderStatusDeliveryFailed": "Pengiriman gagal",
+  "orderStatusException": "Eksepsi",
+  "orderStatusReturnRequested": "Pengembalian diminta",
+  "orderStatusReturnInTransit": "Pengembalian dalam perjalanan",
+  "orderStatusReturnReceived": "Pengembalian diterima",
+  "orderStatusRefundPending": "Pengembalian dana tertunda",
+  "orderStatusRefunded": "Dikembalikan",
+  "orderStatusClosed": "Ditutup",
+  "shipmentStatusLabelCreated": "Label dibuat",
+  "shipmentStatusPickedUp": "Diambil",
+  "shipmentStatusInTransit": "Dalam perjalanan",
+  "shipmentStatusArrivedAtHub": "Tiba di hub",
+  "shipmentStatusCustomsClearance": "Bea cukai",
+  "shipmentStatusOutForDelivery": "Dalam pengantaran",
+  "shipmentStatusDelivered": "Terkirim",
+  "shipmentStatusDeliveryFailed": "Pengiriman gagal",
+  "shipmentStatusException": "Eksepsi",
+  "shipmentStatusLost": "Hilang",
+  "shipmentStatusDamaged": "Rusak",
+  "shipmentStatusReturnToSender": "Dikembalikan ke pengirim",
+  "returnStatusRequested": "Diminta",
+  "returnStatusAuthorized": "Diotorisasi",
+  "returnStatusLabelIssued": "Label diterbitkan",
+  "returnStatusInTransit": "Dalam perjalanan",
+  "returnStatusReceived": "Diterima",
+  "returnStatusRejected": "Ditolak",
+  "returnStatusRefundPending": "Pengembalian dana tertunda",
+  "returnStatusRefunded": "Dikembalikan",
+  "paymentStatusPending": "Tertunda",
+  "paymentStatusAuthorized": "Diotorisasi",
+  "paymentStatusCaptured": "Ditagih",
+  "paymentStatusVoided": "Dibatalkan",
+  "paymentStatusRefunded": "Dikembalikan",
+  "paymentStatusFailed": "Gagal"
 }

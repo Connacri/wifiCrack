@@ -443,6 +443,25 @@
       }
     }
   },
+  "amountWithCurrency": "{amount} DZD",
+  "@amountWithCurrency": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shipmentItemLine": "• {name} (x{quantity})",
+  "@shipmentItemLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
   "noShipmentsYet": "No shipments yet.",
   "shipmentsCount": "Shipments ({count})",
   "@shipmentsCount": {
@@ -602,5 +621,75 @@
   "mainChannelValue": "WebRTC P2P",
   "formErrors": "Please fix the form errors.",
   "saveFailed": "Save failed.",
-  "itemsLabel": "Items"
+  "itemsLabel": "Items",
+  "productInfoSection": "Info",
+  "productImageSection": "Image",
+  "productStockStatusSection": "Stock & status",
+  "categoryLabel": "Category",
+  "nameRequired": "Name is required",
+  "priceRequired": "Price is required",
+  "invalidPrice": "Enter a valid price",
+  "invalidPromoPrice": "Enter a valid promo price",
+  "promoLowerThanPrice": "Promo must be lower than price",
+  "invalidStock": "Enter a valid stock",
+  "popularityHelper": "Higher means more popular",
+  "invalidPopularity": "Enter a valid popularity",
+  "addToCart": "Add to cart",
+  "stockUnknown": "Stock unknown",
+  "startChatPrompt": "Start the conversation",
+  "realtimeMessengerTitle": "Sigma Messenger (Realtime)",
+  "clear": "Clear",
+  "warehouseRole": "Warehouse",
+  "carrierRole": "Carrier",
+  "supportRole": "Support",
+  "orderStatusCreated": "Created",
+  "orderStatusPendingPayment": "Pending payment",
+  "orderStatusPaid": "Paid",
+  "orderStatusPaymentFailed": "Payment failed",
+  "orderStatusCancelRequested": "Cancel requested",
+  "orderStatusCancelled": "Cancelled",
+  "orderStatusOrderConfirmed": "Confirmed",
+  "orderStatusStockAllocated": "Stock allocated",
+  "orderStatusBackorder": "Backorder",
+  "orderStatusPicking": "Picking",
+  "orderStatusPacked": "Packed",
+  "orderStatusReadyToShip": "Ready to ship",
+  "orderStatusPartiallyShipped": "Partially shipped",
+  "orderStatusShipped": "Shipped",
+  "orderStatusPartiallyDelivered": "Partially delivered",
+  "orderStatusDelivered": "Delivered",
+  "orderStatusDeliveryFailed": "Delivery failed",
+  "orderStatusException": "Exception",
+  "orderStatusReturnRequested": "Return requested",
+  "orderStatusReturnInTransit": "Return in transit",
+  "orderStatusReturnReceived": "Return received",
+  "orderStatusRefundPending": "Refund pending",
+  "orderStatusRefunded": "Refunded",
+  "orderStatusClosed": "Closed",
+  "shipmentStatusLabelCreated": "Label created",
+  "shipmentStatusPickedUp": "Picked up",
+  "shipmentStatusInTransit": "In transit",
+  "shipmentStatusArrivedAtHub": "Arrived at hub",
+  "shipmentStatusCustomsClearance": "Customs clearance",
+  "shipmentStatusOutForDelivery": "Out for delivery",
+  "shipmentStatusDelivered": "Delivered",
+  "shipmentStatusDeliveryFailed": "Delivery failed",
+  "shipmentStatusException": "Exception",
+  "shipmentStatusLost": "Lost",
+  "shipmentStatusDamaged": "Damaged",
+  "shipmentStatusReturnToSender": "Return to sender",
+  "returnStatusRequested": "Requested",
+  "returnStatusAuthorized": "Authorized",
+  "returnStatusLabelIssued": "Label issued",
+  "returnStatusInTransit": "In transit",
+  "returnStatusReceived": "Received",
+  "returnStatusRejected": "Rejected",
+  "returnStatusRefundPending": "Refund pending",
+  "returnStatusRefunded": "Refunded",
+  "paymentStatusPending": "Pending",
+  "paymentStatusAuthorized": "Authorized",
+  "paymentStatusCaptured": "Captured",
+  "paymentStatusVoided": "Voided",
+  "paymentStatusRefunded": "Refunded",
+  "paymentStatusFailed": "Failed"
 }
