@@ -44,11 +44,11 @@ Check-Tool gh
 # ------------------------------------------------
 # CLEAN BUILD
 # ------------------------------------------------
-
-Write-Step "Nettoyage projet"
-
-flutter clean
-flutter pub get
+#
+#Write-Step "Nettoyage projet"
+#
+#flutter clean
+#flutter pub get
 
 # ------------------------------------------------
 # VERSIONING AUTOMATIQUE
@@ -65,57 +65,57 @@ Write-Host "Version : $tag"
 # ------------------------------------------------
 # GIT COMMIT
 # ------------------------------------------------
-
-Write-Step "Sauvegarde du code"
-
-git add .
-
-try {
-    git commit -m "Release automatique $tag"
-} catch {
-    Write-Host "Aucun changement a commit."
-}
-
-# ------------------------------------------------
-# SYNC GITHUB
-# ------------------------------------------------
-
-Write-Step "Synchronisation GitHub"
-
-git pull origin main
-git push origin main
-
-# ------------------------------------------------
-# BUILD FLUTTER OPTIMISE
-# ------------------------------------------------
-
-Write-Step "Compilation Flutter optimise"
-
-flutter build apk `
---release `
---obfuscate `
---split-debug-info=$symbolPath `
---split-per-abi
-
-# ------------------------------------------------
-# VERIFICATION APK
-# ------------------------------------------------
-
-Write-Step "Verification build"
-
-if (!(Test-Path $apkPath)) {
-    Write-Host "APK non genere."
-    exit 1
-}
-
-$sizeMB = (Get-Item $apkPath).Length / 1MB
-$sizeMB = [math]::Round($sizeMB,2)
-
-Write-Host "Taille APK : $sizeMB MB"
-
-if ($sizeMB -gt 45) {
-    Write-Host "Attention : APK trop volumineux."
-}
+#
+#Write-Step "Sauvegarde du code"
+#
+#git add .
+#
+#try {
+#    git commit -m "Release automatique $tag"
+#} catch {
+#    Write-Host "Aucun changement a commit."
+#}
+#
+## ------------------------------------------------
+## SYNC GITHUB
+## ------------------------------------------------
+#
+#Write-Step "Synchronisation GitHub"
+#
+#git pull origin main
+#git push origin main
+#
+## ------------------------------------------------
+## BUILD FLUTTER OPTIMISE
+## ------------------------------------------------
+#
+#Write-Step "Compilation Flutter optimise"
+#
+#flutter build apk `
+#--release `
+#--obfuscate `
+#--split-debug-info=$symbolPath `
+#--split-per-abi
+#
+## ------------------------------------------------
+## VERIFICATION APK
+## ------------------------------------------------
+#
+#Write-Step "Verification build"
+#
+#if (!(Test-Path $apkPath)) {
+#    Write-Host "APK non genere."
+#    exit 1
+#}
+#
+#$sizeMB = (Get-Item $apkPath).Length / 1MB
+#$sizeMB = [math]::Round($sizeMB,2)
+#
+#Write-Host "Taille APK : $sizeMB MB"
+#
+#if ($sizeMB -gt 45) {
+#    Write-Host "Attention : APK trop volumineux."
+#}
 
 # ------------------------------------------------
 # TAG GIT
