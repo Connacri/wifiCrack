@@ -2,7 +2,7 @@ name: comwificrack
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.24+23
+version: 1.0.25+24
 
 environment:
   sdk: ^3.10.4
@@ -126,6 +126,7 @@ flutter:
     - assets/
     - assets/splash.png
     - assets/sounds/
+
 
 
 
