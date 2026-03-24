@@ -674,5 +674,8 @@
   "paymentStatusCaptured": "Ditagih",
   "paymentStatusVoided": "Dibatalkan",
   "paymentStatusRefunded": "Dikembalikan",
-  "paymentStatusFailed": "Gagal"
+  "paymentStatusFailed": "Gagal",
+  "bestSeller": "Terlaris",
+  "readMore": "baca selengkapnya",
+  "showLess": "lebih sedikit"
 }

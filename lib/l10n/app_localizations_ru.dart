@@ -1489,4 +1489,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String addedToCart(String product) {
     return '$product added to cart';
   }
+
+  @override
+  String get bestSeller => 'Бестселлер';
+
+  @override
+  String get readMore => 'читать далее';
+
+  @override
+  String get showLess => 'свернуть';
 }

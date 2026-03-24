@@ -701,5 +701,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "bestSeller": "Best Seller",
+  "readMore": "read more",
+  "showLess": "show less"
 }

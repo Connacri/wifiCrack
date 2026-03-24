@@ -1483,4 +1483,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String addedToCart(String product) {
     return 'تم إضافة $product إلى السلة';
   }
+
+  @override
+  String get bestSeller => 'الأكثر مبيعًا';
+
+  @override
+  String get readMore => 'اقرأ المزيد';
+
+  @override
+  String get showLess => 'عرض أقل';
 }

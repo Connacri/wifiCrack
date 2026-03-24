@@ -674,5 +674,8 @@
   "paymentStatusCaptured": "Capturado",
   "paymentStatusVoided": "Anulado",
   "paymentStatusRefunded": "Reembolsado",
-  "paymentStatusFailed": "Fallido"
+  "paymentStatusFailed": "Fallido",
+  "bestSeller": "Más vendido",
+  "readMore": "leer más",
+  "showLess": "ver menos"
 }

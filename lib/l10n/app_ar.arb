@@ -684,5 +684,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "bestSeller": "الأكثر مبيعًا",
+  "readMore": "اقرأ المزيد",
+  "showLess": "عرض أقل"
 }

@@ -20,10 +20,25 @@ class CommerceService {
     bool includeInactive = false,
     int offset = 0,
     int limit = 30,
+    String? userId,
   }) async {
     try {
       final table = CommerceConfig.productsTable;
-      var builder = _client.from(table).select();
+      
+      // Si userId est fourni, on fait un left join sur product_favorites
+      String selectStr = '*';
+      if (userId != null && userId.isNotEmpty) {
+        // Supabase PostgREST syntax for left join. 
+        // We select everything from products and a filtered sub-selection of product_favorites
+        selectStr = '*, product_favorites!left(user_id)';
+      }
+
+      var builder = _client.from(table).select(selectStr);
+
+      if (userId != null && userId.isNotEmpty) {
+        // On filtre le join pour n'avoir que les favoris de l'utilisateur actuel
+        builder = builder.eq('product_favorites.user_id', userId);
+      }
 
       if (!includeInactive) {
         builder = builder.eq('is_active', true);
@@ -136,6 +151,46 @@ class CommerceService {
     }
   }
 
+  /// Alterne le statut favori d'un produit pour un utilisateur
+  Future<bool> toggleFavorite(String userId, String productId, bool isFavorite) async {
+    try {
+      if (isFavorite) {
+        await _client.from('product_favorites').insert({
+          'user_id': userId,
+          'product_id': productId,
+        });
+        return true;
+      } else {
+        await _client
+            .from('product_favorites')
+            .delete()
+            .match({'user_id': userId, 'product_id': productId});
+        return false;
+      }
+    } catch (e) {
+      debugPrint('[Commerce] toggleFavorite error: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Product>> fetchFavorites(String userId) async {
+    try {
+      final res = await _client
+          .from('product_favorites')
+          .select('products(*)')
+          .eq('user_id', userId);
+      
+      final list = List<Map<String, dynamic>>.from(res as List);
+      return list
+          .map((item) => Product.fromMap(item['products'] as Map<String, dynamic>))
+          .map((p) => p.copyWith(isFavorite: true))
+          .toList();
+    } catch (e) {
+      debugPrint('[Commerce] fetchFavorites error: $e');
+      rethrow;
+    }
+  }
+
   Future<String?> createOrder({
     required String userId,
     required List<CartItem> items,
@@ -147,9 +202,16 @@ class CommerceService {
   }) async {
     if (items.isEmpty) return null;
     try {
+      debugPrint(
+        '[Commerce] createOrder start: userId=$userId '
+        'items=${items.length} total=$total '
+        'phoneProvided=${phone.trim().isNotEmpty} '
+        'addressProvided=${address.trim().isNotEmpty}',
+      );
+      final orderNumber = 'ORD-${DateTime.now().millisecondsSinceEpoch}';
       final payload = <String, dynamic>{
         'buyer_id': userId,
-        'order_number': 'ORD-${DateTime.now().millisecondsSinceEpoch}',
+        'order_number': orderNumber,
         'note': note,
         'phone': phone,
         'address': address,
@@ -169,10 +231,29 @@ class CommerceService {
             .toList(),
       };
 
-      final res = await _client.from('orders').insert(payload).select('id').single();
-      final id = res['id']?.toString();
-      if (id == null) throw Exception("L'ordre a été créé mais l'ID n'a pas été retourné.");
-      return id;
+      // Insert first without requesting returning rows to avoid RLS/406 issues.
+      await _client.from('orders').insert(payload);
+      debugPrint('[Commerce] createOrder insert ok: order_number=$orderNumber');
+
+      // Optional: try to fetch the id using the unique order_number.
+      String? id;
+      try {
+        final fallback = await _client
+            .from('orders')
+            .select('id')
+            .eq('order_number', orderNumber)
+            .maybeSingle();
+        id = fallback?['id']?.toString();
+        debugPrint('[Commerce] createOrder fetch id: $id');
+      } catch (e) {
+        debugPrint('[Commerce] createOrder fallback error: $e');
+      }
+
+      if (id != null && id.isNotEmpty) return id;
+
+      debugPrint("[Commerce] createOrder warning: insert ok but ID not returned.");
+      // Return order number so UI treats it as success and shows a reference.
+      return orderNumber;
     } catch (e) {
       debugPrint('[Commerce] createOrder error: $e');
       rethrow;

@@ -1492,4 +1492,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String addedToCart(String product) {
     return '$product added to cart';
   }
+
+  @override
+  String get bestSeller => 'Mais vendido';
+
+  @override
+  String get readMore => 'ler mais';
+
+  @override
+  String get showLess => 'ver menos';
 }

@@ -63,6 +63,7 @@ class _CommerceViewState extends State<_CommerceView> {
   bool _placingOrder = false;
   bool _openingProductForm = false;
   bool _isAdminMode = false;
+  TabController? _tabController;
 
   @override
   void initState() {
@@ -97,6 +98,10 @@ class _CommerceViewState extends State<_CommerceView> {
     final clientNameInput = _clientNameCtrl.text.trim();
     final firebaseUser = FirebaseAuth.instance.currentUser;
     final effectiveUserId = widget.userId ?? firebaseUser?.uid;
+    debugPrint(
+      '[Commerce] UI submitOrder: userId=$effectiveUserId '
+      'phoneProvided=${phone.isNotEmpty} addressProvided=${address.isNotEmpty}',
+    );
 
     if (phone.isEmpty || address.isEmpty) {
       if (!mounted) return;
@@ -137,7 +142,11 @@ class _CommerceViewState extends State<_CommerceView> {
       _phoneCtrl.clear();
       _addressCtrl.clear();
       _clientNameCtrl.clear();
-      DefaultTabController.of(context).animateTo(1);
+      if (_tabController == null) {
+        debugPrint('[Commerce] UI submitOrder warning: tabController is null');
+      } else {
+        _tabController!.animateTo(1);
+      }
       _refreshOrders();
 
       final message = orderId.trim().isEmpty
@@ -146,7 +155,9 @@ class _CommerceViewState extends State<_CommerceView> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[Commerce] UI submitOrder error: $e');
+      debugPrint('[Commerce] UI submitOrder stack: $st');
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -229,6 +240,13 @@ class _CommerceViewState extends State<_CommerceView> {
     final firebaseUser = FirebaseAuth.instance.currentUser;
     final l10n = AppLocalizations.of(context)!;
 
+    final effectiveUserId = widget.userId ?? firebaseUser?.uid;
+    if (provider.currentUserId != effectiveUserId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        provider.setCurrentUserId(effectiveUserId);
+      });
+    }
+
     final tabs = <Tab>[
       Tab(text: l10n.productsTab),
       Tab(
@@ -267,6 +285,7 @@ class _CommerceViewState extends State<_CommerceView> {
       length: tabs.length,
       child: Builder(
         builder: (context) {
+          _tabController = DefaultTabController.of(context);
           final tabController = DefaultTabController.of(context);
           return Scaffold(
             appBar: AppBar(
@@ -916,6 +935,20 @@ class _ProductCard extends StatelessWidget {
                             ],
                           ),
                         ),
+                        IconButton(
+                          icon: Icon(
+                            product.isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: product.isFavorite ? Colors.red : Colors.grey,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            context
+                                .read<CommerceProvider>()
+                                .toggleFavorite(product.id);
+                          },
+                        ),
                         if (isAdmin && (onEdit != null || onDelete != null))
                           PopupMenuButton<String>(
                             onSelected: (value) {
@@ -1138,6 +1171,28 @@ class _ProductGridCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  Positioned(
+                    top: 4,
+                    right: isAdmin ? 40 : 4,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.black26,
+                      radius: 16,
+                      child: IconButton(
+                        iconSize: 16,
+                        color: product.isFavorite ? Colors.red : Colors.white,
+                        icon: Icon(
+                          product.isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                        ),
+                        onPressed: () {
+                          context
+                              .read<CommerceProvider>()
+                              .toggleFavorite(product.id);
+                        },
+                      ),
+                    ),
+                  ),
                   if (isAdmin)
                     Positioned(
                       top: 4,
@@ -1711,81 +1766,87 @@ class _CartTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     if (provider.cartItems.isEmpty) return Center(child: Text(l10n.cartEmpty));
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Text(
-                l10n.yourCart,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: provider.clearCart,
-                icon: const Icon(Icons.delete_sweep),
-                label: Text(l10n.clearCart),
-              ),
-            ],
-          ),
-          ...provider.cartItems.map(
-            (item) => _CartItemRow(
-              item: item,
-              onIncrement: () =>
-                  provider.updateQuantity(item.product.id, item.quantity + 1),
-              onDecrement: () =>
-                  provider.updateQuantity(item.product.id, item.quantity - 1),
-              onRemove: () => provider.removeFromCart(item.product.id),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Text(
+                  l10n.yourCart,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: provider.clearCart,
+                  icon: const Icon(Icons.delete_sweep),
+                  label: Text(l10n.clearCart),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            margin: const EdgeInsets.all(12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: clientNameCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.fullNameLabel,
-                      hintText: l10n.optionalHelper,
+            ...provider.cartItems.map(
+              (item) => _CartItemRow(
+                item: item,
+                onIncrement: () =>
+                    provider.updateQuantity(item.product.id, item.quantity + 1),
+                onDecrement: () =>
+                    provider.updateQuantity(item.product.id, item.quantity - 1),
+                onRemove: () => provider.removeFromCart(item.product.id),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              margin: const EdgeInsets.all(12),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: clientNameCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.fullNameLabel,
+                        hintText: l10n.optionalHelper,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: phoneCtrl,
-                    decoration: InputDecoration(labelText: l10n.phoneLabel),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: addressCtrl,
-                    decoration: InputDecoration(labelText: l10n.addressLabel),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: noteCtrl,
-                    decoration: InputDecoration(labelText: l10n.orderNoteLabel),
-                    maxLines: 2,
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: phoneCtrl,
+                      decoration: InputDecoration(labelText: l10n.phoneLabel),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: addressCtrl,
+                      decoration: InputDecoration(labelText: l10n.addressLabel),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: noteCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.orderNoteLabel,
+                      ),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: placingOrder ? null : onSubmit,
-              child: Text(
-                placingOrder ? l10n.placingOrderButton : l10n.placeOrderButton,
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: placingOrder ? null : onSubmit,
+                child: Text(
+                  placingOrder
+                      ? l10n.placingOrderButton
+                      : l10n.placeOrderButton,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

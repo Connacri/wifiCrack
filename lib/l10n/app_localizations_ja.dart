@@ -1474,4 +1474,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String addedToCart(String product) {
     return '$product added to cart';
   }
+
+  @override
+  String get bestSeller => 'ベストセラー';
+
+  @override
+  String get readMore => '続きを読む';
+
+  @override
+  String get showLess => '閉じる';
 }

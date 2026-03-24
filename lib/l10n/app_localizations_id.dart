@@ -1490,4 +1490,13 @@ class AppLocalizationsId extends AppLocalizations {
   String addedToCart(String product) {
     return '$product added to cart';
   }
+
+  @override
+  String get bestSeller => 'Terlaris';
+
+  @override
+  String get readMore => 'baca selengkapnya';
+
+  @override
+  String get showLess => 'lebih sedikit';
 }

@@ -1472,4 +1472,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String addedToCart(String product) {
     return '$product added to cart';
   }
+
+  @override
+  String get bestSeller => '畅销';
+
+  @override
+  String get readMore => '阅读更多';
+
+  @override
+  String get showLess => '收起';
 }

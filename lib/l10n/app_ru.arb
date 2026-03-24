@@ -674,5 +674,8 @@
   "paymentStatusCaptured": "Списано",
   "paymentStatusVoided": "Отменено",
   "paymentStatusRefunded": "Возвращено",
-  "paymentStatusFailed": "Не удалось"
+  "paymentStatusFailed": "Не удалось",
+  "bestSeller": "Бестселлер",
+  "readMore": "читать далее",
+  "showLess": "свернуть"
 }

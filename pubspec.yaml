@@ -2,7 +2,7 @@ name: comwificrack
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.23+21
+version: 1.0.24+22
 
 environment:
   sdk: ^3.10.4
@@ -85,6 +85,7 @@ dependencies:
   firebase_auth: ^6.3.0
   firebase_database: ^12.2.0
   google_sign_in: ^7.2.0
+  readmore: ^3.0.0
 #  flutter_localization: ^0.3.3
 
 dev_dependencies:
@@ -110,7 +111,7 @@ flutter_launcher_icons:
 flutter_native_splash:
   background_image: "assets/splash.png"
   android_12:
-    image: "assets/icon.png"
+    image: "assets/splash.png"
     color: "#ffffff"
     fullscreen: true
   fullscreen: true
@@ -125,6 +126,7 @@ flutter:
     - assets/
     - assets/splash.png
     - assets/sounds/
+
 
 
 

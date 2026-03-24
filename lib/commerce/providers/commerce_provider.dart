@@ -45,6 +45,41 @@ class CommerceProvider extends ChangeNotifier {
   bool _includeInactive = true;
   String? _lastQuery;
   String? _lastCategory;
+  String? _currentUserId;
+
+  void setCurrentUserId(String? userId) {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    // Reload products to get favorite status if userId changed
+    if (_products.isNotEmpty) {
+      loadProducts(query: _lastQuery, category: _lastCategory, reset: true);
+    }
+  }
+
+  String? get currentUserId => _currentUserId;
+
+  Future<void> toggleFavorite(String productId) async {
+    if (_currentUserId == null || _currentUserId!.isEmpty) return;
+
+    final index = _products.indexWhere((p) => p.id == productId);
+    if (index == -1) return;
+
+    final product = _products[index];
+    final nextState = !product.isFavorite;
+
+    // Optimistic UI update
+    _products[index] = product.copyWith(isFavorite: nextState);
+    notifyListeners();
+
+    try {
+      await _service.toggleFavorite(_currentUserId!, productId, nextState);
+    } catch (e) {
+      // Revert on error
+      _products[index] = product;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
   String? _error;
   String? _ordersError;
   bool _ordersLoading = false;
@@ -125,6 +160,7 @@ class CommerceProvider extends ChangeNotifier {
         includeInactive: _includeInactive,
         offset: _productsOffset,
         limit: _productsPageSize,
+        userId: _currentUserId,
       );
       if (reset) {
         _products = fetched;
@@ -303,18 +339,26 @@ class CommerceProvider extends ChangeNotifier {
     final buyerId = (userId == null || userId.trim().isEmpty) ? null : userId.trim();
     
     if (buyerId == null) {
+       debugPrint('[Commerce] placeOrder blocked: userId missing');
        _ordersError = "Impossible de passer commande : utilisateur non identifié.";
        notifyListeners();
        return null;
     }
 
     try {
+      debugPrint(
+        '[Commerce] placeOrder start: buyerId=$buyerId '
+        'cartItems=${_cart.length} total=$total '
+        'phoneProvided=${phone.trim().isNotEmpty} '
+        'addressProvided=${address.trim().isNotEmpty}',
+      );
       // S'assurer que l'utilisateur existe dans la table 'users' pour satisfaire la FK buyer_id
       await _supabaseService.registerUser(
         device_id: buyerId,
         model: "Commerce User",
         pseudo: clientName,
       );
+      debugPrint('[Commerce] placeOrder registerUser ok: buyerId=$buyerId');
 
       final orderId = await _service.createOrder(
         userId: buyerId,
@@ -326,6 +370,7 @@ class CommerceProvider extends ChangeNotifier {
         clientName: clientName,
       );
 
+      debugPrint('[Commerce] placeOrder result: orderId=$orderId');
       if (orderId != null) {
         clearCart();
       } else {
@@ -335,6 +380,7 @@ class CommerceProvider extends ChangeNotifier {
 
       return orderId;
     } catch (e) {
+      debugPrint('[Commerce] placeOrder error: $e');
       _ordersError = e.toString();
       debugPrint("❌ placeOrder Error: $e");
       notifyListeners();

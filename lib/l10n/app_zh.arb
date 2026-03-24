@@ -674,5 +674,8 @@
   "paymentStatusCaptured": "已扣款",
   "paymentStatusVoided": "已作废",
   "paymentStatusRefunded": "已退款",
-  "paymentStatusFailed": "失败"
+  "paymentStatusFailed": "失败",
+  "bestSeller": "畅销",
+  "readMore": "阅读更多",
+  "showLess": "收起"
 }

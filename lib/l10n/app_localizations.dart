@@ -2915,6 +2915,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{product} added to cart'**
   String addedToCart(String product);
+
+  /// No description provided for @bestSeller.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Seller'**
+  String get bestSeller;
+
+  /// No description provided for @readMore.
+  ///
+  /// In en, this message translates to:
+  /// **'read more'**
+  String get readMore;
+
+  /// No description provided for @showLess.
+  ///
+  /// In en, this message translates to:
+  /// **'show less'**
+  String get showLess;
 }
 
 class _AppLocalizationsDelegate

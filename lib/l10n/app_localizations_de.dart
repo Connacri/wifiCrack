@@ -1499,4 +1499,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String addedToCart(String product) {
     return '$product added to cart';
   }
+
+  @override
+  String get bestSeller => 'Bestseller';
+
+  @override
+  String get readMore => 'mehr lesen';
+
+  @override
+  String get showLess => 'weniger anzeigen';
 }

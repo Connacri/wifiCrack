@@ -674,5 +674,8 @@
   "paymentStatusCaptured": "確定",
   "paymentStatusVoided": "取消済み",
   "paymentStatusRefunded": "返金済み",
-  "paymentStatusFailed": "失敗"
+  "paymentStatusFailed": "失敗",
+  "bestSeller": "ベストセラー",
+  "readMore": "続きを読む",
+  "showLess": "閉じる"
 }

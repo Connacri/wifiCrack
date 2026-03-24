@@ -684,5 +684,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "bestSeller": "Best-seller",
+  "readMore": "lire plus",
+  "showLess": "voir moins"
 }

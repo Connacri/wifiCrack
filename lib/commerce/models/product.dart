@@ -10,6 +10,7 @@ class Product {
   final int? stock;
   final int popularity;
   final bool isActive;
+  final bool isFavorite;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -25,6 +26,7 @@ class Product {
     this.stock,
     this.popularity = 0,
     this.isActive = true,
+    this.isFavorite = false,
     this.createdAt,
     this.updatedAt,
   });
@@ -42,8 +44,47 @@ class Product {
       stock: _toInt(map['stock']),
       popularity: _toInt(map['popularity']) ?? 0,
       isActive: _toBool(map['is_active'], defaultValue: true),
+      isFavorite: _toBool(
+        map['is_favorite'] ?? 
+        (map['product_favorites'] != null && (map['product_favorites'] as List).isNotEmpty), 
+        defaultValue: false
+      ),
       createdAt: _toDateTime(map['created_at']),
       updatedAt: _toDateTime(map['updated_at']),
+    );
+  }
+
+  Product copyWith({
+    String? id,
+    String? name,
+    String? description,
+    double? price,
+    double? promoPrice,
+    String? sku,
+    String? imageUrl,
+    String? category,
+    int? stock,
+    int? popularity,
+    bool? isActive,
+    bool? isFavorite,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      promoPrice: promoPrice ?? this.promoPrice,
+      sku: sku ?? this.sku,
+      imageUrl: imageUrl ?? this.imageUrl,
+      category: category ?? this.category,
+      stock: stock ?? this.stock,
+      popularity: popularity ?? this.popularity,
+      isActive: isActive ?? this.isActive,
+      isFavorite: isFavorite ?? this.isFavorite,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
