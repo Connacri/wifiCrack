@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 
+import '../../data/sources/supabase_service.dart';
 import '../models/cart_item.dart';
 import '../models/order.dart';
 import '../models/product.dart';
@@ -9,9 +10,10 @@ import '../services/commerce_service.dart';
 
 class CommerceProvider extends ChangeNotifier {
   final CommerceService _service;
+  final SupabaseService _supabaseService;
   StreamSubscription? _productsSub;
 
-  CommerceProvider(this._service) {
+  CommerceProvider(this._service, this._supabaseService) {
     _initProductsStream();
   }
 
@@ -292,6 +294,7 @@ class CommerceProvider extends ChangeNotifier {
     required String address,
     String? note,
     String? userId,
+    String? clientName,
   }) async {
     if (_cart.isEmpty) return null;
     
@@ -305,20 +308,38 @@ class CommerceProvider extends ChangeNotifier {
        return null;
     }
 
-    final orderId = await _service.createOrder(
-      userId: buyerId,
-      items: cartItems,
-      total: total,
-      phone: phone,
-      address: address,
-      note: note,
-    );
+    try {
+      // S'assurer que l'utilisateur existe dans la table 'users' pour satisfaire la FK buyer_id
+      await _supabaseService.registerUser(
+        device_id: buyerId,
+        model: "Commerce User",
+        pseudo: clientName,
+      );
 
-    if (orderId != null) {
-      clearCart();
+      final orderId = await _service.createOrder(
+        userId: buyerId,
+        items: cartItems,
+        total: total,
+        phone: phone,
+        address: address,
+        note: note,
+        clientName: clientName,
+      );
+
+      if (orderId != null) {
+        clearCart();
+      } else {
+        _ordersError = "Erreur inconnue : la commande n'a pas retourné d'identifiant.";
+        notifyListeners();
+      }
+
+      return orderId;
+    } catch (e) {
+      _ordersError = e.toString();
+      debugPrint("❌ placeOrder Error: $e");
+      notifyListeners();
+      return null;
     }
-
-    return orderId;
   }
 
   Future<bool> updateOrderStatus({

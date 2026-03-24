@@ -1485,4 +1485,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paymentStatusFailed => 'Échoué';
+
+  @override
+  String get fullNameLabel => 'Nom complet';
+
+  @override
+  String get orderNoteLabel => 'Note de commande (optionnel)';
+
+  @override
+  String addedToCart(String product) {
+    return '$product ajouté au panier';
+  }
 }

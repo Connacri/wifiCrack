@@ -135,8 +135,13 @@ void main() async {
         ChangeNotifierProvider<AppProvider>(create: (_) => AppProvider()),
 
         // --- Commerce (Global) ---
-        ChangeNotifierProvider<CommerceProvider>(
-          create: (_) => CommerceProvider(CommerceService())..loadProducts(),
+        ChangeNotifierProxyProvider2<SupabaseService, MessageService, CommerceProvider>(
+          create: (context) => CommerceProvider(
+            CommerceService(),
+            context.read<SupabaseService>(),
+          )..loadProducts(),
+          update: (_, supabase, messenger, previous) =>
+              previous ?? CommerceProvider(CommerceService(), supabase),
         ),
       ],
       child: const WiFiKeyScanner(),

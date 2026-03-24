@@ -143,6 +143,7 @@ class CommerceService {
     required String phone,
     required String address,
     String? note,
+    String? clientName,
   }) async {
     if (items.isEmpty) return null;
     try {
@@ -154,6 +155,7 @@ class CommerceService {
         'address': address,
         'grand_total': total,
         'status': 'created',
+        'client_name': clientName,
         'items': items
             .map(
               (item) => {
@@ -167,8 +169,10 @@ class CommerceService {
             .toList(),
       };
 
-      final res = await _client.from('orders').insert(payload).select('id').maybeSingle();
-      return res?['id']?.toString();
+      final res = await _client.from('orders').insert(payload).select('id').single();
+      final id = res['id']?.toString();
+      if (id == null) throw Exception("L'ordre a été créé mais l'ID n'a pas été retourné.");
+      return id;
     } catch (e) {
       debugPrint('[Commerce] createOrder error: $e');
       rethrow;

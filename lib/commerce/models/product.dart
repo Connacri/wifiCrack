@@ -10,6 +10,8 @@ class Product {
   final int? stock;
   final int popularity;
   final bool isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const Product({
     required this.id,
@@ -23,6 +25,8 @@ class Product {
     this.stock,
     this.popularity = 0,
     this.isActive = true,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory Product.fromMap(Map<String, dynamic> map) {
@@ -38,6 +42,8 @@ class Product {
       stock: _toInt(map['stock']),
       popularity: _toInt(map['popularity']) ?? 0,
       isActive: _toBool(map['is_active'], defaultValue: true),
+      createdAt: _toDateTime(map['created_at']),
+      updatedAt: _toDateTime(map['updated_at']),
     );
   }
 
@@ -57,6 +63,7 @@ class Product {
     if (includeId && id.isNotEmpty) {
       data['id'] = id;
     }
+    // Note: createdAt and updatedAt are usually handled by the database
     return data;
   }
 
@@ -86,6 +93,12 @@ class Product {
     if (str == 'true' || str == '1' || str == 'yes') return true;
     if (str == 'false' || str == '0' || str == 'no') return false;
     return defaultValue;
+  }
+
+  static DateTime? _toDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    return DateTime.tryParse(value.toString());
   }
 
   double get effectivePrice {

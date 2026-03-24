@@ -674,5 +674,15 @@
   "paymentStatusCaptured": "Capturé",
   "paymentStatusVoided": "Annulé",
   "paymentStatusRefunded": "Remboursé",
-  "paymentStatusFailed": "Échoué"
+  "paymentStatusFailed": "Échoué",
+  "fullNameLabel": "Nom complet",
+  "orderNoteLabel": "Note de commande (optionnel)",
+  "addedToCart": "{product} ajouté au panier",
+  "@addedToCart": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  }
 }

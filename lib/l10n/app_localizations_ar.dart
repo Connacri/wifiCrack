@@ -1472,4 +1472,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get paymentStatusFailed => 'فشل';
+
+  @override
+  String get fullNameLabel => 'الاسم الكامل';
+
+  @override
+  String get orderNoteLabel => 'ملاحظة الطلب (اختياري)';
+
+  @override
+  String addedToCart(String product) {
+    return 'تم إضافة $product إلى السلة';
+  }
 }

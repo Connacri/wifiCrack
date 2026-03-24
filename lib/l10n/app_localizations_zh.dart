@@ -1461,4 +1461,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get paymentStatusFailed => '失败';
+
+  @override
+  String get fullNameLabel => 'Full Name';
+
+  @override
+  String get orderNoteLabel => 'Order Note (optional)';
+
+  @override
+  String addedToCart(String product) {
+    return '$product added to cart';
+  }
 }

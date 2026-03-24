@@ -1481,4 +1481,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get paymentStatusFailed => 'Falhou';
+
+  @override
+  String get fullNameLabel => 'Full Name';
+
+  @override
+  String get orderNoteLabel => 'Order Note (optional)';
+
+  @override
+  String addedToCart(String product) {
+    return '$product added to cart';
+  }
 }

@@ -2897,6 +2897,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed'**
   String get paymentStatusFailed;
+
+  /// No description provided for @fullNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get fullNameLabel;
+
+  /// No description provided for @orderNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Note (optional)'**
+  String get orderNoteLabel;
+
+  /// No description provided for @addedToCart.
+  ///
+  /// In en, this message translates to:
+  /// **'{product} added to cart'**
+  String addedToCart(String product);
 }
 
 class _AppLocalizationsDelegate

@@ -674,5 +674,15 @@
   "paymentStatusCaptured": "تم التحصيل",
   "paymentStatusVoided": "ملغى",
   "paymentStatusRefunded": "مسترد",
-  "paymentStatusFailed": "فشل"
+  "paymentStatusFailed": "فشل",
+  "fullNameLabel": "الاسم الكامل",
+  "orderNoteLabel": "ملاحظة الطلب (اختياري)",
+  "addedToCart": "تم إضافة {product} إلى السلة",
+  "@addedToCart": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  }
 }
