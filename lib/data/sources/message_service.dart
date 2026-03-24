@@ -135,6 +135,10 @@ class MessageService {
 
   Future<void> _initLocalDb() async {
     try {
+      if (Platform.environment.containsKey('FLUTTER_TEST')) {
+        debugPrint('ℹ️ DB init skipped in Flutter tests.');
+        return;
+      }
       final path = '${await getDatabasesPath()}/sigma_p2p_v4.db';
       _db = await openDatabase(path, version: 1, onCreate: (db, _) async {
         await db.execute('''

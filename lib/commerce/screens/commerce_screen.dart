@@ -492,6 +492,7 @@ class _ProductsTab extends StatefulWidget {
 class _ProductsTabState extends State<_ProductsTab> {
   String? _selectedCategory;
   bool _inStockOnly = false;
+  bool _favoritesOnly = false;
   ProductSort _sort = ProductSort.nameAsc;
   bool _gridView = false;
   late final ScrollController _scrollCtrl;
@@ -537,6 +538,8 @@ class _ProductsTabState extends State<_ProductsTab> {
       filtered = filtered
           .where((p) => p.stock == null || p.stock! > 0)
           .toList();
+    if (_favoritesOnly)
+      filtered = filtered.where((p) => p.isFavorite).toList();
     filtered.sort((a, b) {
       switch (_sort) {
         case ProductSort.priceAsc:
@@ -621,6 +624,16 @@ class _ProductsTabState extends State<_ProductsTab> {
                 label: Text(l10n.inStockFilter),
                 selected: _inStockOnly,
                 onSelected: (v) => setState(() => _inStockOnly = v),
+              ),
+              FilterChip(
+                avatar: Icon(
+                  _favoritesOnly ? Icons.favorite : Icons.favorite_border,
+                  size: 16,
+                  color: _favoritesOnly ? Colors.red : null,
+                ),
+                label: const Text('Favoris'),
+                selected: _favoritesOnly,
+                onSelected: (v) => setState(() => _favoritesOnly = v),
               ),
               if (widget.isAdmin)
                 FilterChip(
