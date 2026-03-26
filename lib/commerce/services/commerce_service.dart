@@ -35,6 +35,10 @@ class CommerceService {
       }
 
       var builder = _client.from(table).select(selectStr);
+      if (userId != null && userId.isNotEmpty) {
+        // Filter embedded favorites to the current user only (keeps left join semantics)
+        builder = builder.eq('product_favorites.user_id', userId);
+      }
 
       if (!includeInactive) {
         builder = builder.eq('is_active', true);

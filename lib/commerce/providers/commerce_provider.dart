@@ -25,7 +25,8 @@ class CommerceProvider extends ChangeNotifier {
         // Uniquement si on n'est pas en train de filtrer ou de chercher spécifiquement
         if ((_lastQuery == null || _lastQuery!.isEmpty) &&
             (_lastCategory == null || _lastCategory == 'All')) {
-          _products = data.map(Product.fromMap).toList();
+          final incoming = data.map(Product.fromMap).toList();
+          _products = _mergeFavorites(incoming);
           _productsHasMore = false; // Le stream donne tout par défaut
           notifyListeners();
         }
@@ -40,6 +41,29 @@ class CommerceProvider extends ChangeNotifier {
       },
       cancelOnError: false,
     );
+  }
+
+  List<Product> _mergeFavorites(List<Product> incoming) {
+    if (_currentUserId == null || _currentUserId!.isEmpty) {
+      return incoming;
+    }
+    if (_products.isEmpty) {
+      return incoming;
+    }
+
+    final favoriteIds = <String>{};
+    for (final product in _products) {
+      if (product.isFavorite) favoriteIds.add(product.id);
+    }
+    if (favoriteIds.isEmpty) return incoming;
+
+    return incoming
+        .map(
+          (product) => favoriteIds.contains(product.id)
+              ? product.copyWith(isFavorite: true)
+              : product,
+        )
+        .toList();
   }
 
   void _scheduleProductsStreamRetry() {
@@ -64,12 +88,14 @@ class CommerceProvider extends ChangeNotifier {
   String? _lastQuery;
   String? _lastCategory;
   String? _currentUserId;
+  bool _pendingProductsReload = false;
 
   void setCurrentUserId(String? userId) {
     if (_currentUserId == userId) return;
     _currentUserId = userId;
-    // Reload products to get favorite status if userId changed
-    if (_products.isNotEmpty) {
+    // Reload products to get favorite status when userId changes
+    _pendingProductsReload = true;
+    if (!_loading && !_loadingMore) {
       loadProducts(query: _lastQuery, category: _lastCategory, reset: true);
     }
   }
@@ -156,7 +182,11 @@ class CommerceProvider extends ChangeNotifier {
     if (includeInactive != null) {
       _includeInactive = includeInactive;
     }
-    if (_loading || _loadingMore) return;
+    if (_loading || _loadingMore) {
+      _pendingProductsReload = _pendingProductsReload || reset;
+      return;
+    }
+    _pendingProductsReload = false;
     if (reset) {
       _productsOffset = 0;
       _productsHasMore = true;
@@ -195,6 +225,11 @@ class CommerceProvider extends ChangeNotifier {
       _loading = false;
       _loadingMore = false;
       notifyListeners();
+
+      if (_pendingProductsReload) {
+        _pendingProductsReload = false;
+        await loadProducts(query: _lastQuery, category: _lastCategory, reset: true);
+      }
     }
   }
 
