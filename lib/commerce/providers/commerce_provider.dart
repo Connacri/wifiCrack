@@ -27,6 +27,7 @@ class CommerceProvider extends ChangeNotifier {
             (_lastCategory == null || _lastCategory == 'All')) {
           final incoming = data.map(Product.fromMap).toList();
           _products = _mergeFavorites(incoming);
+          _lastUnfilteredProducts = List<Product>.from(_products);
           _productsHasMore = false; // Le stream donne tout par défaut
           notifyListeners();
         }
@@ -89,6 +90,7 @@ class CommerceProvider extends ChangeNotifier {
   String? _lastCategory;
   String? _currentUserId;
   bool _pendingProductsReload = false;
+  List<Product> _lastUnfilteredProducts = [];
 
   void setCurrentUserId(String? userId) {
     if (_currentUserId == userId) return;
@@ -101,6 +103,7 @@ class CommerceProvider extends ChangeNotifier {
   }
 
   String? get currentUserId => _currentUserId;
+  String? get lastQuery => _lastQuery;
 
   Future<void> toggleFavorite(String productId) async {
     if (_currentUserId == null || _currentUserId!.isEmpty) return;
@@ -177,7 +180,9 @@ class CommerceProvider extends ChangeNotifier {
     bool? includeInactive,
     bool reset = true,
   }) async {
-    _lastQuery = query;
+    final normalizedQuery = query?.trim();
+    final isQueryEmpty = normalizedQuery == null || normalizedQuery.isEmpty;
+    _lastQuery = isQueryEmpty ? null : normalizedQuery;
     _lastCategory = category;
     if (includeInactive != null) {
       _includeInactive = includeInactive;
@@ -190,7 +195,13 @@ class CommerceProvider extends ChangeNotifier {
     if (reset) {
       _productsOffset = 0;
       _productsHasMore = true;
-      _products = [];
+      if (isQueryEmpty) {
+        _products = _lastUnfilteredProducts.isNotEmpty
+            ? List<Product>.from(_lastUnfilteredProducts)
+            : [];
+      } else {
+        // Keep existing list while searching to avoid flicker.
+      }
     }
 
     _error = null;
@@ -203,7 +214,7 @@ class CommerceProvider extends ChangeNotifier {
 
     try {
       final fetched = await _service.fetchProducts(
-        query: query,
+        query: normalizedQuery,
         category: category,
         includeInactive: _includeInactive,
         offset: _productsOffset,
@@ -212,6 +223,9 @@ class CommerceProvider extends ChangeNotifier {
       );
       if (reset) {
         _products = fetched;
+        if (isQueryEmpty) {
+          _lastUnfilteredProducts = fetched;
+        }
       } else {
         _products.addAll(fetched);
       }

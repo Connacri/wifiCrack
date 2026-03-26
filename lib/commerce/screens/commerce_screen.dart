@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -336,7 +338,10 @@ class _CommerceViewState extends State<_CommerceView> {
                   IconButton(
                     onPressed: provider.isLoading
                         ? null
-                        : () => provider.loadProducts(query: _searchCtrl.text),
+                        : () {
+                            final q = _searchCtrl.text.trim();
+                            provider.loadProducts(query: q.isEmpty ? null : q);
+                          },
                     icon: const Icon(Icons.refresh),
                   ),
                   IconButton(
@@ -499,11 +504,24 @@ class _ProductsTabState extends State<_ProductsTab> {
   ProductSort _sort = ProductSort.nameAsc;
   bool _gridView = false;
   late final ScrollController _scrollCtrl;
+  late final VoidCallback _searchListener;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
     _scrollCtrl = ScrollController()..addListener(_onScroll);
+    _searchListener = () {
+      if (!mounted) return;
+      _searchDebounce?.cancel();
+      _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+        if (!mounted) return;
+        final q = widget.searchCtrl.text.trim();
+        widget.provider.loadProducts(query: q.isEmpty ? null : q);
+      });
+      setState(() {});
+    };
+    widget.searchCtrl.addListener(_searchListener);
   }
 
   @override
@@ -511,6 +529,8 @@ class _ProductsTabState extends State<_ProductsTab> {
     _scrollCtrl
       ..removeListener(_onScroll)
       ..dispose();
+    widget.searchCtrl.removeListener(_searchListener);
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -531,7 +551,12 @@ class _ProductsTabState extends State<_ProductsTab> {
     return categories.toList()..sort();
   }
 
-  List<Product> _applyFilters(List<Product> products, String? activeCategory) {
+  List<Product> _applyFilters(
+    List<Product> products,
+    String? activeCategory, {
+    bool applyFavoritesFilter = true,
+    String? searchQuery,
+  }) {
     var filtered = products;
     if (activeCategory != null)
       filtered = filtered
@@ -541,7 +566,12 @@ class _ProductsTabState extends State<_ProductsTab> {
       filtered = filtered
           .where((p) => p.stock == null || p.stock! > 0)
           .toList();
-    if (_favoritesOnly) filtered = filtered.where((p) => p.isFavorite).toList();
+    final q = searchQuery?.trim() ?? '';
+    if (q.isNotEmpty) {
+      filtered = filtered.where((p) => _matchesSearch(p, q)).toList();
+    }
+    if (applyFavoritesFilter && _favoritesOnly)
+      filtered = filtered.where((p) => p.isFavorite).toList();
     filtered.sort((a, b) {
       switch (_sort) {
         case ProductSort.priceAsc:
@@ -565,14 +595,57 @@ class _ProductsTabState extends State<_ProductsTab> {
     return filtered;
   }
 
+  bool _matchesSearch(Product product, String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    final name = product.name.toLowerCase();
+    final description = product.description?.toLowerCase() ?? '';
+    final sku = product.sku?.toLowerCase() ?? '';
+    return name.contains(q) || description.contains(q) || sku.contains(q);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final categories = _extractCategories(widget.provider.products);
+    final theme = Theme.of(context);
+    final activeSearch = widget.searchCtrl.text.trim();
+    final baseForCategoryCounts = _applyFilters(
+      widget.provider.products,
+      null,
+      applyFavoritesFilter: false,
+      searchQuery: activeSearch,
+    );
+    final categoryCounts = <String, int>{};
+    for (final product in baseForCategoryCounts) {
+      final cat = (product.category ?? '').trim();
+      if (cat.isEmpty) continue;
+      categoryCounts.update(cat, (v) => v + 1, ifAbsent: () => 1);
+    }
+    final totalCount = baseForCategoryCounts.length;
+    final categories = _extractCategories(
+      baseForCategoryCounts.isNotEmpty
+          ? baseForCategoryCounts
+          : widget.provider.products,
+    );
     final activeCategory = categories.contains(_selectedCategory)
         ? _selectedCategory
         : null;
-    final products = _applyFilters(widget.provider.products, activeCategory);
+    final baseFiltered = _applyFilters(
+      widget.provider.products,
+      activeCategory,
+      applyFavoritesFilter: false,
+      searchQuery: activeSearch,
+    );
+    final products = _applyFilters(
+      widget.provider.products,
+      activeCategory,
+      searchQuery: activeSearch,
+    );
+    final favoriteCount = baseFiltered.where((p) => p.isFavorite).length;
+    final badgeColor =
+        _favoritesOnly ? Colors.red : theme.colorScheme.primary;
+    final isSearching = activeSearch.isNotEmpty &&
+        (widget.provider.isLoading || widget.provider.isLoadingMore);
 
     return Column(
       children: [
@@ -581,7 +654,11 @@ class _ProductsTabState extends State<_ProductsTab> {
           child: TextField(
             controller: widget.searchCtrl,
             onSubmitted: (_) =>
-                widget.provider.loadProducts(query: widget.searchCtrl.text),
+                widget.provider.loadProducts(
+                  query: widget.searchCtrl.text.trim().isEmpty
+                      ? null
+                      : widget.searchCtrl.text.trim(),
+                ),
             decoration: InputDecoration(
               hintText: l10n.searchProductsPlaceholder,
               prefixIcon: const Icon(Icons.search),
@@ -591,6 +668,24 @@ class _ProductsTabState extends State<_ProductsTab> {
             ),
           ),
         ),
+        if (isSearching)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${l10n.search}...',
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ],
+            ),
+          ),
         if (categories.isNotEmpty)
           SizedBox(
             height: 44,
@@ -601,16 +696,56 @@ class _ProductsTabState extends State<_ProductsTab> {
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 if (index == 0) {
+                  final badgeBg = activeCategory == null
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.surfaceContainerHighest;
+                  final badgeFg = activeCategory == null
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant;
                   return ChoiceChip(
-                    label: Text(l10n.allFilter),
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l10n.allFilter),
+                        const SizedBox(width: 6),
+                        Badge(
+                          label: Text(
+                            totalCount.toString(),
+                            style: TextStyle(color: badgeFg),
+                          ),
+                          backgroundColor: badgeBg,
+                        ),
+                      ],
+                    ),
                     selected: activeCategory == null,
                     onSelected: (_) => setState(() => _selectedCategory = null),
                   );
                 }
                 final cat = categories[index - 1];
+                final count = categoryCounts[cat] ?? 0;
+                final isSelected = activeCategory == cat;
+                final badgeBg = isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.surfaceContainerHighest;
+                final badgeFg = isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurfaceVariant;
                 return ChoiceChip(
-                  label: Text(cat),
-                  selected: activeCategory == cat,
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(cat),
+                      const SizedBox(width: 6),
+                      Badge(
+                        label: Text(
+                          count.toString(),
+                          style: TextStyle(color: badgeFg),
+                        ),
+                        backgroundColor: badgeBg,
+                      ),
+                    ],
+                  ),
+                  selected: isSelected,
                   onSelected: (_) => setState(() => _selectedCategory = cat),
                 );
               },
@@ -633,7 +768,19 @@ class _ProductsTabState extends State<_ProductsTab> {
                   size: 16,
                   color: _favoritesOnly ? Colors.red : null,
                 ),
-                label: const Text('Favoris'),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Favoris'),
+                    if (favoriteCount > 0) ...[
+                      const SizedBox(width: 6),
+                      Badge(
+                        label: Text(favoriteCount.toString()),
+                        backgroundColor: badgeColor,
+                      ),
+                    ],
+                  ],
+                ),
                 selected: _favoritesOnly,
                 onSelected: (v) => setState(() => _favoritesOnly = v),
               ),
