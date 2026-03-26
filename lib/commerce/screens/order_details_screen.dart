@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../models/order.dart';
 import '../models/commerce_enums.dart';
+import '../models/order.dart';
 import '../models/shipment.dart';
 import '../providers/commerce_provider.dart';
 
@@ -25,26 +25,26 @@ class OrderDetailsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.orderNumber(order.id.substring(0, 8))),
-        actions: [
-          _RoleSelector(),
-        ],
+        actions: [_RoleSelector()],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _OrderStatusCard(order: order),
-            const SizedBox(height: 16),
-            if (provider.currentRole == UserRole.admin)
-              _AdminStatusEditCard(order: order, provider: provider),
-            const SizedBox(height: 16),
-            _OrderItemsCard(order: order),
-            const SizedBox(height: 16),
-            _ShipmentsCard(order: order),
-            const SizedBox(height: 16),
-            _ActionPanel(order: order),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _OrderStatusCard(order: order),
+              const SizedBox(height: 16),
+              if (provider.currentRole == UserRole.admin)
+                _AdminStatusEditCard(order: order, provider: provider),
+              const SizedBox(height: 16),
+              _OrderItemsCard(order: order),
+              const SizedBox(height: 16),
+              _ShipmentsCard(order: order),
+              const SizedBox(height: 16),
+              _ActionPanel(order: order),
+            ],
+          ),
         ),
       ),
     );
@@ -62,10 +62,7 @@ class _RoleSelector extends StatelessWidget {
       icon: const Icon(Icons.badge_outlined),
       tooltip: l10n.changeRoleTooltip,
       itemBuilder: (context) => UserRole.values
-          .map((r) => PopupMenuItem(
-                value: r,
-                child: Text(r.label(l10n)),
-              ))
+          .map((r) => PopupMenuItem(value: r, child: Text(r.label(l10n))))
           .toList(),
     );
   }
@@ -144,7 +141,10 @@ class _OrderItemsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.productsLabel, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.productsLabel,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
             ListView.separated(
               shrinkWrap: true,
@@ -156,9 +156,16 @@ class _OrderItemsCard extends StatelessWidget {
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(item.name),
-                  subtitle: Text(l10n.priceXQuantity(item.price.toStringAsFixed(2), item.quantity)),
-                  trailing: Text(l10n.amountWithCurrency(item.subtotal.toStringAsFixed(2)),
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    l10n.priceXQuantity(
+                      item.price.toStringAsFixed(2),
+                      item.quantity,
+                    ),
+                  ),
+                  trailing: Text(
+                    l10n.amountWithCurrency(item.subtotal.toStringAsFixed(2)),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 );
               },
             ),
@@ -191,8 +198,10 @@ class _ShipmentsCard extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: Text(l10n.shipmentsCount(order.shipments.length),
-              style: Theme.of(context).textTheme.titleMedium),
+          child: Text(
+            l10n.shipmentsCount(order.shipments.length),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
         ),
         ...order.shipments.map((s) => _ShipmentItem(shipment: s)),
       ],
@@ -224,15 +233,21 @@ class _ShipmentItem extends StatelessWidget {
                 if (shipment.shippedAt != null)
                   _InfoRow(
                     label: l10n.shippedOn,
-                    value: DateFormat('dd/MM/yyyy HH:mm').format(shipment.shippedAt!),
+                    value: DateFormat(
+                      'dd/MM/yyyy HH:mm',
+                    ).format(shipment.shippedAt!),
                   ),
                 const SizedBox(height: 8),
-                Text(l10n.itemsInPackage,
-                    style: Theme.of(context).textTheme.labelLarge),
-                ...shipment.items.map((i) => Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(l10n.shipmentItemLine(i.name, i.quantity)),
-                    )),
+                Text(
+                  l10n.itemsInPackage,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                ...shipment.items.map(
+                  (i) => Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(l10n.shipmentItemLine(i.name, i.quantity)),
+                  ),
+                ),
               ],
             ),
           ),
@@ -255,16 +270,22 @@ class _ActionPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (role == UserRole.wholesaler) ..._buildWholesalerActions(context, provider),
-        if (role == UserRole.warehouse) ..._buildWarehouseActions(context, provider),
-        if (role == UserRole.carrier) ..._buildCarrierActions(context, provider),
+        if (role == UserRole.wholesaler)
+          ..._buildWholesalerActions(context, provider),
+        if (role == UserRole.warehouse)
+          ..._buildWarehouseActions(context, provider),
+        if (role == UserRole.carrier)
+          ..._buildCarrierActions(context, provider),
         if (role == UserRole.driver) ..._buildDriverActions(context, provider),
         if (role == UserRole.client) ..._buildClientActions(context, provider),
       ],
     );
   }
 
-  List<Widget> _buildWholesalerActions(BuildContext context, CommerceProvider provider) {
+  List<Widget> _buildWholesalerActions(
+    BuildContext context,
+    CommerceProvider provider,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     return [
       if (order.status == OrderStatus.created)
@@ -288,7 +309,10 @@ class _ActionPanel extends StatelessWidget {
     ];
   }
 
-  List<Widget> _buildWarehouseActions(BuildContext context, CommerceProvider provider) {
+  List<Widget> _buildWarehouseActions(
+    BuildContext context,
+    CommerceProvider provider,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     return [
       if (order.status == OrderStatus.stockAllocated)
@@ -318,7 +342,10 @@ class _ActionPanel extends StatelessWidget {
     ];
   }
 
-  List<Widget> _buildCarrierActions(BuildContext context, CommerceProvider provider) {
+  List<Widget> _buildCarrierActions(
+    BuildContext context,
+    CommerceProvider provider,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     return order.shipments.map((s) {
       return Padding(
@@ -335,24 +362,33 @@ class _ActionPanel extends StatelessWidget {
     }).toList();
   }
 
-  List<Widget> _buildDriverActions(BuildContext context, CommerceProvider provider) {
+  List<Widget> _buildDriverActions(
+    BuildContext context,
+    CommerceProvider provider,
+  ) {
     final l10n = AppLocalizations.of(context)!;
-    return order.shipments.where((s) => s.status != ShipmentStatus.delivered).map((s) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: FilledButton.icon(
-          onPressed: () => provider.updateShipmentStatus(
-            shipmentId: s.id,
-            status: ShipmentStatus.delivered,
-          ),
-          icon: const Icon(Icons.done_all),
-          label: Text(l10n.confirmDeliveryButton(s.trackingNumber)),
-        ),
-      );
-    }).toList();
+    return order.shipments
+        .where((s) => s.status != ShipmentStatus.delivered)
+        .map((s) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: FilledButton.icon(
+              onPressed: () => provider.updateShipmentStatus(
+                shipmentId: s.id,
+                status: ShipmentStatus.delivered,
+              ),
+              icon: const Icon(Icons.done_all),
+              label: Text(l10n.confirmDeliveryButton(s.trackingNumber)),
+            ),
+          );
+        })
+        .toList();
   }
 
-  List<Widget> _buildClientActions(BuildContext context, CommerceProvider provider) {
+  List<Widget> _buildClientActions(
+    BuildContext context,
+    CommerceProvider provider,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     return [
       if (order.status == OrderStatus.delivered)
@@ -366,9 +402,14 @@ class _ActionPanel extends StatelessWidget {
     ];
   }
 
-  void _showCreateShipmentDialog(BuildContext context, CommerceProvider provider) {
+  void _showCreateShipmentDialog(
+    BuildContext context,
+    CommerceProvider provider,
+  ) {
     final l10n = AppLocalizations.of(context)!;
-    final trackingCtrl = TextEditingController(text: 'TRK-${DateTime.now().millisecondsSinceEpoch}');
+    final trackingCtrl = TextEditingController(
+      text: 'TRK-${DateTime.now().millisecondsSinceEpoch}',
+    );
     final carrierCtrl = TextEditingController(text: 'DHL');
 
     showDialog(
@@ -378,14 +419,23 @@ class _ActionPanel extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: carrierCtrl, decoration: InputDecoration(labelText: l10n.carrierLabel(''))),
-            TextField(controller: trackingCtrl, decoration: InputDecoration(labelText: l10n.trackingNumberLabel)),
+            TextField(
+              controller: carrierCtrl,
+              decoration: InputDecoration(labelText: l10n.carrierLabel('')),
+            ),
+            TextField(
+              controller: trackingCtrl,
+              decoration: InputDecoration(labelText: l10n.trackingNumberLabel),
+            ),
             const SizedBox(height: 12),
             Text(l10n.allItemIncludedNote),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             onPressed: () {
               provider.createShipment(
@@ -414,12 +464,23 @@ class _StatusBadge extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     Color color;
     switch (status) {
-      case OrderStatus.created: color = Colors.blue; break;
-      case OrderStatus.paid: color = Colors.green; break;
-      case OrderStatus.delivered: color = Colors.purple; break;
-      case OrderStatus.shipped: color = Colors.orange; break;
-      case OrderStatus.cancelled: color = Colors.red; break;
-      default: color = Colors.grey;
+      case OrderStatus.created:
+        color = Colors.blue;
+        break;
+      case OrderStatus.paid:
+        color = Colors.green;
+        break;
+      case OrderStatus.delivered:
+        color = Colors.purple;
+        break;
+      case OrderStatus.shipped:
+        color = Colors.orange;
+        break;
+      case OrderStatus.cancelled:
+        color = Colors.red;
+        break;
+      default:
+        color = Colors.grey;
     }
 
     return Container(
@@ -431,7 +492,11 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         status.label(l10n),
-        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
       ),
     );
   }
@@ -474,10 +539,13 @@ class _InfoRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: Theme.of(context).textTheme.bodySmall),
-          Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: valueColor,
-            fontWeight: valueColor != null ? FontWeight.bold : null,
-          )),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: valueColor,
+              fontWeight: valueColor != null ? FontWeight.bold : null,
+            ),
+          ),
         ],
       ),
     );
@@ -504,7 +572,10 @@ class _AdminStatusEditCard extends StatelessWidget {
               children: [
                 const Icon(Icons.admin_panel_settings, color: Colors.blue),
                 const SizedBox(width: 8),
-                Text(l10n.adminStatusTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  l10n.adminStatusTitle,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -516,13 +587,18 @@ class _AdminStatusEditCard extends StatelessWidget {
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12),
               ),
-              items: OrderStatus.values.map((s) => DropdownMenuItem(
-                value: s,
-                child: Text(s.label(l10n)),
-              )).toList(),
+              items: OrderStatus.values
+                  .map(
+                    (s) =>
+                        DropdownMenuItem(value: s, child: Text(s.label(l10n))),
+                  )
+                  .toList(),
               onChanged: (newStatus) {
                 if (newStatus != null && newStatus != order.status) {
-                  provider.updateOrderStatus(orderId: order.id, status: newStatus);
+                  provider.updateOrderStatus(
+                    orderId: order.id,
+                    status: newStatus,
+                  );
                 }
               },
             ),

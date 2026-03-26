@@ -33,15 +33,16 @@ class _Mistral2laudeEntryScreenState extends State<Mistral2laudeEntryScreen> {
   }
 
   Future<_M2CInitData> _initialize() async {
+    final l10n = AppLocalizations.of(context)!;
     final objectBox = ObjectBoxService();
     await objectBox.init();
     await NotificationService().init();
 
     final deviceId = await _getOrCreateDeviceId(widget.deviceIdOverride);
-    final deviceModel = await _getDeviceModel(context);
+    final deviceModel = await _getDeviceModel(l10n);
 
     final user = await _initUser(
-      context: context,
+      l10n: l10n,
       objectBox: objectBox,
       deviceId: deviceId,
       model: deviceModel,
@@ -148,8 +149,7 @@ Future<String> _getOrCreateDeviceId(String? override) async {
   return newId;
 }
 
-Future<String> _getDeviceModel(BuildContext context) async {
-  final l10n = AppLocalizations.of(context)!;
+Future<String> _getDeviceModel(AppLocalizations l10n) async {
   try {
     final info = DeviceInfoPlugin();
     if (defaultTargetPlatform == TargetPlatform.android) {
@@ -165,12 +165,11 @@ Future<String> _getDeviceModel(BuildContext context) async {
 }
 
 Future<M2CUser> _initUser({
-  required BuildContext context,
+  required AppLocalizations l10n,
   required ObjectBoxService objectBox,
   required String deviceId,
   required String model,
 }) async {
-  final l10n = AppLocalizations.of(context)!;
   final existing = objectBox.userBox
       .query(M2CUser_.deviceId.equals(deviceId))
       .build()

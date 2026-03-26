@@ -72,7 +72,7 @@ if (Test-Path $indexPath) {
     $indexContent = [regex]::Replace($indexContent, "Version \d+\.\d+\.\d+", "Version $newVersion")
     # Mise a jour du lien de telechargement APK specifique
     $indexContent = [regex]::Replace($indexContent, "/download/v\d+\.\d+\.\d+/", "/download/$newTag/")
-    
+
     Set-Content $indexPath $indexContent
     Write-Host "   -> index.html mis a jour avec $newTag."
 }

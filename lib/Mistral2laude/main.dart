@@ -84,7 +84,7 @@ Future<String> _getDeviceModel() async {
     }
     if (defaultTargetPlatform == TargetPlatform.linux) {
       final linux = await info.linuxInfo;
-      return linux.prettyName ?? linux.name;
+      return linux.prettyName;
     }
     return "mobileDevice"; // Key for l10n
   } catch (_) {

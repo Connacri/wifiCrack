@@ -8,7 +8,11 @@ class ChatScreen extends StatefulWidget {
   final String otherUserId;
   final String otherUserName;
 
-  const ChatScreen({super.key, required this.otherUserId, required this.otherUserName});
+  const ChatScreen({
+    super.key,
+    required this.otherUserId,
+    required this.otherUserName,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -17,7 +21,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _msgCtrl = TextEditingController();
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
-  final String _currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "anonymous";
+  final String _currentUserId =
+      FirebaseAuth.instance.currentUser?.uid ?? "anonymous";
   late String _chatId;
 
   @override
@@ -45,56 +50,67 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.otherUserName)),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder(
-              stream: _dbRef.child('chats/$_chatId/messages').orderByChild('timestamp').onValue,
-              builder: (context, snapshot) {
-                if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
-                  Map<dynamic, dynamic> messages = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
-                  List<dynamic> sortedMessages = messages.values.toList()
-                    ..sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(title: Text(widget.otherUserName)),
+        body: Column(
+          children: [
+            Expanded(
+              child: StreamBuilder(
+                stream: _dbRef
+                    .child('chats/$_chatId/messages')
+                    .orderByChild('timestamp')
+                    .onValue,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData &&
+                      snapshot.data!.snapshot.value != null) {
+                    Map<dynamic, dynamic> messages =
+                        snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+                    List<dynamic> sortedMessages = messages.values.toList()
+                      ..sort(
+                        (a, b) => (b['timestamp'] ?? 0).compareTo(
+                          a['timestamp'] ?? 0,
+                        ),
+                      );
 
-                  return ListView.builder(
-                    reverse: true,
-                    itemCount: sortedMessages.length,
-                    itemBuilder: (context, index) {
-                      var msg = sortedMessages[index];
-                      bool isMe = msg['senderId'] == _currentUserId;
-                      return _buildMessageBubble(msg['text'], isMe);
-                    },
-                  );
-                }
-                return Center(child: Text(l10n.startChatPrompt));
-              },
+                    return ListView.builder(
+                      reverse: true,
+                      itemCount: sortedMessages.length,
+                      itemBuilder: (context, index) {
+                        var msg = sortedMessages[index];
+                        bool isMe = msg['senderId'] == _currentUserId;
+                        return _buildMessageBubble(msg['text'], isMe);
+                      },
+                    );
+                  }
+                  return Center(child: Text(l10n.startChatPrompt));
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _msgCtrl,
-                    decoration: InputDecoration(
-                      hintText: l10n.messageHint,
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(30)),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _msgCtrl,
+                      decoration: InputDecoration(
+                        hintText: l10n.messageHint,
+                        border: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Colors.deepPurple),
-                  onPressed: _sendMessage,
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.send, color: Colors.deepPurple),
+                    onPressed: _sendMessage,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -108,8 +124,12 @@ class _ChatScreenState extends State<ChatScreen> {
         decoration: BoxDecoration(
           color: isMe ? Colors.deepPurple : Colors.grey[300],
           borderRadius: BorderRadius.circular(20).copyWith(
-            bottomRight: isMe ? const Radius.circular(0) : const Radius.circular(20),
-            bottomLeft: isMe ? const Radius.circular(20) : const Radius.circular(0),
+            bottomRight: isMe
+                ? const Radius.circular(0)
+                : const Radius.circular(20),
+            bottomLeft: isMe
+                ? const Radius.circular(20)
+                : const Radius.circular(0),
           ),
         ),
         child: Text(

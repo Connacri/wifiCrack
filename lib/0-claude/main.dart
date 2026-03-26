@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'app_provider.dart';
 import 'conversations_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../data/sources/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,9 +63,10 @@ class _InitializationScreenState extends State<InitializationScreen> {
   Future<void> _initialize() async {
     try {
       final provider = context.read<AppProvider>();
-      const supabaseUrl = 'YOUR_SUPABASE_URL';
-      const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-      await provider.initialize(supabaseUrl, supabaseAnonKey);
+      await provider.initialize(
+        SupabaseService.supabaseUrl,
+        SupabaseService.supabaseAnonKey,
+      );
       setState(() => _isInitialized = true);
     } catch (e) {
       setState(() => _error = e.toString());

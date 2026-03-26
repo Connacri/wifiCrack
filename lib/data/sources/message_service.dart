@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:sqflite/sqflite.dart';
 import 'p2p_transfer_service.dart';
 
 /// Service Expert de Gestion des Messages (Local & P2P).
@@ -12,9 +10,6 @@ import 'p2p_transfer_service.dart';
 class MessageService {
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   final FirebaseStorage _storage = FirebaseStorage.instance;
-  
-  Database? _db;
-  bool _dbReady = false;
 
   final List<Map<String, dynamic>> _localMessages = [];
   final _localMessageController = StreamController<List<Map<String, dynamic>>>.broadcast();
@@ -25,7 +20,6 @@ class MessageService {
   final Set<String> _seenInbound = {}; // Anti-doublons
 
   MessageService() {
-    _initLocalDb();
   }
 
   Future<void> initializeNotifications() async {
@@ -65,13 +59,11 @@ class MessageService {
 
     _localMessages.add(messageData);
     _localMessageController.add(_localMessages);
-    unawaited(_upsertLocalMessage(messageData));
 
     try {
       await p2pService.sendJson(targetUserId, messageData);
       messageData['status'] = 'sent';
       _localMessageController.add(_localMessages);
-      unawaited(_upsertLocalMessage(messageData));
     } catch (e) {
       debugPrint("⚠️ P2P Fail: $e");
     }
@@ -89,7 +81,6 @@ class MessageService {
     
     _localMessages.add(message);
     _localMessageController.add(_localMessages);
-    unawaited(_upsertLocalMessage(message));
     
     _showLocalNotification(message);
   }
@@ -125,68 +116,14 @@ class MessageService {
       if (m['peer_id'] == peerId && (m['is_read'] == 0 || m['is_read'] == false)) {
         m['is_read'] = 1;
         changed = true;
-        unawaited(_upsertLocalMessage(m));
       }
     }
     if (changed) _localMessageController.add(_localMessages);
   }
 
-  // --- PERSISTANCE SQLITE ---
-
-  Future<void> _initLocalDb() async {
-    try {
-      if (Platform.environment.containsKey('FLUTTER_TEST')) {
-        debugPrint('ℹ️ DB init skipped in Flutter tests.');
-        return;
-      }
-      final path = '${await getDatabasesPath()}/sigma_p2p_v4.db';
-      _db = await openDatabase(path, version: 1, onCreate: (db, _) async {
-        await db.execute('''
-          CREATE TABLE messages (
-            key TEXT PRIMARY KEY, 
-            payload TEXT, 
-            ts TEXT, 
-            peer_id TEXT, 
-            is_read INTEGER
-          )
-        ''');
-      });
-
-      final rows = await _db!.query('messages', orderBy: 'ts ASC');
-      _localMessages.clear();
-      for (final row in rows) {
-        final decoded = Map<String, dynamic>.from(jsonDecode(row['payload'] as String));
-        decoded['is_read'] = row['is_read'];
-        decoded['peer_id'] = row['peer_id']; // Crucial
-        _localMessages.add(decoded);
-        
-        // Remplir l'anti-doublons avec l'historique
-        final msgKey = '${decoded['user_id']}|${decoded['timestamp']}|${decoded['content'].hashCode}';
-        _seenInbound.add(msgKey);
-      }
-      _dbReady = true;
-      _localMessageController.add(_localMessages);
-    } catch (e) { debugPrint('❌ DB Error: $e'); }
-  }
-
-  Future<void> _upsertLocalMessage(Map<String, dynamic> message) async {
-    if (!_dbReady) return;
-    final msgKey = '${message['user_id']}|${message['timestamp']}|${message['content'].hashCode}';
-    final peerId = message['peer_id']; // Toujours l'ID de l'autre
-    
-    await _db!.insert('messages', {
-      'key': msgKey,
-      'payload': jsonEncode(message),
-      'ts': message['timestamp'],
-      'peer_id': peerId,
-      'is_read': (message['is_read'] == 1 || message['is_read'] == true) ? 1 : 0,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
   Future<void> clearConversationWith(String peerId) async {
     _localMessages.removeWhere((m) => m['peer_id'] == peerId);
     _localMessageController.add(_localMessages);
-    if (_db != null) await _db!.delete('messages', where: 'peer_id = ?', whereArgs: [peerId]);
   }
 
   Future<String?> uploadAudio(String userId, String filePath) async {

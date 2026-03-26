@@ -12,6 +12,7 @@ class CommerceProvider extends ChangeNotifier {
   final CommerceService _service;
   final SupabaseService _supabaseService;
   StreamSubscription? _productsSub;
+  Timer? _productsStreamRetry;
 
   CommerceProvider(this._service, this._supabaseService) {
     _initProductsStream();
@@ -19,20 +20,37 @@ class CommerceProvider extends ChangeNotifier {
 
   void _initProductsStream() {
     _productsSub?.cancel();
-    _productsSub = _service.watchProductsStream().listen((data) {
-      // Uniquement si on n'est pas en train de filtrer ou de chercher spécifiquement
-      if ((_lastQuery == null || _lastQuery!.isEmpty) && 
-          (_lastCategory == null || _lastCategory == 'All')) {
-        _products = data.map(Product.fromMap).toList();
-        _productsHasMore = false; // Le stream donne tout par défaut
-        notifyListeners();
-      }
-    });
+    _productsSub = _service.watchProductsStream().listen(
+      (data) {
+        // Uniquement si on n'est pas en train de filtrer ou de chercher spécifiquement
+        if ((_lastQuery == null || _lastQuery!.isEmpty) &&
+            (_lastCategory == null || _lastCategory == 'All')) {
+          _products = data.map(Product.fromMap).toList();
+          _productsHasMore = false; // Le stream donne tout par défaut
+          notifyListeners();
+        }
+      },
+      onError: (err, st) {
+        debugPrint('[Commerce] Products stream error: $err');
+        _scheduleProductsStreamRetry();
+      },
+      onDone: () {
+        debugPrint('[Commerce] Products stream closed.');
+        _scheduleProductsStreamRetry();
+      },
+      cancelOnError: false,
+    );
+  }
+
+  void _scheduleProductsStreamRetry() {
+    if (_productsStreamRetry?.isActive ?? false) return;
+    _productsStreamRetry = Timer(const Duration(seconds: 5), _initProductsStream);
   }
 
   @override
   void dispose() {
     _productsSub?.cancel();
+    _productsStreamRetry?.cancel();
     super.dispose();
   }
 

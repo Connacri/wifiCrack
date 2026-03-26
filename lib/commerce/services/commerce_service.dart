@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../data/sources/supabase_service.dart';
 import '../commerce_config.dart';
 import '../models/cart_item.dart';
 import '../models/order.dart';
@@ -34,11 +35,6 @@ class CommerceService {
       }
 
       var builder = _client.from(table).select(selectStr);
-
-      if (userId != null && userId.isNotEmpty) {
-        // On filtre le join pour n'avoir que les favoris de l'utilisateur actuel
-        builder = builder.eq('product_favorites.user_id', userId);
-      }
 
       if (!includeInactive) {
         builder = builder.eq('is_active', true);
@@ -142,9 +138,12 @@ class CommerceService {
     try {
       final bucket = CommerceConfig.supabaseImagesBucket.trim();
       if (bucket.isEmpty) return;
-      
-      await _client.storage.from(bucket).remove([path]);
-      debugPrint('[Commerce] Image deleted: $path');
+
+      final storagePath = CommerceConfig.buildStoragePath(path);
+      if (storagePath.isEmpty) return;
+
+      await SupabaseService.storageRemove(bucket: bucket, paths: [storagePath]);
+      debugPrint('[Commerce] Image deleted: $storagePath');
     } catch (e) {
       debugPrint('[Commerce] deleteImage error: $e');
       // We don't rethrow here to avoid failing the whole operation if image delete fails
@@ -155,7 +154,7 @@ class CommerceService {
   Future<bool> toggleFavorite(String userId, String productId, bool isFavorite) async {
     try {
       if (isFavorite) {
-        await _client.from('product_favorites').insert({
+        await _client.from('product_favorites').upsert({
           'user_id': userId,
           'product_id': productId,
         });

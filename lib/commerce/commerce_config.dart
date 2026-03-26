@@ -1,4 +1,6 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
+
+import '../data/sources/supabase_service.dart';
 
 class CommerceConfig {
   // Supabase table for products.
@@ -34,15 +36,39 @@ class CommerceConfig {
     }
 
     final fullPath = buildStoragePath(value);
-
-    return Supabase.instance.client.storage
-        .from(supabaseImagesBucket)
-        .getPublicUrl(fullPath);
+    final baseUrl = SupabaseService.storageBaseUrl;
+    final publicUrl =
+        '$baseUrl/object/public/$supabaseImagesBucket/$fullPath';
+    // Debug helper to verify path resolution during development.
+    debugPrint(
+      '[Commerce] resolveImageUrl: raw="$raw" -> fullPath="$fullPath" -> url="$publicUrl"',
+    );
+    return publicUrl;
   }
 
   static String buildStoragePath(String rawPath) {
-    var path = rawPath.startsWith('/') ? rawPath.substring(1) : rawPath;
-    path = path.trim();
+    var path = rawPath.trim();
+    if (path.isEmpty) return path;
+    if (path.startsWith('/')) path = path.substring(1);
+    final queryIndex = path.indexOf('?');
+    if (queryIndex != -1) {
+      path = path.substring(0, queryIndex);
+    }
+    final hashIndex = path.indexOf('#');
+    if (hashIndex != -1) {
+      path = path.substring(0, hashIndex);
+    }
+
+    final bucket = _trimSlashes(supabaseImagesBucket.trim());
+    if (bucket.isNotEmpty) {
+      if (path.startsWith('$bucket/')) {
+        path = path.substring(bucket.length + 1);
+      } else if (path.startsWith('public/$bucket/')) {
+        path = path.substring('public/'.length + bucket.length + 1);
+      } else if (path.startsWith('sign/$bucket/')) {
+        path = path.substring('sign/'.length + bucket.length + 1);
+      }
+    }
     final prefix = _trimSlashes(supabaseImagesPrefix.trim());
     if (prefix.isEmpty) return path;
     if (path.isEmpty) return prefix;

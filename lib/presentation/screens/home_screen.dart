@@ -124,7 +124,10 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context) => AlertDialog(
             title: Text(
               l10n.configRequiredTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
             ),
             content: Text(
               "${l10n.configRequiredInfo}\n"
@@ -466,10 +469,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                TextButton(
-                  onPressed: _selectRole,
-                  child: Text(l10n.edit),
-                ),
+                TextButton(onPressed: _selectRole, child: Text(l10n.edit)),
               ],
             ],
             if (_isAdmin)
@@ -661,7 +661,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 l10n.connected,
                 Colors.green,
               ),
-              _statItem("${wifi.getStats()['failed']}", l10n.failed, Colors.red),
+              _statItem(
+                "${wifi.getStats()['failed']}",
+                l10n.failed,
+                Colors.red,
+              ),
             ],
           ),
         ],
@@ -800,7 +804,8 @@ class _NetworkTile extends StatelessWidget {
                   isConnected ? Icons.check_circle : Icons.link,
                   color: isConnected ? Colors.green : null,
                 ),
-                onPressed: () => wifi.connect(network, AppLocalizations.of(context)!),
+                onPressed: () =>
+                    wifi.connect(network, AppLocalizations.of(context)!),
               ),
       ),
     );

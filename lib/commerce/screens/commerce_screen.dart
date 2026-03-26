@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../data/sources/supabase_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../commerce_config.dart';
 import '../models/cart_item.dart';
@@ -287,120 +288,122 @@ class _CommerceViewState extends State<_CommerceView> {
         builder: (context) {
           _tabController = DefaultTabController.of(context);
           final tabController = DefaultTabController.of(context);
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(l10n.commerce),
-              actions: [
-                if (firebaseUser == null)
-                  IconButton(
-                    tooltip: l10n.login,
-                    icon: const Icon(Icons.login, color: Colors.blue),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AuthScreen()),
-                    ),
-                  ),
-                IconButton(
-                  tooltip: l10n.logout,
-                  icon: const Icon(Icons.logout),
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text(l10n.logout),
-                        content: Text(l10n.commerceDisconnectConfirm),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(l10n.cancel),
-                          ),
-                          FilledButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text(l10n.logout),
-                          ),
-                        ],
+          return SafeArea(
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(l10n.commerce),
+                actions: [
+                  if (firebaseUser == null)
+                    IconButton(
+                      tooltip: l10n.login,
+                      icon: const Icon(Icons.login, color: Colors.blue),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AuthScreen()),
                       ),
-                    );
-                    if (confirm == true) {
-                      await FirebaseAuth.instance.signOut();
-                      if (context.mounted) {
-                        provider.setRole(UserRole.client);
-                        setState(() => _isAdminMode = false);
-                        Navigator.of(context).pop();
-                      }
-                    }
-                  },
-                ),
-                IconButton(
-                  onPressed: provider.isLoading
-                      ? null
-                      : () => provider.loadProducts(query: _searchCtrl.text),
-                  icon: const Icon(Icons.refresh),
-                ),
-                IconButton(
-                  tooltip: _isAdminMode
-                      ? l10n.clientModeTooltip
-                      : l10n.adminModeTooltip,
-                  icon: Icon(
-                    _isAdminMode
-                        ? Icons.admin_panel_settings
-                        : Icons.person_outline,
-                  ),
-                  onPressed: () => _toggleAdminMode(provider),
-                ),
-                if (_isAdminMode)
+                    ),
                   IconButton(
-                    tooltip: l10n.addProductTooltip,
-                    onPressed: () => _openProductForm(provider: provider),
-                    icon: const Icon(Icons.add),
+                    tooltip: l10n.logout,
+                    icon: const Icon(Icons.logout),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text(l10n.logout),
+                          content: Text(l10n.commerceDisconnectConfirm),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(l10n.cancel),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text(l10n.logout),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await FirebaseAuth.instance.signOut();
+                        if (context.mounted) {
+                          provider.setRole(UserRole.client);
+                          setState(() => _isAdminMode = false);
+                          Navigator.of(context).pop();
+                        }
+                      }
+                    },
                   ),
-              ],
-              bottom: TabBar(tabs: tabs),
-            ),
-            body: TabBarView(
-              children: [
-                _ProductsTab(
-                  provider: provider,
-                  searchCtrl: _searchCtrl,
-                  includeInactive: provider.includeInactive,
-                  onToggleInactive: provider.setIncludeInactive,
-                  onAddProduct: _isAdminMode
-                      ? () => _openProductForm(provider: provider)
-                      : null,
-                  onEditProduct: _isAdminMode
-                      ? (product) => _openProductForm(
-                          provider: provider,
-                          product: product,
-                        )
-                      : null,
-                  onDeleteProduct: _isAdminMode
-                      ? (product) => _confirmDelete(provider, product)
-                      : null,
-                  isAdmin: _isAdminMode,
-                ),
-                _OrdersTab(
-                  provider: provider,
-                  onRefresh: () => provider.loadOrders(reset: true),
-                  onLoadMore: provider.loadMoreOrders,
-                  onUpdateStatus: provider.updateOrderStatus,
-                  isUpdating: provider.isUpdatingOrder,
-                  canUpdateStatus: _isAdminMode,
-                ),
-                _CartTab(
-                  provider: provider,
-                  phoneCtrl: _phoneCtrl,
-                  addressCtrl: _addressCtrl,
-                  clientNameCtrl: _clientNameCtrl,
-                  noteCtrl: _noteCtrl,
-                  placingOrder: _placingOrder,
-                  onSubmit: () => _submitOrder(provider),
-                ),
-              ],
-            ),
-            bottomNavigationBar: _buildCartBar(
-              context,
-              tabController,
-              provider,
+                  IconButton(
+                    onPressed: provider.isLoading
+                        ? null
+                        : () => provider.loadProducts(query: _searchCtrl.text),
+                    icon: const Icon(Icons.refresh),
+                  ),
+                  IconButton(
+                    tooltip: _isAdminMode
+                        ? l10n.clientModeTooltip
+                        : l10n.adminModeTooltip,
+                    icon: Icon(
+                      _isAdminMode
+                          ? Icons.admin_panel_settings
+                          : Icons.person_outline,
+                    ),
+                    onPressed: () => _toggleAdminMode(provider),
+                  ),
+                  if (_isAdminMode)
+                    IconButton(
+                      tooltip: l10n.addProductTooltip,
+                      onPressed: () => _openProductForm(provider: provider),
+                      icon: const Icon(Icons.add),
+                    ),
+                ],
+                bottom: TabBar(tabs: tabs),
+              ),
+              body: TabBarView(
+                children: [
+                  _ProductsTab(
+                    provider: provider,
+                    searchCtrl: _searchCtrl,
+                    includeInactive: provider.includeInactive,
+                    onToggleInactive: provider.setIncludeInactive,
+                    onAddProduct: _isAdminMode
+                        ? () => _openProductForm(provider: provider)
+                        : null,
+                    onEditProduct: _isAdminMode
+                        ? (product) => _openProductForm(
+                            provider: provider,
+                            product: product,
+                          )
+                        : null,
+                    onDeleteProduct: _isAdminMode
+                        ? (product) => _confirmDelete(provider, product)
+                        : null,
+                    isAdmin: _isAdminMode,
+                  ),
+                  _OrdersTab(
+                    provider: provider,
+                    onRefresh: () => provider.loadOrders(reset: true),
+                    onLoadMore: provider.loadMoreOrders,
+                    onUpdateStatus: provider.updateOrderStatus,
+                    isUpdating: provider.isUpdatingOrder,
+                    canUpdateStatus: _isAdminMode,
+                  ),
+                  _CartTab(
+                    provider: provider,
+                    phoneCtrl: _phoneCtrl,
+                    addressCtrl: _addressCtrl,
+                    clientNameCtrl: _clientNameCtrl,
+                    noteCtrl: _noteCtrl,
+                    placingOrder: _placingOrder,
+                    onSubmit: () => _submitOrder(provider),
+                  ),
+                ],
+              ),
+              bottomNavigationBar: _buildCartBar(
+                context,
+                tabController,
+                provider,
+              ),
             ),
           );
         },
@@ -538,8 +541,7 @@ class _ProductsTabState extends State<_ProductsTab> {
       filtered = filtered
           .where((p) => p.stock == null || p.stock! > 0)
           .toList();
-    if (_favoritesOnly)
-      filtered = filtered.where((p) => p.isFavorite).toList();
+    if (_favoritesOnly) filtered = filtered.where((p) => p.isFavorite).toList();
     filtered.sort((a, b) {
       switch (_sort) {
         case ProductSort.priceAsc:
@@ -773,6 +775,7 @@ class _ProductGrid extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final width = MediaQuery.of(context).size.width;
     final count = width >= 1100 ? 4 : (width >= 800 ? 3 : 2);
+    final aspectRatio = count == 2 ? 0.45 : (count == 3 ? 0.52 : 0.58);
 
     return GridView.builder(
       controller: controller,
@@ -781,7 +784,7 @@ class _ProductGrid extends StatelessWidget {
         crossAxisCount: count,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 0.58,
+        childAspectRatio: aspectRatio,
       ),
       itemCount: products.length + 1,
       itemBuilder: (context, index) {
@@ -953,13 +956,15 @@ class _ProductCard extends StatelessWidget {
                             product.isFavorite
                                 ? Icons.favorite
                                 : Icons.favorite_border,
-                            color: product.isFavorite ? Colors.red : Colors.grey,
+                            color: product.isFavorite
+                                ? Colors.red
+                                : Colors.grey,
                             size: 20,
                           ),
                           onPressed: () {
-                            context
-                                .read<CommerceProvider>()
-                                .toggleFavorite(product.id);
+                            context.read<CommerceProvider>().toggleFavorite(
+                              product.id,
+                            );
                           },
                         ),
                         if (isAdmin && (onEdit != null || onDelete != null))
@@ -1199,9 +1204,9 @@ class _ProductGridCard extends StatelessWidget {
                               : Icons.favorite_border,
                         ),
                         onPressed: () {
-                          context
-                              .read<CommerceProvider>()
-                              .toggleFavorite(product.id);
+                          context.read<CommerceProvider>().toggleFavorite(
+                            product.id,
+                          );
                         },
                       ),
                     ),
@@ -1398,6 +1403,7 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
     if (_uploadingImage) return;
     final l10n = AppLocalizations.of(context)!;
     final bucket = CommerceConfig.supabaseImagesBucket.trim();
+    debugPrint('[Commerce] Image upload start: bucket="$bucket"');
     if (bucket.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -1418,28 +1424,47 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       if (bytes == null) throw Exception('No file data.');
 
       final extension = (file.extension ?? '').toLowerCase();
-      final fileName =
-          '${Uuid().v4()}.${extension.isEmpty ? 'jpg' : extension}';
+      final safeExtension = extension.isEmpty ? 'jpg' : extension;
+      final fileName = '${Uuid().v4()}.$safeExtension';
+      final contentType =
+          _contentTypeForExtension(safeExtension) ?? 'application/octet-stream';
+      debugPrint(
+        '[Commerce] Image upload picked: name=${file.name} '
+        'ext=$safeExtension bytes=${bytes.length} '
+        'fileName=$fileName contentType=$contentType',
+      );
 
-      await Supabase.instance.client.storage
-          .from(bucket)
-          .uploadBinary(
-            fileName,
-            bytes,
-            fileOptions: FileOptions(
-              contentType:
-                  _contentTypeForExtension(extension) ??
-                  'application/octet-stream',
-              upsert: true,
-            ),
-          );
+      _logStorageDiagnostics(bucket);
+
+      try {
+        debugPrint('[Commerce] Bucket check start: "$bucket"');
+        await SupabaseService.storageCheckBucket(bucket);
+        debugPrint('[Commerce] Bucket check OK: id=$bucket');
+      } catch (e) {
+        debugPrint('[Commerce] Bucket check FAILED for "$bucket": $e');
+      }
+
+      debugPrint(
+        '[Commerce] Upload start: path=$fileName bytes=${bytes.length} '
+        'contentType=$contentType',
+      );
+      await SupabaseService.storageUploadBinary(
+        bucket: bucket,
+        path: fileName,
+        bytes: bytes,
+        contentType: contentType,
+        upsert: true,
+      );
 
       if (!mounted) return;
       setState(() => _imageCtrl.text = fileName);
+      debugPrint('[Commerce] Image upload success: path=$fileName');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.imageUploaded)));
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[Commerce] Image upload error: $e');
+      debugPrint('[Commerce] Image upload stack: $st');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.imageUploadFailed(e.toString()))),
@@ -1463,6 +1488,31 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
       default:
         return null;
     }
+  }
+
+  void _logStorageDiagnostics(String bucket) {
+    final storageUrl = SupabaseService.storageBaseUrl;
+    final apikey = SupabaseService.storageAnonKey;
+    final hasAuthHeader = true;
+    final clientHeaders = Supabase.instance.client.headers;
+    debugPrint(
+      '[Commerce] Storage diag: storageUrl=$storageUrl bucket="$bucket" '
+      'apikey=${_maskKey(apikey)} hasAuth=$hasAuthHeader '
+      'storageHeaders=[apikey, Authorization] '
+      'clientHeaders=${clientHeaders.keys.toList()}',
+    );
+  }
+
+  String _maskKey(String? key) {
+    if (key == null || key.isEmpty) return '<empty>';
+    var value = key;
+    if (value.startsWith('Bearer ')) {
+      value = value.substring('Bearer '.length);
+    }
+    if (value.length <= 12) return '${value.substring(0, value.length)}(len=${value.length})';
+    final prefix = value.substring(0, 12);
+    final suffix = value.substring(value.length - 6);
+    return '$prefix...$suffix(len=${value.length})';
   }
 
   @override
