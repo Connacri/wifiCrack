@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -642,9 +643,9 @@ class _ProductsTabState extends State<_ProductsTab> {
       searchQuery: activeSearch,
     );
     final favoriteCount = baseFiltered.where((p) => p.isFavorite).length;
-    final badgeColor =
-        _favoritesOnly ? Colors.red : theme.colorScheme.primary;
-    final isSearching = activeSearch.isNotEmpty &&
+    final badgeColor = _favoritesOnly ? Colors.red : theme.colorScheme.primary;
+    final isSearching =
+        activeSearch.isNotEmpty &&
         (widget.provider.isLoading || widget.provider.isLoadingMore);
 
     return Column(
@@ -653,12 +654,11 @@ class _ProductsTabState extends State<_ProductsTab> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: TextField(
             controller: widget.searchCtrl,
-            onSubmitted: (_) =>
-                widget.provider.loadProducts(
-                  query: widget.searchCtrl.text.trim().isEmpty
-                      ? null
-                      : widget.searchCtrl.text.trim(),
-                ),
+            onSubmitted: (_) => widget.provider.loadProducts(
+              query: widget.searchCtrl.text.trim().isEmpty
+                  ? null
+                  : widget.searchCtrl.text.trim(),
+            ),
             decoration: InputDecoration(
               hintText: l10n.searchProductsPlaceholder,
               prefixIcon: const Icon(Icons.search),
@@ -1656,7 +1656,8 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
     if (value.startsWith('Bearer ')) {
       value = value.substring('Bearer '.length);
     }
-    if (value.length <= 12) return '${value.substring(0, value.length)}(len=${value.length})';
+    if (value.length <= 12)
+      return '${value.substring(0, value.length)}(len=${value.length})';
     final prefix = value.substring(0, 12);
     final suffix = value.substring(value.length - 6);
     return '$prefix...$suffix(len=${value.length})';
@@ -1976,6 +1977,11 @@ class _CartTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     if (provider.cartItems.isEmpty) return Center(child: Text(l10n.cartEmpty));
+    // Calcul du total
+    double total = provider.cartItems.fold(
+      0,
+      (sum, item) => sum + item.subtotal,
+    );
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -2043,7 +2049,8 @@ class _CartTab extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
+            // BottomSheet fixe pour le total et le formulaire
+            _CartBottomSheet(total: total),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -2062,30 +2069,262 @@ class _CartTab extends StatelessWidget {
   }
 }
 
+class _CartBottomSheet extends StatelessWidget {
+  final double total;
+
+  const _CartBottomSheet({required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Ligne "Total"
+          const Text(
+            "Récapitulatif",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Total :",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              Text(
+                "${total.toStringAsFixed(2)} DZD",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Champ pour le code promo (optionnel)
+          TextField(
+            decoration: InputDecoration(
+              hintText: "Code promo",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              suffixIcon: TextButton(
+                onPressed: () {
+                  // Logique pour appliquer le code promo
+                },
+                child: const Text("Appliquer"),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Bouton "Valider la commande"
+          ElevatedButton(
+            onPressed: () {
+              // Logique pour valider la commande
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Commande validée !")),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              "Valider la commande",
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CartItemRow extends StatelessWidget {
   final CartItem item;
   final VoidCallback onIncrement, onDecrement, onRemove;
+
   const _CartItemRow({
     required this.item,
     required this.onIncrement,
     required this.onDecrement,
     required this.onRemove,
   });
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final resolvedImageUrl = CommerceConfig.resolveImageUrl(
+      item.product.imageUrl,
+    );
     return Card(
-      child: ListTile(
-        title: Text(item.product.name),
-        subtitle: Text('${item.subtotal.toStringAsFixed(2)} DZD'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IconButton(onPressed: onDecrement, icon: const Icon(Icons.remove)),
-            Text(item.quantity.toString()),
-            IconButton(onPressed: onIncrement, icon: const Icon(Icons.add)),
-            IconButton(
-              onPressed: onRemove,
-              icon: const Icon(Icons.delete_outline),
+            // --- Image / placeholder ---
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: resolvedImageUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: resolvedImageUrl,
+                        width: 90,
+                        height: 90,
+                        fit: BoxFit.cover,
+                        errorWidget: (context, error, stackTrace) => Container(
+                          width: 90,
+                          height: 90,
+                          alignment: Alignment.center,
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          child: const Icon(Icons.broken_image),
+                        ),
+                      )
+                    : Container(
+                        width: 90,
+                        height: 90,
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        child: const Icon(Icons.videocam, size: 32),
+                      ),
+                // Center(
+                //   child: Icon(
+                //     Icons.shopping_bag_outlined,
+                //     color: theme.primaryColor,
+                //     size: 28,
+                //   ),
+                // ),
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // --- Infos produit ---
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.product.name,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${item.product.price.toStringAsFixed(2)} DZD / unité',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // --- Contrôle quantité & suppression ---
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Sélecteur de quantité
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: onDecrement,
+                        icon: const Icon(Icons.remove, size: 18),
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                        padding: EdgeInsets.zero,
+                        splashRadius: 20,
+                      ),
+                      Container(
+                        width: 32,
+                        alignment: Alignment.center,
+                        child: Text(
+                          item.quantity.toString(),
+                          style: textTheme.titleMedium,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: onIncrement,
+                        icon: const Icon(Icons.add, size: 18),
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                        padding: EdgeInsets.zero,
+                        splashRadius: 20,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Sous‑total + bouton supprimer
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${item.subtotal.toStringAsFixed(2)} DZD',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: onRemove,
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      color: Colors.red.shade600,
+                      tooltip: 'Retirer du panier',
+                      splashRadius: 20,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
