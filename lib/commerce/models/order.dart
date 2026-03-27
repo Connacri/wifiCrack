@@ -9,8 +9,8 @@ class Order {
   final String address;
   final String? note;
   final double total;
-  final OrderStatus status;
-  final PaymentStatus paymentStatus;
+  final String status;
+  final String paymentStatus;
   final DateTime? createdAt;
   final List<OrderItem> items;
   final List<Shipment> shipments;
@@ -24,7 +24,7 @@ class Order {
     required this.total,
     required this.status,
     required this.items,
-    this.paymentStatus = PaymentStatus.pending,
+    this.paymentStatus = 'pending',
     this.note,
     this.createdAt,
     this.shipments = const [],
@@ -71,8 +71,8 @@ class Order {
       address: map['address']?.toString() ?? '',
       note: map['note']?.toString(),
       total: ((map['grand_total'] ?? map['total']) as num?)?.toDouble() ?? 0,
-      status: OrderStatus.fromJson(map['status']?.toString()),
-      paymentStatus: PaymentStatus.fromJson(map['payment_status']?.toString()),
+      status: map['status']?.toString() ?? 'created',
+      paymentStatus: map['payment_status']?.toString() ?? 'pending',
       createdAt: _parseDate(map['created_at']),
       items: items,
       shipments: shipments,

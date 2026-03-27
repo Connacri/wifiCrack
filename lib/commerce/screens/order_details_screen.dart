@@ -101,8 +101,10 @@ class _OrderStatusCard extends StatelessWidget {
             _InfoRow(label: l10n.addressLabel, value: order.address),
             _InfoRow(
               label: l10n.paymentLabel,
-              value: order.paymentStatus.label(l10n),
-              valueColor: order.paymentStatus == PaymentStatus.captured
+              value: PaymentStatus.fromJson(order.paymentStatus).label(l10n),
+              valueColor:
+                  order.paymentStatus == PaymentStatus.captured.name ||
+                      order.paymentStatus == 'captured'
                   ? Colors.green
                   : Colors.orange,
             ),
@@ -288,20 +290,20 @@ class _ActionPanel extends StatelessWidget {
   ) {
     final l10n = AppLocalizations.of(context)!;
     return [
-      if (order.status == OrderStatus.created)
+      if (order.status == OrderStatus.created.name || order.status == 'created')
         ElevatedButton.icon(
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
-            status: OrderStatus.orderConfirmed,
+            status: OrderStatus.orderConfirmed.name,
           ),
           icon: const Icon(Icons.check_circle),
           label: Text(l10n.confirmOrderButton),
         ),
-      if (order.status == OrderStatus.orderConfirmed)
+      if (order.status == OrderStatus.orderConfirmed.name || order.status == 'order_confirmed')
         ElevatedButton.icon(
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
-            status: OrderStatus.stockAllocated,
+            status: OrderStatus.stockAllocated.name,
           ),
           icon: const Icon(Icons.inventory),
           label: Text(l10n.allocateStockButton),
@@ -315,25 +317,26 @@ class _ActionPanel extends StatelessWidget {
   ) {
     final l10n = AppLocalizations.of(context)!;
     return [
-      if (order.status == OrderStatus.stockAllocated)
+      if (order.status == OrderStatus.stockAllocated.name ||
+          order.status == 'stock_allocated')
         ElevatedButton.icon(
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
-            status: OrderStatus.picking,
+            status: OrderStatus.picking.name,
           ),
           icon: const Icon(Icons.shopping_basket),
           label: Text(l10n.startPickingButton),
         ),
-      if (order.status == OrderStatus.picking)
+      if (order.status == OrderStatus.picking.name || order.status == 'picking')
         ElevatedButton.icon(
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
-            status: OrderStatus.packed,
+            status: OrderStatus.packed.name,
           ),
           icon: const Icon(Icons.inventory_2),
           label: Text(l10n.packingFinishedButton),
         ),
-      if (order.status == OrderStatus.packed)
+      if (order.status == OrderStatus.packed.name || order.status == 'packed')
         ElevatedButton.icon(
           onPressed: () => _showCreateShipmentDialog(context, provider),
           icon: const Icon(Icons.local_shipping),
@@ -391,7 +394,8 @@ class _ActionPanel extends StatelessWidget {
   ) {
     final l10n = AppLocalizations.of(context)!;
     return [
-      if (order.status == OrderStatus.delivered)
+      if (order.status == OrderStatus.delivered.name ||
+          order.status == 'delivered')
         TextButton.icon(
           onPressed: () {
             // Logic for return request
@@ -455,33 +459,16 @@ class _ActionPanel extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final OrderStatus status;
+  final String status;
 
   const _StatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    Color color;
-    switch (status) {
-      case OrderStatus.created:
-        color = Colors.blue;
-        break;
-      case OrderStatus.paid:
-        color = Colors.green;
-        break;
-      case OrderStatus.delivered:
-        color = Colors.purple;
-        break;
-      case OrderStatus.shipped:
-        color = Colors.orange;
-        break;
-      case OrderStatus.cancelled:
-        color = Colors.red;
-        break;
-      default:
-        color = Colors.grey;
-    }
+    final s = OrderStatus.tryParse(status);
+    final label = s != null ? s.label(l10n) : status;
+    final color = s != null ? _getColorForStatus(s) : Colors.grey;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -491,7 +478,7 @@ class _StatusBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
-        status.label(l10n),
+        label,
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.bold,
@@ -499,6 +486,23 @@ class _StatusBadge extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _getColorForStatus(OrderStatus s) {
+    switch (s) {
+      case OrderStatus.created:
+        return Colors.blue;
+      case OrderStatus.paid:
+        return Colors.green;
+      case OrderStatus.delivered:
+        return Colors.purple;
+      case OrderStatus.shipped:
+        return Colors.orange;
+      case OrderStatus.cancelled:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }
 
@@ -552,11 +556,35 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _AdminStatusEditCard extends StatelessWidget {
+class _AdminStatusEditCard extends StatefulWidget {
   final Order order;
   final CommerceProvider provider;
 
   const _AdminStatusEditCard({required this.order, required this.provider});
+
+  @override
+  State<_AdminStatusEditCard> createState() => _AdminStatusEditCardState();
+}
+
+class _AdminStatusEditCardState extends State<_AdminStatusEditCard> {
+  late final TextEditingController _statusCtrl;
+  late final TextEditingController _paymentStatusCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _statusCtrl = TextEditingController(text: widget.order.status);
+    _paymentStatusCtrl = TextEditingController(
+      text: widget.order.paymentStatus,
+    );
+  }
+
+  @override
+  void dispose() {
+    _statusCtrl.dispose();
+    _paymentStatusCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -579,28 +607,42 @@ class _AdminStatusEditCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<OrderStatus>(
-              value: order.status,
-              decoration: const InputDecoration(
+            TextFormField(
+              controller: _statusCtrl,
+              decoration: InputDecoration(
+                labelText: l10n.globalStatus,
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.save),
+                  onPressed: () {
+                    widget.provider.updateOrderStatus(
+                      orderId: widget.order.id,
+                      status: _statusCtrl.text.trim(),
+                    );
+                  },
+                ),
               ),
-              items: OrderStatus.values
-                  .map(
-                    (s) =>
-                        DropdownMenuItem(value: s, child: Text(s.label(l10n))),
-                  )
-                  .toList(),
-              onChanged: (newStatus) {
-                if (newStatus != null && newStatus != order.status) {
-                  provider.updateOrderStatus(
-                    orderId: order.id,
-                    status: newStatus,
-                  );
-                }
-              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _paymentStatusCtrl,
+              decoration: InputDecoration(
+                labelText: l10n.paymentLabel,
+                filled: true,
+                fillColor: Colors.white,
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.save),
+                  onPressed: () {
+                    widget.provider.updatePaymentStatus(
+                      orderId: widget.order.id,
+                      paymentStatus: _paymentStatusCtrl.text.trim(),
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),

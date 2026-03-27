@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/sources/supabase_service.dart';
 import '../models/cart_item.dart';
@@ -13,6 +14,8 @@ class CommerceProvider extends ChangeNotifier {
   final SupabaseService _supabaseService;
   StreamSubscription? _productsSub;
   Timer? _productsStreamRetry;
+  RealtimeChannel? _ordersChannel;
+  String? _ordersStreamUserId;
 
   CommerceProvider(this._service, this._supabaseService) {
     _initProductsStream();
@@ -72,10 +75,108 @@ class CommerceProvider extends ChangeNotifier {
     _productsStreamRetry = Timer(const Duration(seconds: 5), _initProductsStream);
   }
 
+  void _initOrdersStream(String? userId) {
+    final normalizedUserId =
+        (userId == null || userId.trim().isEmpty) ? null : userId.trim();
+    if (_ordersChannel != null && _ordersStreamUserId == normalizedUserId) {
+      return;
+    }
+    _ordersStreamUserId = normalizedUserId;
+    _ordersChannel?.unsubscribe();
+    _ordersChannel = null;
+
+    final channelName = normalizedUserId == null
+        ? 'orders:all'
+        : 'orders:$normalizedUserId';
+    final channel = Supabase.instance.client.channel(channelName);
+
+    PostgresChangeFilter? filter;
+    if (normalizedUserId != null) {
+      filter = PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'buyer_id',
+        value: normalizedUserId,
+      );
+    }
+
+    channel
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.insert,
+        schema: 'public',
+        table: 'orders',
+        filter: filter,
+        callback: (payload) {
+          _upsertOrderFromRealtime(payload.newRecord);
+        },
+      )
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.update,
+        schema: 'public',
+        table: 'orders',
+        filter: filter,
+        callback: (payload) {
+          _upsertOrderFromRealtime(payload.newRecord);
+        },
+      )
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.delete,
+        schema: 'public',
+        table: 'orders',
+        filter: filter,
+        callback: (payload) {
+          _removeOrderFromRealtime(payload.oldRecord);
+        },
+      )
+      ..subscribe();
+
+    _ordersChannel = channel;
+  }
+
+  Map<String, dynamic>? _normalizeOrderRecord(Map<dynamic, dynamic>? record) {
+    if (record == null || record.isEmpty) return null;
+    return Map<String, dynamic>.from(record);
+  }
+
+  void _upsertOrderFromRealtime(Map<dynamic, dynamic>? record) {
+    final map = _normalizeOrderRecord(record);
+    if (map == null) return;
+    final order = Order.fromMap(map);
+    if (order.id.isEmpty) return;
+    final index = _orders.indexWhere((o) => o.id == order.id);
+    if (index == -1) {
+      _orders.insert(0, order);
+    } else {
+      _orders[index] = order;
+    }
+    _sortOrders();
+    notifyListeners();
+  }
+
+  void _removeOrderFromRealtime(Map<dynamic, dynamic>? record) {
+    final map = _normalizeOrderRecord(record);
+    if (map == null) return;
+    final id = map['id']?.toString();
+    if (id == null || id.isEmpty) return;
+    final before = _orders.length;
+    _orders.removeWhere((o) => o.id == id);
+    if (_orders.length != before) {
+      notifyListeners();
+    }
+  }
+
+  void _sortOrders() {
+    _orders.sort((a, b) {
+      final aDate = a.createdAt ?? DateTime(0);
+      final bDate = b.createdAt ?? DateTime(0);
+      return bDate.compareTo(aDate);
+    });
+  }
+
   @override
   void dispose() {
     _productsSub?.cancel();
     _productsStreamRetry?.cancel();
+    _ordersChannel?.unsubscribe();
     super.dispose();
   }
 
@@ -259,8 +360,11 @@ class CommerceProvider extends ChangeNotifier {
   String? _lastOrdersUserId;
 
   Future<void> loadOrders({String? userId, bool reset = false}) async {
+    final normalizedUserId =
+        (userId == null || userId.trim().isEmpty) ? null : userId.trim();
+    _lastOrdersUserId = normalizedUserId;
+    _initOrdersStream(normalizedUserId);
     if (_ordersLoading || _ordersLoadingMore) return;
-    _lastOrdersUserId = userId;
     if (reset) {
       _ordersOffset = 0;
       _ordersHasMore = true;
@@ -277,14 +381,18 @@ class CommerceProvider extends ChangeNotifier {
 
     try {
       final fetched = await _service.fetchOrders(
-        userId: userId,
+        userId: normalizedUserId,
         offset: _ordersOffset,
         limit: _ordersPageSize,
       );
       if (reset) {
         _orders = fetched;
       } else {
-        _orders.addAll(fetched);
+        final existingIds = _orders.map((o) => o.id).toSet();
+        for (final order in fetched) {
+          if (order.id.isEmpty || existingIds.contains(order.id)) continue;
+          _orders.add(order);
+        }
       }
       _ordersOffset += fetched.length;
       if (fetched.length < _ordersPageSize) {
@@ -457,7 +565,7 @@ class CommerceProvider extends ChangeNotifier {
 
   Future<bool> updateOrderStatus({
     required String orderId,
-    required OrderStatus status,
+    required String status,
   }) async {
     if (orderId.trim().isEmpty) return false;
     _updatingOrderIds.add(orderId);
@@ -465,7 +573,7 @@ class CommerceProvider extends ChangeNotifier {
     try {
       final ok = await _service.updateOrderStatus(
         orderId: orderId,
-        status: status.toJson(),
+        status: status,
       );
       if (ok) {
         final index = _orders.indexWhere((o) => o.id == orderId);
@@ -478,10 +586,51 @@ class CommerceProvider extends ChangeNotifier {
             address: current.address,
             total: current.total,
             status: status,
+            paymentStatus: current.paymentStatus,
             items: current.items,
             note: current.note,
             createdAt: current.createdAt,
-            paymentStatus: current.paymentStatus,
+            shipments: current.shipments,
+            returns: current.returns,
+          );
+        }
+      }
+      return ok;
+    } catch (_) {
+      return false;
+    } finally {
+      _updatingOrderIds.remove(orderId);
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updatePaymentStatus({
+    required String orderId,
+    required String paymentStatus,
+  }) async {
+    if (orderId.trim().isEmpty) return false;
+    _updatingOrderIds.add(orderId);
+    notifyListeners();
+    try {
+      final ok = await _service.updatePaymentStatus(
+        orderId: orderId,
+        paymentStatus: paymentStatus,
+      );
+      if (ok) {
+        final index = _orders.indexWhere((o) => o.id == orderId);
+        if (index != -1) {
+          final current = _orders[index];
+          _orders[index] = Order(
+            id: current.id,
+            userId: current.userId,
+            phone: current.phone,
+            address: current.address,
+            total: current.total,
+            status: current.status,
+            paymentStatus: paymentStatus,
+            items: current.items,
+            note: current.note,
+            createdAt: current.createdAt,
             shipments: current.shipments,
             returns: current.returns,
           );

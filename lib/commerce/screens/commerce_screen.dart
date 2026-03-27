@@ -388,7 +388,7 @@ class _CommerceViewState extends State<_CommerceView> {
                   ),
                   _OrdersTab(
                     provider: provider,
-                    onRefresh: () => provider.loadOrders(reset: true),
+                    onRefresh: _refreshOrders,
                     onLoadMore: provider.loadMoreOrders,
                     onUpdateStatus: provider.updateOrderStatus,
                     isUpdating: provider.isUpdatingOrder,
@@ -2333,12 +2333,12 @@ class _CartItemRow extends StatelessWidget {
   }
 }
 
-class _OrdersTab extends StatelessWidget {
+class _OrdersTab extends StatefulWidget {
   final CommerceProvider provider;
   final VoidCallback onRefresh, onLoadMore;
   final Future<bool> Function({
     required String orderId,
-    required OrderStatus status,
+    required String status,
   })
   onUpdateStatus;
   final bool Function(String orderId) isUpdating;
@@ -2354,23 +2354,62 @@ class _OrdersTab extends StatelessWidget {
   });
 
   @override
+  State<_OrdersTab> createState() => _OrdersTabState();
+}
+
+class _OrdersTabState extends State<_OrdersTab> {
+  late final ScrollController _scrollCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollCtrl = ScrollController()..addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollCtrl
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollCtrl.hasClients) return;
+    final provider = widget.provider;
+    if (!provider.ordersHasMore ||
+        provider.ordersLoadingMore ||
+        provider.ordersLoading) {
+      return;
+    }
+    if (_scrollCtrl.position.maxScrollExtent - _scrollCtrl.position.pixels <=
+        320) {
+      widget.onLoadMore();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final provider = widget.provider;
     if (provider.ordersLoading)
       return const Center(child: CircularProgressIndicator());
     return RefreshIndicator(
-      onRefresh: () async => onRefresh(),
+      onRefresh: () async => widget.onRefresh(),
       child: ListView.builder(
+        controller: _scrollCtrl,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         itemCount: provider.orders.length + (provider.ordersHasMore ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index >= provider.orders.length)
-            return Center(
-              child: TextButton(
-                onPressed: onLoadMore,
-                child: Text(l10n.loadMoreButton),
-              ),
-            );
+          if (index >= provider.orders.length) {
+            if (provider.ordersLoadingMore) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            return const SizedBox(height: 24);
+          }
           final order = provider.orders[index];
           return _OrderCard(
             order: order,
@@ -2391,19 +2430,128 @@ class _OrderCard extends StatelessWidget {
   final Order order;
   final VoidCallback onTap;
   const _OrderCard({required this.order, required this.onTap});
+
+  // Helper method to get status color
+  Color _getStatusColor(String status) {
+    final s = OrderStatus.fromJson(status);
+    switch (s) {
+      case OrderStatus.paid:
+      case OrderStatus.delivered:
+      case OrderStatus.refunded:
+        return Colors.green;
+      case OrderStatus.pendingPayment:
+      case OrderStatus.picking:
+      case OrderStatus.packed:
+      case OrderStatus.readyToShip:
+        return Colors.orange;
+      case OrderStatus.cancelled:
+      case OrderStatus.paymentFailed:
+      case OrderStatus.deliveryFailed:
+      case OrderStatus.exception:
+        return Colors.red;
+      default:
+        return Colors.blue;
+    }
+  }
+
+  // Helper method to get status icon
+  IconData _getStatusIcon(String status) {
+    final s = OrderStatus.fromJson(status);
+    switch (s) {
+      case OrderStatus.paid:
+      case OrderStatus.delivered:
+        return Icons.check_circle_outline;
+      case OrderStatus.pendingPayment:
+      case OrderStatus.picking:
+      case OrderStatus.packed:
+        return Icons.access_time;
+      case OrderStatus.cancelled:
+      case OrderStatus.paymentFailed:
+      case OrderStatus.deliveryFailed:
+        return Icons.cancel;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final statusEnum = OrderStatus.tryParse(order.status);
+    final paymentStatusEnum = PaymentStatus.tryParse(order.paymentStatus);
+    
+    final statusLabel = statusEnum != null 
+        ? statusEnum.label(l10n) 
+        : order.status;
+    final paymentLabel = paymentStatusEnum != null 
+        ? paymentStatusEnum.label(l10n) 
+        : order.paymentStatus;
+
     return Card(
-      child: ListTile(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
         onTap: onTap,
-        title: Text(l10n.orderNumber(order.id.substring(0, 8))),
-        subtitle: Text(order.status.label(l10n)),
-        trailing: Text(
-          '${order.total.toStringAsFixed(2)} DZD',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Status indicator (icon + color)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(order.status).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _getStatusIcon(order.status),
+                  color: _getStatusColor(order.status),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Order info (number, status)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.orderNumber(order.id.substring(0, 8)),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$statusLabel - $paymentLabel',
+                        style: TextStyle(
+                          color: _getStatusColor(order.status),
+                          fontSize: 14,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // Total amount
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${order.total.toStringAsFixed(2)} DZD',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.green,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+                ],
+              ),
+            ],
           ),
         ),
       ),

@@ -220,6 +220,7 @@ class CommerceService {
         'address': address,
         'grand_total': total,
         'status': 'created',
+        'payment_status': 'pending',
         'client_name': clientName,
         'items': items
             .map(
@@ -299,6 +300,23 @@ class CommerceService {
       return true;
     } catch (e) {
       debugPrint('[Commerce] updateOrderStatus error: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> updatePaymentStatus({
+    required String orderId,
+    required String paymentStatus,
+  }) async {
+    if (orderId.trim().isEmpty) return false;
+    try {
+      await _client
+          .from('orders')
+          .update({'payment_status': paymentStatus})
+          .eq('id', orderId);
+      return true;
+    } catch (e) {
+      debugPrint('[Commerce] updatePaymentStatus error: $e');
       rethrow;
     }
   }
