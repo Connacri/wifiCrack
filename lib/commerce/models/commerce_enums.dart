@@ -24,17 +24,22 @@ enum OrderStatus {
   returnReceived,
   refundPending,
   refunded,
-
   closed;
 
-  String toJson() => name;
+  String toJson() => _toSnakeCase(name);
 
   static OrderStatus? tryParse(String? value) {
     if (value == null) return null;
+    final normalized = _toCamelCase(value);
     try {
-      return OrderStatus.values.firstWhere((e) => e.name == value);
+      return OrderStatus.values.firstWhere((e) => e.name == normalized);
     } catch (_) {
-      return null;
+      // Fallback: check if raw value matches name
+      try {
+        return OrderStatus.values.firstWhere((e) => e.name == value);
+      } catch (_) {
+        return null;
+      }
     }
   }
 
@@ -90,7 +95,6 @@ enum OrderStatus {
         return l10n.orderStatusRefundPending;
       case OrderStatus.refunded:
         return l10n.orderStatusRefunded;
-
       case OrderStatus.closed:
         return l10n.orderStatusClosed;
     }
@@ -111,13 +115,20 @@ enum ShipmentStatus {
   damaged,
   returnToSender;
 
-  String toJson() => name;
+  String toJson() => _toSnakeCase(name);
 
   static ShipmentStatus fromJson(String? value) {
-    return ShipmentStatus.values.firstWhere(
-      (e) => e.name == value,
-      orElse: () => ShipmentStatus.labelCreated,
-    );
+    if (value == null) return ShipmentStatus.labelCreated;
+    final normalized = _toCamelCase(value);
+    try {
+      return ShipmentStatus.values.firstWhere((e) => e.name == normalized);
+    } catch (_) {
+      try {
+        return ShipmentStatus.values.firstWhere((e) => e.name == value);
+      } catch (_) {
+        return ShipmentStatus.labelCreated;
+      }
+    }
   }
 
   String label(AppLocalizations l10n) {
@@ -160,13 +171,16 @@ enum ReturnStatus {
   refundPending,
   refunded;
 
-  String toJson() => name;
+  String toJson() => _toSnakeCase(name);
 
   static ReturnStatus fromJson(String? value) {
-    return ReturnStatus.values.firstWhere(
-      (e) => e.name == value,
-      orElse: () => ReturnStatus.requested,
-    );
+    if (value == null) return ReturnStatus.requested;
+    final normalized = _toCamelCase(value);
+    try {
+      return ReturnStatus.values.firstWhere((e) => e.name == normalized);
+    } catch (_) {
+      return ReturnStatus.requested;
+    }
   }
 
   String label(AppLocalizations l10n) {
@@ -199,12 +213,13 @@ enum PaymentStatus {
   refunded,
   failed;
 
-  String toJson() => name;
+  String toJson() => _toSnakeCase(name);
 
   static PaymentStatus? tryParse(String? value) {
     if (value == null) return null;
+    final normalized = _toCamelCase(value);
     try {
-      return PaymentStatus.values.firstWhere((e) => e.name == value);
+      return PaymentStatus.values.firstWhere((e) => e.name == normalized);
     } catch (_) {
       return null;
     }
@@ -259,4 +274,151 @@ enum UserRole {
         return l10n.admin;
     }
   }
+}
+
+/// Helpers pour la conversion de casse
+String _toSnakeCase(String name) {
+  return name.replaceAllMapped(
+    RegExp(r'([A-Z])'),
+    (match) => '_${match.group(1)!.toLowerCase()}',
+  );
+}
+
+String _toCamelCase(String snake) {
+  final parts = snake.split('_');
+  if (parts.length == 1) return snake;
+  return parts[0] +
+      parts
+          .sublist(1)
+          .map((p) => p[0].toUpperCase() + p.substring(1))
+          .join('');
+}
+
+/// Matrice des transitions autorisées par rôle.
+class OrderTransitionPolicy {
+  OrderTransitionPolicy._();
+
+  static Set<OrderStatus> allowedTransitions({
+    required UserRole role,
+    required OrderStatus current,
+  }) {
+    switch (role) {
+      case UserRole.admin:
+      case UserRole.support:
+        return OrderStatus.values.where((s) => s != current).toSet();
+      case UserRole.wholesaler:
+        return _wholesalerTransitions[current] ?? {};
+      case UserRole.warehouse:
+        return _warehouseTransitions[current] ?? {};
+      case UserRole.carrier:
+        return _carrierTransitions[current] ?? {};
+      case UserRole.driver:
+        return _driverTransitions[current] ?? {};
+      case UserRole.client:
+        return _clientTransitions[current] ?? {};
+    }
+  }
+
+  static bool canTransition({
+    required UserRole role,
+    required OrderStatus from,
+    required OrderStatus to,
+  }) {
+    return allowedTransitions(role: role, current: from).contains(to);
+  }
+
+  static const _wholesalerTransitions = <OrderStatus, Set<OrderStatus>>{
+    OrderStatus.created: {OrderStatus.orderConfirmed, OrderStatus.cancelled},
+    OrderStatus.orderConfirmed: {
+      OrderStatus.stockAllocated,
+      OrderStatus.cancelled,
+    },
+  };
+
+  static const _warehouseTransitions = <OrderStatus, Set<OrderStatus>>{
+    OrderStatus.orderConfirmed: {OrderStatus.stockAllocated},
+    OrderStatus.stockAllocated: {OrderStatus.picking, OrderStatus.backorder},
+    OrderStatus.picking: {OrderStatus.packed},
+    OrderStatus.packed: {OrderStatus.readyToShip},
+  };
+
+  static const _carrierTransitions = <OrderStatus, Set<OrderStatus>>{
+    OrderStatus.readyToShip: {OrderStatus.shipped},
+    OrderStatus.shipped: {OrderStatus.partiallyShipped},
+  };
+
+  static const _driverTransitions = <OrderStatus, Set<OrderStatus>>{
+    OrderStatus.shipped: {OrderStatus.delivered, OrderStatus.deliveryFailed},
+    OrderStatus.partiallyDelivered: {
+      OrderStatus.delivered,
+      OrderStatus.deliveryFailed,
+    },
+    OrderStatus.deliveryFailed: {OrderStatus.shipped},
+  };
+
+  static const _clientTransitions = <OrderStatus, Set<OrderStatus>>{
+    OrderStatus.delivered: {OrderStatus.returnRequested},
+    OrderStatus.partiallyDelivered: {OrderStatus.returnRequested},
+    OrderStatus.shipped: {OrderStatus.exception},
+  };
+}
+
+class ShipmentTransitionPolicy {
+  ShipmentTransitionPolicy._();
+
+  static Set<ShipmentStatus> allowedTransitions({
+    required UserRole role,
+    required ShipmentStatus current,
+  }) {
+    switch (role) {
+      case UserRole.admin:
+      case UserRole.support:
+        return ShipmentStatus.values.where((s) => s != current).toSet();
+      case UserRole.carrier:
+        return _carrierShipmentTransitions[current] ?? {};
+      case UserRole.driver:
+        return _driverShipmentTransitions[current] ?? {};
+      case UserRole.client:
+      case UserRole.warehouse:
+      case UserRole.wholesaler:
+        return {};
+    }
+  }
+
+  static bool canTransition({
+    required UserRole role,
+    required ShipmentStatus from,
+    required ShipmentStatus to,
+  }) {
+    return allowedTransitions(role: role, current: from).contains(to);
+  }
+
+  static const _carrierShipmentTransitions =
+      <ShipmentStatus, Set<ShipmentStatus>>{
+        ShipmentStatus.labelCreated: {ShipmentStatus.pickedUp},
+        ShipmentStatus.pickedUp: {ShipmentStatus.inTransit},
+        ShipmentStatus.inTransit: {
+          ShipmentStatus.arrivedAtHub,
+          ShipmentStatus.exception,
+          ShipmentStatus.lost,
+          ShipmentStatus.damaged,
+        },
+        ShipmentStatus.arrivedAtHub: {
+          ShipmentStatus.customsClearance,
+          ShipmentStatus.outForDelivery,
+        },
+        ShipmentStatus.customsClearance: {ShipmentStatus.outForDelivery},
+      };
+
+  static const _driverShipmentTransitions =
+      <ShipmentStatus, Set<ShipmentStatus>>{
+        ShipmentStatus.outForDelivery: {
+          ShipmentStatus.delivered,
+          ShipmentStatus.deliveryFailed,
+        },
+        ShipmentStatus.deliveryFailed: {
+          ShipmentStatus.outForDelivery,
+          ShipmentStatus.returnToSender,
+        },
+      };
 }

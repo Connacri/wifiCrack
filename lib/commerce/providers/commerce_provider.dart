@@ -1,12 +1,14 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/sources/supabase_service.dart';
 import '../models/cart_item.dart';
+import '../models/commerce_enums.dart';
 import '../models/order.dart';
 import '../models/product.dart';
-import '../models/commerce_enums.dart';
+import '../models/shipment.dart';
 import '../services/commerce_service.dart';
 
 class CommerceProvider extends ChangeNotifier {
@@ -25,13 +27,12 @@ class CommerceProvider extends ChangeNotifier {
     _productsSub?.cancel();
     _productsSub = _service.watchProductsStream().listen(
       (data) {
-        // Uniquement si on n'est pas en train de filtrer ou de chercher spécifiquement
         if ((_lastQuery == null || _lastQuery!.isEmpty) &&
             (_lastCategory == null || _lastCategory == 'All')) {
           final incoming = data.map(Product.fromMap).toList();
           _products = _mergeFavorites(incoming);
           _lastUnfilteredProducts = List<Product>.from(_products);
-          _productsHasMore = false; // Le stream donne tout par défaut
+          _productsHasMore = false;
           notifyListeners();
         }
       },
@@ -48,19 +49,13 @@ class CommerceProvider extends ChangeNotifier {
   }
 
   List<Product> _mergeFavorites(List<Product> incoming) {
-    if (_currentUserId == null || _currentUserId!.isEmpty) {
-      return incoming;
-    }
-    if (_products.isEmpty) {
-      return incoming;
-    }
-
+    if (_currentUserId == null || _currentUserId!.isEmpty) return incoming;
+    if (_products.isEmpty) return incoming;
     final favoriteIds = <String>{};
     for (final product in _products) {
       if (product.isFavorite) favoriteIds.add(product.id);
     }
     if (favoriteIds.isEmpty) return incoming;
-
     return incoming
         .map(
           (product) => favoriteIds.contains(product.id)
@@ -72,15 +67,18 @@ class CommerceProvider extends ChangeNotifier {
 
   void _scheduleProductsStreamRetry() {
     if (_productsStreamRetry?.isActive ?? false) return;
-    _productsStreamRetry = Timer(const Duration(seconds: 5), _initProductsStream);
+    _productsStreamRetry = Timer(
+      const Duration(seconds: 5),
+      _initProductsStream,
+    );
   }
 
   void _initOrdersStream(String? userId) {
-    final normalizedUserId =
-        (userId == null || userId.trim().isEmpty) ? null : userId.trim();
-    if (_ordersChannel != null && _ordersStreamUserId == normalizedUserId) {
+    final normalizedUserId = (userId == null || userId.trim().isEmpty)
+        ? null
+        : userId.trim();
+    if (_ordersChannel != null && _ordersStreamUserId == normalizedUserId)
       return;
-    }
     _ordersStreamUserId = normalizedUserId;
     _ordersChannel?.unsubscribe();
     _ordersChannel = null;
@@ -105,27 +103,21 @@ class CommerceProvider extends ChangeNotifier {
         schema: 'public',
         table: 'orders',
         filter: filter,
-        callback: (payload) {
-          _upsertOrderFromRealtime(payload.newRecord);
-        },
+        callback: (payload) => _upsertOrderFromRealtime(payload.newRecord),
       )
       ..onPostgresChanges(
         event: PostgresChangeEvent.update,
         schema: 'public',
         table: 'orders',
         filter: filter,
-        callback: (payload) {
-          _upsertOrderFromRealtime(payload.newRecord);
-        },
+        callback: (payload) => _upsertOrderFromRealtime(payload.newRecord),
       )
       ..onPostgresChanges(
         event: PostgresChangeEvent.delete,
         schema: 'public',
         table: 'orders',
         filter: filter,
-        callback: (payload) {
-          _removeOrderFromRealtime(payload.oldRecord);
-        },
+        callback: (payload) => _removeOrderFromRealtime(payload.oldRecord),
       )
       ..subscribe();
 
@@ -159,9 +151,7 @@ class CommerceProvider extends ChangeNotifier {
     if (id == null || id.isEmpty) return;
     final before = _orders.length;
     _orders.removeWhere((o) => o.id == id);
-    if (_orders.length != before) {
-      notifyListeners();
-    }
+    if (_orders.length != before) notifyListeners();
   }
 
   void _sortOrders() {
@@ -172,402 +162,70 @@ class CommerceProvider extends ChangeNotifier {
     });
   }
 
-  @override
-  void dispose() {
-    _productsSub?.cancel();
-    _productsStreamRetry?.cancel();
-    _ordersChannel?.unsubscribe();
-    super.dispose();
-  }
-
-  List<Product> _products = [];
-  bool _loading = false;
-  bool _loadingMore = false;
-  bool _productsHasMore = true;
-  int _productsOffset = 0;
-  static const int _productsPageSize = 30;
-  bool _includeInactive = true;
-  String? _lastQuery;
-  String? _lastCategory;
-  String? _currentUserId;
-  bool _pendingProductsReload = false;
-  List<Product> _lastUnfilteredProducts = [];
-
-  void setCurrentUserId(String? userId) {
-    if (_currentUserId == userId) return;
-    _currentUserId = userId;
-    // Reload products to get favorite status when userId changes
-    _pendingProductsReload = true;
-    if (!_loading && !_loadingMore) {
-      loadProducts(query: _lastQuery, category: _lastCategory, reset: true);
-    }
-  }
-
-  String? get currentUserId => _currentUserId;
-  String? get lastQuery => _lastQuery;
-
-  Future<void> toggleFavorite(String productId) async {
-    if (_currentUserId == null || _currentUserId!.isEmpty) return;
-
-    final index = _products.indexWhere((p) => p.id == productId);
-    if (index == -1) return;
-
-    final product = _products[index];
-    final nextState = !product.isFavorite;
-
-    // Optimistic UI update
-    _products[index] = product.copyWith(isFavorite: nextState);
-    notifyListeners();
-
-    try {
-      await _service.toggleFavorite(_currentUserId!, productId, nextState);
-    } catch (e) {
-      // Revert on error
-      _products[index] = product;
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-  String? _error;
-  String? _ordersError;
-  bool _ordersLoading = false;
-  bool _ordersLoadingMore = false;
-  bool _ordersHasMore = true;
-  int _ordersOffset = 0;
-  static const int _ordersPageSize = 20;
-  final Set<String> _updatingOrderIds = {};
-
-  final Map<String, CartItem> _cart = {};
-  List<Order> _orders = [];
-
-  UserRole _currentRole = UserRole.client;
-  UserRole get currentRole => _currentRole;
-
-  void setRole(UserRole role) {
-    if (_currentRole == role) return;
-    _currentRole = role;
-    notifyListeners();
-  }
-
-  List<Product> get products => _products;
-  bool get isLoading => _loading;
-  bool get isLoadingMore => _loadingMore;
-  bool get productsHasMore => _productsHasMore;
-  bool get includeInactive => _includeInactive;
-  String? get error => _error;
-  List<Order> get orders => _orders;
-  bool get ordersLoading => _ordersLoading;
-  bool get ordersLoadingMore => _ordersLoadingMore;
-  bool get ordersHasMore => _ordersHasMore;
-  String? get ordersError => _ordersError;
-  bool isUpdatingOrder(String orderId) =>
-      _updatingOrderIds.contains(orderId);
-
-  List<CartItem> get cartItems {
-    final items = _cart.values.toList();
-    items.sort((a, b) => a.product.name.compareTo(b.product.name));
-    return items;
-  }
-
-  int get totalItems =>
-      _cart.values.fold(0, (sum, item) => sum + item.quantity);
-
-  double get total =>
-      _cart.values.fold(0, (sum, item) => sum + item.subtotal);
-
-  Future<void> loadProducts({
-    String? query,
-    String? category,
-    bool? includeInactive,
-    bool reset = true,
-  }) async {
-    final normalizedQuery = query?.trim();
-    final isQueryEmpty = normalizedQuery == null || normalizedQuery.isEmpty;
-    _lastQuery = isQueryEmpty ? null : normalizedQuery;
-    _lastCategory = category;
-    if (includeInactive != null) {
-      _includeInactive = includeInactive;
-    }
-    if (_loading || _loadingMore) {
-      _pendingProductsReload = _pendingProductsReload || reset;
-      return;
-    }
-    _pendingProductsReload = false;
-    if (reset) {
-      _productsOffset = 0;
-      _productsHasMore = true;
-      if (isQueryEmpty) {
-        _products = _lastUnfilteredProducts.isNotEmpty
-            ? List<Product>.from(_lastUnfilteredProducts)
-            : [];
-      } else {
-        // Keep existing list while searching to avoid flicker.
-      }
-    }
-
-    _error = null;
-    if (_products.isEmpty) {
-      _loading = true;
-    } else {
-      _loadingMore = true;
-    }
-    notifyListeners();
-
-    try {
-      final fetched = await _service.fetchProducts(
-        query: normalizedQuery,
-        category: category,
-        includeInactive: _includeInactive,
-        offset: _productsOffset,
-        limit: _productsPageSize,
-        userId: _currentUserId,
-      );
-      if (reset) {
-        _products = fetched;
-        if (isQueryEmpty) {
-          _lastUnfilteredProducts = fetched;
-        }
-      } else {
-        _products.addAll(fetched);
-      }
-      _productsOffset += fetched.length;
-      if (fetched.length < _productsPageSize) {
-        _productsHasMore = false;
-      }
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _loading = false;
-      _loadingMore = false;
-      notifyListeners();
-
-      if (_pendingProductsReload) {
-        _pendingProductsReload = false;
-        await loadProducts(query: _lastQuery, category: _lastCategory, reset: true);
-      }
-    }
-  }
-
-  Future<void> loadMoreProducts() async {
-    if (!_productsHasMore) return;
-    await loadProducts(
-      query: _lastQuery,
-      category: _lastCategory,
-      reset: false,
-    );
-  }
-
-  String? _lastOrdersUserId;
-
-  Future<void> loadOrders({String? userId, bool reset = false}) async {
-    final normalizedUserId =
-        (userId == null || userId.trim().isEmpty) ? null : userId.trim();
-    _lastOrdersUserId = normalizedUserId;
-    _initOrdersStream(normalizedUserId);
-    if (_ordersLoading || _ordersLoadingMore) return;
-    if (reset) {
-      _ordersOffset = 0;
-      _ordersHasMore = true;
-      _orders = [];
-    }
-
-    _ordersError = null;
-    if (_orders.isEmpty) {
-      _ordersLoading = true;
-    } else {
-      _ordersLoadingMore = true;
-    }
-    notifyListeners();
-
-    try {
-      final fetched = await _service.fetchOrders(
-        userId: normalizedUserId,
-        offset: _ordersOffset,
-        limit: _ordersPageSize,
-      );
-      if (reset) {
-        _orders = fetched;
-      } else {
-        final existingIds = _orders.map((o) => o.id).toSet();
-        for (final order in fetched) {
-          if (order.id.isEmpty || existingIds.contains(order.id)) continue;
-          _orders.add(order);
-        }
-      }
-      _ordersOffset += fetched.length;
-      if (fetched.length < _ordersPageSize) {
-        _ordersHasMore = false;
-      }
-    } catch (e) {
-      _ordersError = e.toString();
-    } finally {
-      _ordersLoading = false;
-      _ordersLoadingMore = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> loadMoreOrders() async {
-    if (!_ordersHasMore) return;
-    await loadOrders(userId: _lastOrdersUserId);
-  }
-
-  void setIncludeInactive(bool value) {
-    if (_includeInactive == value) return;
-    _includeInactive = value;
-    loadProducts(query: _lastQuery, category: _lastCategory);
-  }
-
-  Future<bool> saveProduct(Product product) async {
-    try {
-      final isNew = product.id.isEmpty;
-      String? oldImageUrl;
-
-      // Si c'est une mise à jour, on identifie l'ancienne image à supprimer
-      if (!isNew) {
-        final oldProduct = _products.cast<Product?>().firstWhere(
-          (p) => p?.id == product.id,
-          orElse: () => null,
-        );
-        if (oldProduct != null &&
-            oldProduct.imageUrl != null &&
-            oldProduct.imageUrl!.isNotEmpty &&
-            oldProduct.imageUrl != product.imageUrl) {
-          oldImageUrl = oldProduct.imageUrl;
-        }
-      }
-
-      final saved = isNew
-          ? await _service.createProduct(product)
-          : await _service.updateProduct(product);
-      
-      if (saved == null) return false;
-
-      // Nettoyage de l'ancienne image SEULEMENT après succès de l'opération en base
-      if (oldImageUrl != null) {
-        await _service.deleteImage(oldImageUrl);
-      }
-
-      await loadProducts(query: _lastQuery, category: _lastCategory, reset: true);
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    }
-  }
-
-  Future<bool> deleteProduct(String productId) async {
-    try {
-      await _service.deleteProduct(productId);
-      _products.removeWhere((p) => p.id == productId);
-      _cart.remove(productId);
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    }
-  }
-
-  void addToCart(Product product) {
-    final existing = _cart[product.id];
-    final nextQty = (existing?.quantity ?? 0) + 1;
-    _cart[product.id] = CartItem(product: product, quantity: nextQty);
-    notifyListeners();
-  }
-
-  void removeFromCart(String productId) {
-    _cart.remove(productId);
-    notifyListeners();
-  }
-
-  void updateQuantity(String productId, int quantity) {
-    if (quantity <= 0) {
-      _cart.remove(productId);
-    } else {
-      final existing = _cart[productId];
-      if (existing != null) {
-        _cart[productId] = existing.copyWith(quantity: quantity);
-      }
-    }
-    notifyListeners();
-  }
-
-  void clearCart() {
-    _cart.clear();
-    notifyListeners();
-  }
-
-  Future<String?> placeOrder({
-    required String phone,
-    required String address,
-    String? note,
-    String? userId,
-    String? clientName,
-  }) async {
-    if (_cart.isEmpty) return null;
-    
-    // Si l'utilisateur est authentifié, on utilise son ID (Firebase UID synchronisé dans Supabase)
-    // Sinon on utilise le deviceId fourni. On évite 'guest' car il n'est pas dans la table users.
-    final buyerId = (userId == null || userId.trim().isEmpty) ? null : userId.trim();
-    
-    if (buyerId == null) {
-       debugPrint('[Commerce] placeOrder blocked: userId missing');
-       _ordersError = "Impossible de passer commande : utilisateur non identifié.";
-       notifyListeners();
-       return null;
-    }
-
-    try {
-      debugPrint(
-        '[Commerce] placeOrder start: buyerId=$buyerId '
-        'cartItems=${_cart.length} total=$total '
-        'phoneProvided=${phone.trim().isNotEmpty} '
-        'addressProvided=${address.trim().isNotEmpty}',
-      );
-      // S'assurer que l'utilisateur existe dans la table 'users' pour satisfaire la FK buyer_id
-      await _supabaseService.registerUser(
-        device_id: buyerId,
-        model: "Commerce User",
-        pseudo: clientName,
-      );
-      debugPrint('[Commerce] placeOrder registerUser ok: buyerId=$buyerId');
-
-      final orderId = await _service.createOrder(
-        userId: buyerId,
-        items: cartItems,
-        total: total,
-        phone: phone,
-        address: address,
-        note: note,
-        clientName: clientName,
+  // ─────────────────────────────────────────────────────────
+  // PERMISSION HELPERS
+  // ─────────────────────────────────────────────────────────
+  /// Transitions OrderStatus accessibles au rôle courant depuis [current].
+  Set<OrderStatus> allowedOrderTransitions(OrderStatus current) =>
+      OrderTransitionPolicy.allowedTransitions(
+        role: _currentRole,
+        current: current,
       );
 
-      debugPrint('[Commerce] placeOrder result: orderId=$orderId');
-      if (orderId != null) {
-        clearCart();
-      } else {
-        _ordersError = "Erreur inconnue : la commande n'a pas retourné d'identifiant.";
-        notifyListeners();
-      }
+  /// Transitions ShipmentStatus accessibles au rôle courant depuis [current].
+  Set<ShipmentStatus> allowedShipmentTransitions(ShipmentStatus current) =>
+      ShipmentTransitionPolicy.allowedTransitions(
+        role: _currentRole,
+        current: current,
+      );
 
-      return orderId;
-    } catch (e) {
-      debugPrint('[Commerce] placeOrder error: $e');
-      _ordersError = e.toString();
-      debugPrint("❌ placeOrder Error: $e");
-      notifyListeners();
-      return null;
-    }
-  }
+  // ─────────────────────────────────────────────────────────
+  // ORDER STATUS
+  // ─────────────────────────────────────────────────────────
 
   Future<bool> updateOrderStatus({
     required String orderId,
     required String status,
   }) async {
     if (orderId.trim().isEmpty) return false;
+
+    final targetStatus = OrderStatus.tryParse(status);
+    final isAdmin =
+        _currentRole == UserRole.admin || _currentRole == UserRole.support;
+
+    if (targetStatus == null && !isAdmin) {
+      debugPrint('[Commerce] updateOrderStatus: statut inconnu "$status"');
+      return false;
+    }
+
+    final Order? order = _orders.cast<Order?>().firstWhere(
+      (o) => o?.id == orderId,
+      orElse: () => null,
+    );
+    if (order == null) {
+      debugPrint('[Commerce] updateOrderStatus: ordre $orderId introuvable');
+      return false;
+    }
+
+    if (targetStatus != null && !isAdmin) {
+      final currentStatus = OrderStatus.fromJson(order.status);
+      if (!OrderTransitionPolicy.canTransition(
+        role: _currentRole,
+        from: currentStatus,
+        to: targetStatus,
+      )) {
+        debugPrint(
+          '[Commerce] Transition refusée [$_currentRole] '
+          '$currentStatus → $targetStatus',
+        );
+        _ordersError =
+            'Transition non autorisée : $_currentRole '
+            'ne peut pas passer de $currentStatus à $targetStatus';
+        notifyListeners();
+        return false;
+      }
+    }
+
     _updatingOrderIds.add(orderId);
     notifyListeners();
     try {
@@ -575,32 +233,69 @@ class CommerceProvider extends ChangeNotifier {
         orderId: orderId,
         status: status,
       );
-      if (ok) {
-        final index = _orders.indexWhere((o) => o.id == orderId);
-        if (index != -1) {
-          final current = _orders[index];
-          _orders[index] = Order(
-            id: current.id,
-            userId: current.userId,
-            phone: current.phone,
-            address: current.address,
-            total: current.total,
-            status: status,
-            paymentStatus: current.paymentStatus,
-            items: current.items,
-            note: current.note,
-            createdAt: current.createdAt,
-            shipments: current.shipments,
-            returns: current.returns,
-          );
-        }
-      }
+      if (ok) _syncOrderStatusLocal(orderId, status);
       return ok;
-    } catch (_) {
+    } catch (e) {
+      _ordersError = e.toString();
       return false;
     } finally {
       _updatingOrderIds.remove(orderId);
       notifyListeners();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // SHIPMENT STATUS
+  // ─────────────────────────────────────────────────────────
+
+  Future<bool> updateShipmentStatus({
+    required String shipmentId,
+    required ShipmentStatus status,
+    String? orderId,
+    ShipmentStatus? fromStatus,
+  }) async {
+    final isAdmin =
+        _currentRole == UserRole.admin || _currentRole == UserRole.support;
+
+    if (!isAdmin &&
+        fromStatus != null &&
+        !ShipmentTransitionPolicy.canTransition(
+          role: _currentRole,
+          from: fromStatus,
+          to: status,
+        )) {
+      debugPrint(
+        '[Commerce] Shipment transition refusée [$_currentRole] '
+        '$fromStatus → $status',
+      );
+      _ordersError = 'Expédition : transition non autorisée pour $_currentRole';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      final ok = await _service.updateShipmentStatus(
+        shipmentId: shipmentId,
+        status: status.toJson(),
+      );
+
+      if (ok && orderId != null && orderId.trim().isNotEmpty) {
+        final corresponding = _shipmentToOrderStatus(status);
+        if (corresponding != null) {
+          await _service.updateOrderStatus(
+            orderId: orderId,
+            status: corresponding.name,
+          );
+          _syncOrderStatusLocal(orderId, corresponding.name);
+          notifyListeners();
+        }
+        await loadOrders(userId: _lastOrdersUserId, reset: true);
+      }
+      return ok;
+    } catch (e) {
+      _ordersError = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 
@@ -645,7 +340,10 @@ class CommerceProvider extends ChangeNotifier {
     }
   }
 
-  // New methods for logistics
+  // ─────────────────────────────────────────────────────────
+  // SHIPMENTS
+  // ─────────────────────────────────────────────────────────
+
   Future<bool> createShipment({
     required String orderId,
     required String trackingNumber,
@@ -659,8 +357,19 @@ class CommerceProvider extends ChangeNotifier {
         carrierName: carrierName,
         items: items,
       );
+
       if (shipment != null) {
-        await loadOrders(userId: _lastOrdersUserId, reset: true);
+        await _service.updateOrderStatus(
+          orderId: orderId,
+          status: OrderStatus.readyToShip.name,
+        );
+
+        _syncOrderStatusLocal(
+          orderId,
+          OrderStatus.readyToShip.name,
+          newShipment: shipment,
+        );
+        notifyListeners();
         return true;
       }
       return false;
@@ -671,23 +380,427 @@ class CommerceProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateShipmentStatus({
-    required String shipmentId,
-    required ShipmentStatus status,
-  }) async {
+  void _syncOrderStatusLocal(
+    String orderId,
+    String status, {
+    Shipment? newShipment,
+  }) {
+    final index = _orders.indexWhere((o) => o.id == orderId);
+    if (index == -1) return;
+    final current = _orders[index];
+    _orders[index] = Order(
+      id: current.id,
+      userId: current.userId,
+      phone: current.phone,
+      address: current.address,
+      total: current.total,
+      status: status,
+      paymentStatus: current.paymentStatus,
+      items: current.items,
+      note: current.note,
+      createdAt: current.createdAt,
+      shipments: newShipment != null
+          ? [...current.shipments, newShipment]
+          : current.shipments,
+      returns: current.returns,
+    );
+  }
+
+  OrderStatus? _shipmentToOrderStatus(ShipmentStatus shipmentStatus) {
+    switch (shipmentStatus) {
+      case ShipmentStatus.pickedUp:
+      case ShipmentStatus.inTransit:
+      case ShipmentStatus.arrivedAtHub:
+      case ShipmentStatus.customsClearance:
+      case ShipmentStatus.outForDelivery:
+        return OrderStatus.shipped;
+      case ShipmentStatus.delivered:
+        return OrderStatus.delivered;
+      case ShipmentStatus.deliveryFailed:
+        return OrderStatus.deliveryFailed;
+      case ShipmentStatus.returnToSender:
+        return OrderStatus.returnInTransit;
+      default:
+        return null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _productsSub?.cancel();
+    _productsStreamRetry?.cancel();
+    _ordersChannel?.unsubscribe();
+    super.dispose();
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────────────────────────
+
+  List<Product> _products = [];
+  bool _loading = false;
+  bool _loadingMore = false;
+  bool _productsHasMore = true;
+  int _productsOffset = 0;
+  static const int _productsPageSize = 30;
+  bool _includeInactive = true;
+  String? _lastQuery;
+  String? _lastCategory;
+  String? _currentUserId;
+  bool _pendingProductsReload = false;
+  List<Product> _lastUnfilteredProducts = [];
+
+  void setCurrentUserId(String? userId) {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    _pendingProductsReload = true;
+    if (!_loading && !_loadingMore) {
+      loadProducts(query: _lastQuery, category: _lastCategory, reset: true);
+    }
+  }
+
+  String? get currentUserId => _currentUserId;
+  String? get lastQuery => _lastQuery;
+
+  Future<void> toggleFavorite(String productId) async {
+    if (_currentUserId == null || _currentUserId!.isEmpty) return;
+    final index = _products.indexWhere((p) => p.id == productId);
+    if (index == -1) return;
+    final product = _products[index];
+    final nextState = !product.isFavorite;
+    _products[index] = product.copyWith(isFavorite: nextState);
+    notifyListeners();
     try {
-      final ok = await _service.updateShipmentStatus(
-        shipmentId: shipmentId,
-        status: status.toJson(),
-      );
-      if (ok) {
-        await loadOrders(userId: _lastOrdersUserId, reset: true);
+      await _service.toggleFavorite(_currentUserId!, productId, nextState);
+    } catch (e) {
+      _products[index] = product;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  String? _error;
+  String? _ordersError;
+  bool _ordersLoading = false;
+  bool _ordersLoadingMore = false;
+  bool _ordersHasMore = true;
+  int _ordersOffset = 0;
+  static const int _ordersPageSize = 20;
+  final Set<String> _updatingOrderIds = {};
+  final Map<String, CartItem> _cart = {};
+  List<Order> _orders = [];
+  UserRole _currentRole = UserRole.client;
+
+  UserRole get currentRole => _currentRole;
+
+  void setRole(UserRole role) {
+    if (_currentRole == role) return;
+    _currentRole = role;
+    notifyListeners();
+  }
+
+  List<Product> get products => _products;
+  bool get isLoading => _loading;
+  bool get isLoadingMore => _loadingMore;
+  bool get productsHasMore => _productsHasMore;
+  bool get includeInactive => _includeInactive;
+  String? get error => _error;
+  List<Order> get orders => _orders;
+  bool get ordersLoading => _ordersLoading;
+  bool get ordersLoadingMore => _ordersLoadingMore;
+  bool get ordersHasMore => _ordersHasMore;
+  String? get ordersError => _ordersError;
+  bool isUpdatingOrder(String orderId) => _updatingOrderIds.contains(orderId);
+
+  List<CartItem> get cartItems {
+    final items = _cart.values.toList();
+    items.sort((a, b) => a.product.name.compareTo(b.product.name));
+    return items;
+  }
+
+  int get totalItems =>
+      _cart.values.fold(0, (sum, item) => sum + item.quantity);
+  double get total => _cart.values.fold(0, (sum, item) => sum + item.subtotal);
+
+  // ─────────────────────────────────────────────────────────
+  // PRODUCTS
+  // ─────────────────────────────────────────────────────────
+
+  Future<void> loadProducts({
+    String? query,
+    String? category,
+    bool? includeInactive,
+    bool reset = true,
+  }) async {
+    final normalizedQuery = query?.trim();
+    final isQueryEmpty = normalizedQuery == null || normalizedQuery.isEmpty;
+    _lastQuery = isQueryEmpty ? null : normalizedQuery;
+    _lastCategory = category;
+    if (includeInactive != null) _includeInactive = includeInactive;
+    if (_loading || _loadingMore) {
+      _pendingProductsReload = _pendingProductsReload || reset;
+      return;
+    }
+    _pendingProductsReload = false;
+    if (reset) {
+      _productsOffset = 0;
+      _productsHasMore = true;
+      if (isQueryEmpty) {
+        _products = _lastUnfilteredProducts.isNotEmpty
+            ? List<Product>.from(_lastUnfilteredProducts)
+            : [];
       }
-      return ok;
+    }
+    _error = null;
+    if (_products.isEmpty) {
+      _loading = true;
+    } else {
+      _loadingMore = true;
+    }
+    notifyListeners();
+
+    try {
+      final fetched = await _service.fetchProducts(
+        query: normalizedQuery,
+        category: category,
+        includeInactive: _includeInactive,
+        offset: _productsOffset,
+        limit: _productsPageSize,
+        userId: _currentUserId,
+      );
+      if (reset) {
+        _products = fetched;
+        if (isQueryEmpty) _lastUnfilteredProducts = fetched;
+      } else {
+        _products.addAll(fetched);
+      }
+      _productsOffset += fetched.length;
+      if (fetched.length < _productsPageSize) _productsHasMore = false;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _loading = false;
+      _loadingMore = false;
+      notifyListeners();
+      if (_pendingProductsReload) {
+        _pendingProductsReload = false;
+        await loadProducts(
+          query: _lastQuery,
+          category: _lastCategory,
+          reset: true,
+        );
+      }
+    }
+  }
+
+  Future<void> loadMoreProducts() async {
+    if (!_productsHasMore) return;
+    await loadProducts(
+      query: _lastQuery,
+      category: _lastCategory,
+      reset: false,
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // ORDERS
+  // ─────────────────────────────────────────────────────────
+
+  String? _lastOrdersUserId;
+
+  Future<void> loadOrders({String? userId, bool reset = false}) async {
+    final normalizedUserId = (userId == null || userId.trim().isEmpty)
+        ? null
+        : userId.trim();
+    _lastOrdersUserId = normalizedUserId;
+    _initOrdersStream(normalizedUserId);
+    if (_ordersLoading || _ordersLoadingMore) return;
+    if (reset) {
+      _ordersOffset = 0;
+      _ordersHasMore = true;
+      _orders = [];
+    }
+    _ordersError = null;
+    if (_orders.isEmpty) {
+      _ordersLoading = true;
+    } else {
+      _ordersLoadingMore = true;
+    }
+    notifyListeners();
+
+    try {
+      final fetched = await _service.fetchOrders(
+        userId: normalizedUserId,
+        offset: _ordersOffset,
+        limit: _ordersPageSize,
+      );
+      if (reset) {
+        _orders = fetched;
+      } else {
+        final existingIds = _orders.map((o) => o.id).toSet();
+        for (final order in fetched) {
+          if (order.id.isEmpty || existingIds.contains(order.id)) continue;
+          _orders.add(order);
+        }
+      }
+      _ordersOffset += fetched.length;
+      if (fetched.length < _ordersPageSize) _ordersHasMore = false;
     } catch (e) {
       _ordersError = e.toString();
+    } finally {
+      _ordersLoading = false;
+      _ordersLoadingMore = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadMoreOrders() async {
+    if (!_ordersHasMore) return;
+    await loadOrders(userId: _lastOrdersUserId);
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // PRODUCTS CRUD
+  // ─────────────────────────────────────────────────────────
+
+  void setIncludeInactive(bool value) {
+    if (_includeInactive == value) return;
+    _includeInactive = value;
+    loadProducts(query: _lastQuery, category: _lastCategory);
+  }
+
+  Future<bool> saveProduct(Product product) async {
+    try {
+      final isNew = product.id.isEmpty;
+      String? oldImageUrl;
+      if (!isNew) {
+        final oldProduct = _products.cast<Product?>().firstWhere(
+          (p) => p?.id == product.id,
+          orElse: () => null,
+        );
+        if (oldProduct != null &&
+            oldProduct.imageUrl != null &&
+            oldProduct.imageUrl!.isNotEmpty &&
+            oldProduct.imageUrl != product.imageUrl) {
+          oldImageUrl = oldProduct.imageUrl;
+        }
+      }
+      final saved = isNew
+          ? await _service.createProduct(product)
+          : await _service.updateProduct(product);
+      if (saved == null) return false;
+      if (oldImageUrl != null) await _service.deleteImage(oldImageUrl);
+      await loadProducts(
+        query: _lastQuery,
+        category: _lastCategory,
+        reset: true,
+      );
+      return true;
+    } catch (e) {
+      _error = e.toString();
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<bool> deleteProduct(String productId) async {
+    try {
+      await _service.deleteProduct(productId);
+      _products.removeWhere((p) => p.id == productId);
+      _cart.remove(productId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // CART
+  // ─────────────────────────────────────────────────────────
+
+  void addToCart(Product product) {
+    final existing = _cart[product.id];
+    final nextQty = (existing?.quantity ?? 0) + 1;
+    _cart[product.id] = CartItem(product: product, quantity: nextQty);
+    notifyListeners();
+  }
+
+  void removeFromCart(String productId) {
+    _cart.remove(productId);
+    notifyListeners();
+  }
+
+  void updateQuantity(String productId, int quantity) {
+    if (quantity <= 0) {
+      _cart.remove(productId);
+    } else {
+      final existing = _cart[productId];
+      if (existing != null) {
+        _cart[productId] = existing.copyWith(quantity: quantity);
+      }
+    }
+    notifyListeners();
+  }
+
+  void clearCart() {
+    _cart.clear();
+    notifyListeners();
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // PLACE ORDER
+  // ─────────────────────────────────────────────────────────
+
+  Future<String?> placeOrder({
+    required String phone,
+    required String address,
+    String? note,
+    String? userId,
+    String? clientName,
+  }) async {
+    if (_cart.isEmpty) return null;
+    final buyerId = (userId == null || userId.trim().isEmpty)
+        ? null
+        : userId.trim();
+    if (buyerId == null) {
+      debugPrint('[Commerce] placeOrder blocked: userId missing');
+      _ordersError =
+          "Impossible de passer commande : utilisateur non identifié.";
+      notifyListeners();
+      return null;
+    }
+
+    try {
+      await _supabaseService.registerUser(
+        device_id: buyerId,
+        model: "Commerce User",
+        pseudo: clientName,
+      );
+      final orderId = await _service.createOrder(
+        userId: buyerId,
+        items: cartItems,
+        total: total,
+        phone: phone,
+        address: address,
+        note: note,
+        clientName: clientName,
+      );
+      if (orderId != null) {
+        clearCart();
+      } else {
+        _ordersError =
+            "Erreur inconnue : la commande n'a pas retourné d'identifiant.";
+        notifyListeners();
+      }
+      return orderId;
+    } catch (e) {
+      debugPrint('[Commerce] placeOrder error: $e');
+      _ordersError = e.toString();
+      notifyListeners();
+      return null;
     }
   }
 }

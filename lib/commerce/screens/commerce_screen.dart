@@ -393,6 +393,7 @@ class _CommerceViewState extends State<_CommerceView> {
                     onUpdateStatus: provider.updateOrderStatus,
                     isUpdating: provider.isUpdatingOrder,
                     canUpdateStatus: _isAdminMode,
+                    currentRole: provider.currentRole,
                   ),
                   _CartTab(
                     provider: provider,
@@ -2336,13 +2337,11 @@ class _CartItemRow extends StatelessWidget {
 class _OrdersTab extends StatefulWidget {
   final CommerceProvider provider;
   final VoidCallback onRefresh, onLoadMore;
-  final Future<bool> Function({
-    required String orderId,
-    required String status,
-  })
+  final Future<bool> Function({required String orderId, required String status})
   onUpdateStatus;
   final bool Function(String orderId) isUpdating;
   final bool canUpdateStatus;
+  final UserRole currentRole;
 
   const _OrdersTab({
     required this.provider,
@@ -2351,6 +2350,7 @@ class _OrdersTab extends StatefulWidget {
     required this.onUpdateStatus,
     required this.isUpdating,
     required this.canUpdateStatus,
+    required this.currentRole,
   });
 
   @override
@@ -2479,12 +2479,12 @@ class _OrderCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final statusEnum = OrderStatus.tryParse(order.status);
     final paymentStatusEnum = PaymentStatus.tryParse(order.paymentStatus);
-    
-    final statusLabel = statusEnum != null 
-        ? statusEnum.label(l10n) 
+
+    final statusLabel = statusEnum != null
+        ? statusEnum.label(l10n)
         : order.status;
-    final paymentLabel = paymentStatusEnum != null 
-        ? paymentStatusEnum.label(l10n) 
+    final paymentLabel = paymentStatusEnum != null
+        ? paymentStatusEnum.label(l10n)
         : order.paymentStatus;
 
     return Card(
@@ -2524,14 +2524,14 @@ class _OrderCard extends StatelessWidget {
                         fontSize: 16,
                       ),
                     ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$statusLabel - $paymentLabel',
-                        style: TextStyle(
-                          color: _getStatusColor(order.status),
-                          fontSize: 14,
-                        ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$statusLabel - $paymentLabel',
+                      style: TextStyle(
+                        color: _getStatusColor(order.status),
+                        fontSize: 14,
                       ),
+                    ),
                   ],
                 ),
               ),
