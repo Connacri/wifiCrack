@@ -132,13 +132,35 @@ class CommerceProvider extends ChangeNotifier {
   void _upsertOrderFromRealtime(Map<dynamic, dynamic>? record) {
     final map = _normalizeOrderRecord(record);
     if (map == null) return;
-    final order = Order.fromMap(map);
-    if (order.id.isEmpty) return;
-    final index = _orders.indexWhere((o) => o.id == order.id);
+    final incoming = Order.fromMap(map);
+    if (incoming.id.isEmpty) return;
+
+    final index = _orders.indexWhere((o) => o.id == incoming.id);
     if (index == -1) {
-      _orders.insert(0, order);
+      _orders.insert(0, incoming);
     } else {
-      _orders[index] = order;
+      // Le payload Realtime ne contient pas les relations (shipments/returns).
+      // On préserve celles déjà en mémoire pour ne pas les effacer.
+      final existing = _orders[index];
+      _orders[index] = Order(
+        id: incoming.id,
+        userId: incoming.userId,
+        phone: incoming.phone,
+        address: incoming.address,
+        total: incoming.total,
+        status: incoming.status,
+        paymentStatus: incoming.paymentStatus,
+        note: incoming.note,
+        createdAt: incoming.createdAt ?? existing.createdAt,
+        items: incoming.items.isNotEmpty ? incoming.items : existing.items,
+        // ↓ CRITIQUE : on garde les shipments existants si le payload n'en a pas
+        shipments: incoming.shipments.isNotEmpty
+            ? incoming.shipments
+            : existing.shipments,
+        returns: incoming.returns.isNotEmpty
+            ? incoming.returns
+            : existing.returns,
+      );
     }
     _sortOrders();
     notifyListeners();

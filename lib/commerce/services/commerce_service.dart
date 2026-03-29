@@ -4,16 +4,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/sources/supabase_service.dart';
 import '../commerce_config.dart';
 import '../models/cart_item.dart';
+import '../models/commerce_enums.dart';
 import '../models/order.dart';
 import '../models/product.dart';
-import '../models/commerce_enums.dart';
 import '../models/shipment.dart';
 
 class CommerceService {
   final SupabaseClient _client;
 
   CommerceService({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
 
   Future<List<Product>> fetchProducts({
     String? query,
@@ -25,11 +25,11 @@ class CommerceService {
   }) async {
     try {
       final table = CommerceConfig.productsTable;
-      
+
       // Si userId est fourni, on fait un left join sur product_favorites
       String selectStr = '*';
       if (userId != null && userId.isNotEmpty) {
-        // Supabase PostgREST syntax for left join. 
+        // Supabase PostgREST syntax for left join.
         // We select everything from products and a filtered sub-selection of product_favorites
         selectStr = '*, product_favorites!left(user_id)';
       }
@@ -115,7 +115,7 @@ class CommerceService {
           .select('image_url')
           .eq('id', productId)
           .maybeSingle();
-      
+
       final imageUrl = productRes?['image_url']?.toString();
 
       // 2. Delete product from database
@@ -138,7 +138,7 @@ class CommerceService {
     if (path.isEmpty) return;
     // Only delete if it's a relative path (not an external URL)
     if (path.startsWith('http://') || path.startsWith('https://')) return;
-    
+
     try {
       final bucket = CommerceConfig.supabaseImagesBucket.trim();
       if (bucket.isEmpty) return;
@@ -155,7 +155,11 @@ class CommerceService {
   }
 
   /// Alterne le statut favori d'un produit pour un utilisateur
-  Future<bool> toggleFavorite(String userId, String productId, bool isFavorite) async {
+  Future<bool> toggleFavorite(
+    String userId,
+    String productId,
+    bool isFavorite,
+  ) async {
     try {
       if (isFavorite) {
         await _client.from('product_favorites').upsert({
@@ -164,10 +168,10 @@ class CommerceService {
         });
         return true;
       } else {
-        await _client
-            .from('product_favorites')
-            .delete()
-            .match({'user_id': userId, 'product_id': productId});
+        await _client.from('product_favorites').delete().match({
+          'user_id': userId,
+          'product_id': productId,
+        });
         return false;
       }
     } catch (e) {
@@ -182,10 +186,12 @@ class CommerceService {
           .from('product_favorites')
           .select('products(*)')
           .eq('user_id', userId);
-      
+
       final list = List<Map<String, dynamic>>.from(res as List);
       return list
-          .map((item) => Product.fromMap(item['products'] as Map<String, dynamic>))
+          .map(
+            (item) => Product.fromMap(item['products'] as Map<String, dynamic>),
+          )
           .map((p) => p.copyWith(isFavorite: true))
           .toList();
     } catch (e) {
@@ -255,7 +261,9 @@ class CommerceService {
 
       if (id != null && id.isNotEmpty) return id;
 
-      debugPrint("[Commerce] createOrder warning: insert ok but ID not returned.");
+      debugPrint(
+        "[Commerce] createOrder warning: insert ok but ID not returned.",
+      );
       // Return order number so UI treats it as success and shows a reference.
       return orderNumber;
     } catch (e) {
@@ -270,7 +278,9 @@ class CommerceService {
     int limit = 20,
   }) async {
     try {
-      var builder = _client.from('orders').select();
+      // AVANT : _client.from('orders').select()
+      // Les shipments n'étaient jamais chargés → order.shipments = [] toujours
+      var builder = _client.from('orders').select('*, shipments(*)');
 
       if (userId != null && userId.trim().isNotEmpty) {
         builder = builder.eq('buyer_id', userId.trim());
@@ -293,10 +303,7 @@ class CommerceService {
   }) async {
     if (orderId.trim().isEmpty) return false;
     try {
-      await _client
-          .from('orders')
-          .update({'status': status})
-          .eq('id', orderId);
+      await _client.from('orders').update({'status': status}).eq('id', orderId);
       return true;
     } catch (e) {
       debugPrint('[Commerce] updateOrderStatus error: $e');
@@ -333,13 +340,17 @@ class CommerceService {
         'tracking_number': trackingNumber,
         'carrier_name': carrierName,
         'status': ShipmentStatus.labelCreated.toJson(),
-        'items': items.map((i) => {
-          'product_id': i.productId,
-          'name': i.name,
-          'price': i.price,
-          'quantity': i.quantity,
-          'subtotal': i.subtotal,
-        }).toList(),
+        'items': items
+            .map(
+              (i) => {
+                'product_id': i.productId,
+                'name': i.name,
+                'price': i.price,
+                'quantity': i.quantity,
+                'subtotal': i.subtotal,
+              },
+            )
+            .toList(),
         'shipped_at': DateTime.now().toIso8601String(),
       };
 
@@ -348,7 +359,7 @@ class CommerceService {
           .insert(payload)
           .select()
           .maybeSingle();
-      
+
       if (res == null) return null;
       return Shipment.fromMap(res);
     } catch (e) {

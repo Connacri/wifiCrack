@@ -68,6 +68,7 @@ class _CommerceViewState extends State<_CommerceView> {
   bool _openingProductForm = false;
   bool _isAdminMode = false;
   TabController? _tabController;
+  UserRole? _lastRole;
 
   @override
   void initState() {
@@ -82,7 +83,15 @@ class _CommerceViewState extends State<_CommerceView> {
     final provider = context.read<CommerceProvider>();
     final firebaseUser = FirebaseAuth.instance.currentUser;
     final effectiveUserId = widget.userId ?? firebaseUser?.uid;
-    final filterUserId = _isAdminMode ? null : effectiveUserId;
+
+    // Rôles qui voient UNIQUEMENT leurs propres commandes
+    const clientRoles = {UserRole.client, UserRole.wholesaler};
+
+    // Carrier, driver, warehouse, support, admin voient TOUTES les commandes
+    final filterUserId = clientRoles.contains(provider.currentRole)
+        ? effectiveUserId
+        : null;
+
     await provider.loadOrders(userId: filterUserId, reset: true);
   }
 
@@ -250,7 +259,13 @@ class _CommerceViewState extends State<_CommerceView> {
         provider.setCurrentUserId(effectiveUserId);
       });
     }
-
+    // Reload automatique quand le rôle change
+    if (_lastRole != provider.currentRole) {
+      _lastRole = provider.currentRole;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _refreshOrders();
+      });
+    }
     final tabs = <Tab>[
       Tab(text: l10n.productsTab),
       Tab(

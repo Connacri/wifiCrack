@@ -23,6 +23,10 @@ class OrderDetailsScreen extends StatelessWidget {
       orElse: () => throw Exception(l10n.orderNotFound),
     );
 
+    final isPrivileged =
+        provider.currentRole == UserRole.admin ||
+        provider.currentRole == UserRole.support;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.orderNumber(order.id.substring(0, 8))),
@@ -36,7 +40,8 @@ class OrderDetailsScreen extends StatelessWidget {
             children: [
               _OrderStatusCard(order: order),
               const SizedBox(height: 16),
-              if (provider.currentRole == UserRole.admin)
+              // Carte admin étendue au rôle support
+              if (isPrivileged)
                 _AdminStatusEditCard(order: order, provider: provider),
               const SizedBox(height: 16),
               _OrderItemsCard(order: order),
@@ -276,7 +281,7 @@ class _ShipmentItem extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────
-// ACTION PANEL — CORRIGÉ
+// ACTION PANEL
 // ─────────────────────────────────────────────────────────
 
 class _ActionPanel extends StatelessWidget {
@@ -300,6 +305,10 @@ class _ActionPanel extends StatelessWidget {
           ..._buildCarrierActions(context, provider),
         if (role == UserRole.driver) ..._buildDriverActions(context, provider),
         if (role == UserRole.client) ..._buildClientActions(context, provider),
+        // Admin et support ont leurs actions via _AdminStatusEditCard
+        // mais on expose aussi les boutons rapides de transition ici
+        if (role == UserRole.admin || role == UserRole.support)
+          ..._buildAdminQuickActions(context, provider),
       ],
     );
   }
@@ -313,39 +322,44 @@ class _ActionPanel extends StatelessWidget {
     final currentStatus = OrderStatus.fromJson(order.status);
     final allowed = provider.allowedOrderTransitions(currentStatus);
 
+    if (allowed.isEmpty) return [];
+
     return [
       if (allowed.contains(OrderStatus.orderConfirmed))
-        ElevatedButton.icon(
+        _ActionButton(
+          icon: Icons.check_circle,
+          label: l10n.confirmOrderButton,
+          color: Colors.green,
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
             status: OrderStatus.orderConfirmed.name,
           ),
-          icon: const Icon(Icons.check_circle),
-          label: Text(l10n.confirmOrderButton),
         ),
       if (allowed.contains(OrderStatus.stockAllocated))
-        ElevatedButton.icon(
+        _ActionButton(
+          icon: Icons.inventory,
+          label: l10n.allocateStockButton,
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
             status: OrderStatus.stockAllocated.name,
           ),
-          icon: const Icon(Icons.inventory),
-          label: Text(l10n.allocateStockButton),
         ),
       if (allowed.contains(OrderStatus.cancelled))
-        OutlinedButton.icon(
+        _ActionButton(
+          icon: Icons.cancel,
+          label: 'Annuler la commande',
+          color: Colors.red,
+          outlined: true,
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
             status: OrderStatus.cancelled.name,
           ),
-          icon: const Icon(Icons.cancel),
-          label: const Text('Annuler la commande'),
-          style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
         ),
     ];
   }
 
   // ── ENTREPÔT ───────────────────────────────────────────
+  // FIX : ajout de stockAllocated (depuis orderConfirmed) et backorder
   List<Widget> _buildWarehouseActions(
     BuildContext context,
     CommerceProvider provider,
@@ -354,98 +368,179 @@ class _ActionPanel extends StatelessWidget {
     final currentStatus = OrderStatus.fromJson(order.status);
     final allowed = provider.allowedOrderTransitions(currentStatus);
 
+    if (allowed.isEmpty) {
+      // L'entrepôt n'a rien à faire dans cet état → info contextuelle
+      return [
+        _InfoCard(
+          icon: Icons.hourglass_top,
+          message:
+              'En attente : statut actuel "${currentStatus.label(l10n)}" '
+              'ne requiert pas d\'action de l\'entrepôt.',
+        ),
+      ];
+    }
+
     return [
+      // orderConfirmed → stockAllocated  (MANQUAIT)
+      if (allowed.contains(OrderStatus.stockAllocated))
+        _ActionButton(
+          icon: Icons.check_box,
+          label: l10n.allocateStockButton,
+          color: Colors.indigo,
+          onPressed: () => provider.updateOrderStatus(
+            orderId: order.id,
+            status: OrderStatus.stockAllocated.name,
+          ),
+        ),
+      // stockAllocated → backorder  (MANQUAIT)
+      if (allowed.contains(OrderStatus.backorder))
+        _ActionButton(
+          icon: Icons.pending_actions,
+          label: 'Mettre en rupture (backorder)',
+          color: Colors.orange,
+          outlined: true,
+          onPressed: () => provider.updateOrderStatus(
+            orderId: order.id,
+            status: OrderStatus.backorder.name,
+          ),
+        ),
+      // backorder → stockAllocated : récupération  (MANQUAIT)
+      if (currentStatus == OrderStatus.backorder &&
+          allowed.contains(OrderStatus.stockAllocated))
+        _ActionButton(
+          icon: Icons.refresh,
+          label: 'Stock disponible — reprendre',
+          color: Colors.green,
+          onPressed: () => provider.updateOrderStatus(
+            orderId: order.id,
+            status: OrderStatus.stockAllocated.name,
+          ),
+        ),
+      // stockAllocated → picking
       if (allowed.contains(OrderStatus.picking))
-        ElevatedButton.icon(
+        _ActionButton(
+          icon: Icons.shopping_basket,
+          label: l10n.startPickingButton,
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
             status: OrderStatus.picking.name,
           ),
-          icon: const Icon(Icons.shopping_basket),
-          label: Text(l10n.startPickingButton),
         ),
+      // picking → packed
       if (allowed.contains(OrderStatus.packed))
-        ElevatedButton.icon(
+        _ActionButton(
+          icon: Icons.inventory_2,
+          label: l10n.packingFinishedButton,
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
             status: OrderStatus.packed.name,
           ),
-          icon: const Icon(Icons.inventory_2),
-          label: Text(l10n.packingFinishedButton),
         ),
+      // packed → readyToShip : ouvre le dialog de création d'expédition
       if (allowed.contains(OrderStatus.readyToShip))
-        ElevatedButton.icon(
+        _ActionButton(
+          icon: Icons.local_shipping,
+          label: l10n.shipButton,
+          color: Colors.teal,
           onPressed: () => _showCreateShipmentDialog(context, provider),
-          icon: const Icon(Icons.local_shipping),
-          label: Text(l10n.shipButton),
         ),
     ];
   }
 
-  // ── TRANSPORTEUR — CORRIGÉ: orderId transmis ──────────
-  // ── TRANSPORTEUR — piloté par la matrice de permissions ──
+  // ── TRANSPORTEUR ──────────────────────────────────────
+  // FIX : cast supprimé (s.status est déjà ShipmentStatus)
+  // FIX : message d'attente quand allowed.isEmpty au lieu de liste vide silencieuse
   List<Widget> _buildCarrierActions(
     BuildContext context,
     CommerceProvider provider,
   ) {
     final l10n = AppLocalizations.of(context)!;
 
-    // Aucune expédition → rien à afficher
-    if (order.shipments.isEmpty) return [];
+    if (order.shipments.isEmpty) {
+      return [
+        _InfoCard(
+          icon: Icons.info_outline,
+          message: 'En attente de préparation par l\'entrepôt.',
+        ),
+      ];
+    }
 
-    return order.shipments.expand((s) {
-      final currentShipmentStatus = ShipmentStatus.fromJson(
-        s.status as String?,
-      );
+    final widgets = <Widget>[];
+
+    for (final s in order.shipments) {
+      // s.status est déjà un ShipmentStatus — plus de cast dangereux
+      final currentShipmentStatus = s.status;
       final allowed = provider.allowedShipmentTransitions(
         currentShipmentStatus,
       );
 
-      if (allowed.isEmpty) return <Widget>[];
-
-      return [
+      widgets.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.only(bottom: 4, top: 8),
           child: Text(
-            '${l10n.packageNumber(s.trackingNumber)} — ${currentShipmentStatus.label(l10n)}',
+            '${l10n.packageNumber(s.trackingNumber)} — '
+            '${currentShipmentStatus.label(l10n)}',
             style: Theme.of(context).textTheme.labelMedium,
           ),
         ),
-        // Bouton scan QR (déclenche QrScanSheet)
+      );
+
+      if (allowed.isEmpty) {
+        // Expédition existe mais le transporteur n'a pas encore la main
+        // (ex : outForDelivery → déjà passée au livreur)
+        widgets.add(
+          _InfoCard(
+            icon: Icons.hourglass_top,
+            message:
+                'Ce colis est au statut "${currentShipmentStatus.label(l10n)}"'
+                ' — aucune action transporteur disponible à ce stade.',
+          ),
+        );
+        continue;
+      }
+
+      widgets.add(
         OutlinedButton.icon(
           onPressed: () => QrScanSheet.show(context, order.id),
           icon: const Icon(Icons.qr_code_scanner),
           label: const Text('Scanner le colis'),
         ),
-        const SizedBox(height: 4),
-        // Boutons de simulation manuelle (une par transition autorisée)
-        ...allowed.map(
-          (target) => Padding(
+      );
+      widgets.add(const SizedBox(height: 4));
+
+      for (final target in allowed) {
+        widgets.add(
+          Padding(
             padding: const EdgeInsets.only(bottom: 6),
             child: OutlinedButton.icon(
               onPressed: () => provider.updateShipmentStatus(
                 shipmentId: s.id,
                 status: target,
                 orderId: order.id,
-                fromStatus: currentShipmentStatus, // REQUIS pour la garde
+                fromStatus: currentShipmentStatus,
               ),
               icon: const Icon(Icons.route),
               label: Text(target.label(l10n)),
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-      ];
-    }).toList();
+        );
+      }
+
+      widgets.add(const SizedBox(height: 8));
+    }
+
+    return widgets;
   }
 
-  // ── LIVREUR — CORRIGÉ: orderId transmis ───────────────
-  // ── LIVREUR — piloté par la matrice de permissions ────────
+  // ── LIVREUR ──────────────────────────────────────────
+  // FIX : cast supprimé (s.status est déjà ShipmentStatus)
   List<Widget> _buildDriverActions(
     BuildContext context,
     CommerceProvider provider,
   ) {
     final l10n = AppLocalizations.of(context)!;
+
+    if (order.shipments.isEmpty) return [];
 
     final activeShipments = order.shipments
         .where((s) => s.status != ShipmentStatus.delivered)
@@ -453,67 +548,53 @@ class _ActionPanel extends StatelessWidget {
 
     if (activeShipments.isEmpty) return [];
 
-    return activeShipments.expand((s) {
-      final currentShipmentStatus = ShipmentStatus.fromJson(
-        s.status as String?,
-      );
+    final widgets = <Widget>[];
+
+    for (final s in activeShipments) {
+      // s.status est déjà un ShipmentStatus — plus de cast dangereux
+      final currentShipmentStatus = s.status;
       final allowed = provider.allowedShipmentTransitions(
         currentShipmentStatus,
       );
 
-      if (allowed.isEmpty) {
-        // L'expédition existe mais le driver n'a pas encore la main
-        // (ex: statut encore labelCreated/pickedUp/inTransit — pas outForDelivery)
-        return [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Card(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.hourglass_top,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${l10n.packageNumber(s.trackingNumber)} — '
-                        'En attente de prise en charge '
-                        '(${currentShipmentStatus.label(l10n)})',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ];
-      }
-
-      return [
+      widgets.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.only(bottom: 4, top: 8),
           child: Text(
-            '${l10n.packageNumber(s.trackingNumber)} — ${currentShipmentStatus.label(l10n)}',
+            '${l10n.packageNumber(s.trackingNumber)} — '
+            '${currentShipmentStatus.label(l10n)}',
             style: Theme.of(context).textTheme.labelMedium,
           ),
         ),
-        // Bouton scan QR
+      );
+
+      if (allowed.isEmpty) {
+        // Statut pas encore outForDelivery → livreur attend le transporteur
+        widgets.add(
+          _InfoCard(
+            icon: Icons.hourglass_top,
+            message:
+                '${l10n.packageNumber(s.trackingNumber)} — '
+                'En attente de prise en charge '
+                '(${currentShipmentStatus.label(l10n)})',
+          ),
+        );
+        continue;
+      }
+
+      widgets.add(
         OutlinedButton.icon(
           onPressed: () => QrScanSheet.show(context, order.id),
           icon: const Icon(Icons.qr_code_scanner),
           label: const Text('Scanner à la livraison'),
         ),
-        const SizedBox(height: 4),
-        // Boutons de simulation manuelle
-        ...allowed.map((target) {
-          final isDelivered = target == ShipmentStatus.delivered;
-          return Padding(
+      );
+      widgets.add(const SizedBox(height: 4));
+
+      for (final target in allowed) {
+        final isDelivered = target == ShipmentStatus.delivered;
+        widgets.add(
+          Padding(
             padding: const EdgeInsets.only(bottom: 6),
             child: isDelivered
                 ? FilledButton.icon(
@@ -539,26 +620,25 @@ class _ActionPanel extends StatelessWidget {
                       foregroundColor: Theme.of(context).colorScheme.error,
                     ),
                   ),
-          );
-        }),
-        const SizedBox(height: 12),
-      ];
-    }).toList();
+          ),
+        );
+      }
+
+      widgets.add(const SizedBox(height: 8));
+    }
+
+    return widgets;
   }
 
-  // ── CLIENT — CORRIGÉ: logique retour et annulation ────
-  // ── CLIENT — piloté par la matrice de permissions ──────────
+  // ── CLIENT ────────────────────────────────────────────
   List<Widget> _buildClientActions(
     BuildContext context,
     CommerceProvider provider,
   ) {
     final l10n = AppLocalizations.of(context)!;
     final currentStatus = OrderStatus.fromJson(order.status);
-
-    // Transitions autorisées depuis la matrice (returnRequested, exception…)
     final allowedOrderActions = provider.allowedOrderTransitions(currentStatus);
 
-    // Annulation avant expédition — conservée indépendamment
     final canCancel = {
       OrderStatus.created,
       OrderStatus.pendingPayment,
@@ -570,15 +650,14 @@ class _ActionPanel extends StatelessWidget {
 
     return [
       if (canCancel)
-        OutlinedButton.icon(
+        _ActionButton(
+          icon: Icons.cancel_outlined,
+          label: 'Demander l\'annulation',
+          color: Theme.of(context).colorScheme.error,
+          outlined: true,
           onPressed: () => provider.updateOrderStatus(
             orderId: order.id,
             status: OrderStatus.cancelRequested.name,
-          ),
-          icon: const Icon(Icons.cancel_outlined),
-          label: const Text('Demander l\'annulation'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Theme.of(context).colorScheme.error,
           ),
         ),
       ...allowedOrderActions.map(
@@ -594,6 +673,48 @@ class _ActionPanel extends StatelessWidget {
           ),
         ),
       ),
+    ];
+  }
+
+  // ── ADMIN / SUPPORT — boutons rapides ─────────────────
+  // FIX : support n'avait aucun panneau d'action
+  List<Widget> _buildAdminQuickActions(
+    BuildContext context,
+    CommerceProvider provider,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentStatus = OrderStatus.fromJson(order.status);
+
+    // Toutes les transitions possibles sauf le statut courant
+    final all = OrderStatus.values.where((s) => s != currentStatus).toList();
+
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: 8, bottom: 4),
+        child: Text(
+          'Actions rapides (${provider.currentRole.name})',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      ),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: all.map((target) {
+          return ActionChip(
+            label: Text(
+              target.label(l10n),
+              style: const TextStyle(fontSize: 11),
+            ),
+            onPressed: () => provider.updateOrderStatus(
+              orderId: order.id,
+              status: target.name,
+            ),
+          );
+        }).toList(),
+      ),
+      const SizedBox(height: 12),
     ];
   }
 
@@ -634,8 +755,6 @@ class _ActionPanel extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () {
-              // FIX: createShipment synchronise maintenant automatiquement
-              // le statut commande vers readyToShip
               provider.createShipment(
                 orderId: order.id,
                 trackingNumber: trackingCtrl.text,
@@ -653,7 +772,7 @@ class _ActionPanel extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────
-// ADMIN STATUS EDIT CARD
+// ADMIN STATUS EDIT CARD (admin + support)
 // ─────────────────────────────────────────────────────────
 
 class _AdminStatusEditCard extends StatefulWidget {
@@ -689,8 +808,10 @@ class _AdminStatusEditCardState extends State<_AdminStatusEditCard> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isSupport = widget.provider.currentRole == UserRole.support;
+
     return Card(
-      color: Colors.blue.shade50,
+      color: isSupport ? Colors.orange.shade50 : Colors.blue.shade50,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -698,10 +819,15 @@ class _AdminStatusEditCardState extends State<_AdminStatusEditCard> {
           children: [
             Row(
               children: [
-                const Icon(Icons.admin_panel_settings, color: Colors.blue),
+                Icon(
+                  isSupport ? Icons.support_agent : Icons.admin_panel_settings,
+                  color: isSupport ? Colors.orange : Colors.blue,
+                ),
                 const SizedBox(width: 8),
                 Text(
-                  l10n.adminStatusTitle,
+                  isSupport
+                      ? 'Panneau support — forçage statut'
+                      : l10n.adminStatusTitle,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -748,8 +874,89 @@ class _AdminStatusEditCardState extends State<_AdminStatusEditCard> {
 }
 
 // ─────────────────────────────────────────────────────────
-// WIDGETS UTILITAIRES
+// WIDGETS RÉUTILISABLES
 // ─────────────────────────────────────────────────────────
+
+/// Bouton d'action standardisé (filled ou outlined selon [outlined]).
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  final Color? color;
+  final bool outlined;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.color,
+    this.outlined = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveColor = color ?? Theme.of(context).colorScheme.primary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SizedBox(
+        width: double.infinity,
+        child: outlined
+            ? OutlinedButton.icon(
+                onPressed: onPressed,
+                icon: Icon(icon),
+                label: Text(label),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: effectiveColor,
+                  side: BorderSide(color: effectiveColor),
+                ),
+              )
+            : ElevatedButton.icon(
+                onPressed: onPressed,
+                icon: Icon(icon),
+                label: Text(label),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: effectiveColor,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+/// Carte informative contextuelle pour les états d'attente.
+class _InfoCard extends StatelessWidget {
+  final IconData icon;
+  final String message;
+
+  const _InfoCard({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _StatusBadge extends StatelessWidget {
   final String status;
@@ -803,11 +1010,13 @@ class _StatusBadge extends StatelessWidget {
       case OrderStatus.paymentFailed:
       case OrderStatus.deliveryFailed:
         return Colors.red;
+      case OrderStatus.backorder:
+        return Colors.orange;
       case OrderStatus.returnRequested:
       case OrderStatus.returnInTransit:
       case OrderStatus.returnReceived:
       case OrderStatus.refundPending:
-        return Colors.orange;
+        return Colors.deepOrange;
       default:
         return Colors.grey;
     }
@@ -822,17 +1031,40 @@ class _ShipmentStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final color = _getColorForShipmentStatus(status);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         status.label(l10n),
-        style: const TextStyle(color: Colors.blue, fontSize: 11),
+        style: TextStyle(color: color, fontSize: 11),
       ),
     );
+  }
+
+  Color _getColorForShipmentStatus(ShipmentStatus s) {
+    switch (s) {
+      case ShipmentStatus.delivered:
+        return Colors.green;
+      case ShipmentStatus.deliveryFailed:
+      case ShipmentStatus.lost:
+      case ShipmentStatus.damaged:
+        return Colors.red;
+      case ShipmentStatus.outForDelivery:
+        return Colors.teal;
+      case ShipmentStatus.inTransit:
+      case ShipmentStatus.arrivedAtHub:
+      case ShipmentStatus.customsClearance:
+        return Colors.purple;
+      case ShipmentStatus.returnToSender:
+        return Colors.orange;
+      default:
+        return Colors.blue;
+    }
   }
 }
 
