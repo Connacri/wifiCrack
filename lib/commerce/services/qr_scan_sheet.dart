@@ -1,11 +1,9 @@
-// lib/commerce/ui/qr_scan_sheet.dart
+// lib/commerce/services/qr_scan_sheet.dart
 
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 
-import '../../l10n/app_localizations.dart';
-import '../models/commerce_enums.dart';
 import '../models/shipment.dart';
 import '../providers/commerce_provider.dart';
 import 'qr_step_confirm_sheet.dart';
@@ -55,13 +53,14 @@ class _QrScanSheetState extends State<QrScanSheet> {
     if (!mounted) return;
     final provider = context.read<CommerceProvider>();
 
-    // Chercher l'expédition correspondante
+    // Chercher la commande correspondante
     final order = provider.orders.cast<dynamic>().firstWhere(
       (o) => o.id == widget.orderId,
       orElse: () => null,
     );
     if (order == null) return;
 
+    // Chercher l'expédition dans la liste
     final Shipment? shipment = (order.shipments as List<dynamic>)
         .cast<Shipment?>()
         .firstWhere((s) => s?.id == shipmentId, orElse: () => null);
@@ -75,15 +74,21 @@ class _QrScanSheetState extends State<QrScanSheet> {
       return;
     }
 
-    final currentStatus = ShipmentStatus.fromJson(shipment.status as String?);
+    // BUG #1 FIX : shipment.status est déjà un ShipmentStatus — pas de cast vers String
+    // Avant : ShipmentStatus.fromJson(shipment.status as String?) → TypeError au runtime
+    // Après : shipment.status directement
+    final currentStatus = shipment.status;
     final allowed = provider.allowedShipmentTransitions(currentStatus);
 
     if (!mounted) return;
 
     if (allowed.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Aucune transition disponible pour votre rôle'),
+        SnackBar(
+          content: Text(
+            'Aucune transition disponible pour votre rôle '
+            '(statut actuel : ${currentStatus.name})',
+          ),
         ),
       );
       Navigator.pop(context);

@@ -754,10 +754,22 @@ class AppLocalizationsId extends AppLocalizations {
   String get productsTab => 'Produk';
 
   @override
+  String get logisticsTab => 'Logistics';
+
+  @override
   String get ordersTab => 'Pesanan';
 
   @override
   String get cartTab => 'Keranjang';
+
+  @override
+  String get toPickUp => 'To Pick Up';
+
+  @override
+  String get toPrepare => 'To Prepare';
+
+  @override
+  String get toDeliver => 'To Deliver';
 
   @override
   String get clientModeTooltip => 'Mode pelanggan';

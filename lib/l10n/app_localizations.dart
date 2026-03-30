@@ -1530,6 +1530,12 @@ abstract class AppLocalizations {
   /// **'Products'**
   String get productsTab;
 
+  /// No description provided for @logisticsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Logistics'**
+  String get logisticsTab;
+
   /// No description provided for @ordersTab.
   ///
   /// In en, this message translates to:
@@ -1541,6 +1547,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cart'**
   String get cartTab;
+
+  /// No description provided for @toPickUp.
+  ///
+  /// In en, this message translates to:
+  /// **'To Pick Up'**
+  String get toPickUp;
+
+  /// No description provided for @toPrepare.
+  ///
+  /// In en, this message translates to:
+  /// **'To Prepare'**
+  String get toPrepare;
+
+  /// No description provided for @toDeliver.
+  ///
+  /// In en, this message translates to:
+  /// **'To Deliver'**
+  String get toDeliver;
 
   /// No description provided for @clientModeTooltip.
   ///

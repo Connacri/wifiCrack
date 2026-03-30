@@ -762,10 +762,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get productsTab => 'Produkte';
 
   @override
+  String get logisticsTab => 'Logistics';
+
+  @override
   String get ordersTab => 'Bestellungen';
 
   @override
   String get cartTab => 'Warenkorb';
+
+  @override
+  String get toPickUp => 'To Pick Up';
+
+  @override
+  String get toPrepare => 'To Prepare';
+
+  @override
+  String get toDeliver => 'To Deliver';
 
   @override
   String get clientModeTooltip => 'Kundenmodus';

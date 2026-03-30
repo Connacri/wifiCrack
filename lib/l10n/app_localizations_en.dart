@@ -750,10 +750,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get productsTab => 'Products';
 
   @override
+  String get logisticsTab => 'Logistics';
+
+  @override
   String get ordersTab => 'Orders';
 
   @override
   String get cartTab => 'Cart';
+
+  @override
+  String get toPickUp => 'To Pick Up';
+
+  @override
+  String get toPrepare => 'To Prepare';
+
+  @override
+  String get toDeliver => 'To Deliver';
 
   @override
   String get clientModeTooltip => 'Client mode';

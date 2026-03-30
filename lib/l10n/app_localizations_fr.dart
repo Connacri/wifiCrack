@@ -760,10 +760,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get productsTab => 'Produits';
 
   @override
+  String get logisticsTab => 'Logistique';
+
+  @override
   String get ordersTab => 'Commandes';
 
   @override
   String get cartTab => 'Panier';
+
+  @override
+  String get toPickUp => 'À ramasser';
+
+  @override
+  String get toPrepare => 'À préparer';
+
+  @override
+  String get toDeliver => 'À livrer';
 
   @override
   String get clientModeTooltip => 'Mode Client';

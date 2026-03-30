@@ -755,10 +755,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String get productsTab => 'Produtos';
 
   @override
+  String get logisticsTab => 'Logistics';
+
+  @override
   String get ordersTab => 'Encomendas';
 
   @override
   String get cartTab => 'Carrinho';
+
+  @override
+  String get toPickUp => 'To Pick Up';
+
+  @override
+  String get toPrepare => 'To Prepare';
+
+  @override
+  String get toDeliver => 'To Deliver';
 
   @override
   String get clientModeTooltip => 'Modo cliente';

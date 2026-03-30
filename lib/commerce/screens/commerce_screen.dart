@@ -247,6 +247,18 @@ class _CommerceViewState extends State<_CommerceView> {
     _refreshOrders();
   }
 
+  IconData _getRoleIcon(UserRole role) {
+    switch (role) {
+      case UserRole.admin: return Icons.admin_panel_settings;
+      case UserRole.support: return Icons.support_agent;
+      case UserRole.warehouse: return Icons.inventory_2;
+      case UserRole.carrier: return Icons.local_shipping;
+      case UserRole.driver: return Icons.delivery_dining;
+      case UserRole.wholesaler: return Icons.business;
+      case UserRole.client: return Icons.person;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CommerceProvider>();
@@ -266,8 +278,32 @@ class _CommerceViewState extends State<_CommerceView> {
         if (mounted) _refreshOrders();
       });
     }
+    final showLogistics =
+        provider.currentRole == UserRole.warehouse ||
+        provider.currentRole == UserRole.carrier ||
+        provider.currentRole == UserRole.driver ||
+        provider.currentRole == UserRole.admin ||
+        provider.currentRole == UserRole.support;
+
+    final String logisticsTitle = provider.currentRole == UserRole.carrier
+        ? l10n.toPickUp
+        : (provider.currentRole == UserRole.driver
+            ? l10n.toDeliver
+            : (provider.currentRole == UserRole.warehouse
+                ? l10n.toPrepare
+                : l10n.logisticsTab));
+
     final tabs = <Tab>[
       Tab(text: l10n.productsTab),
+      if (showLogistics)
+        Tab(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(logisticsTitle),
+            ],
+          ),
+        ),
       Tab(
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -360,16 +396,43 @@ class _CommerceViewState extends State<_CommerceView> {
                           },
                     icon: const Icon(Icons.refresh),
                   ),
-                  IconButton(
-                    tooltip: _isAdminMode
-                        ? l10n.clientModeTooltip
-                        : l10n.adminModeTooltip,
+                  PopupMenuButton<UserRole>(
+                    tooltip: 'Changer de rôle (Simulation)',
                     icon: Icon(
                       _isAdminMode
                           ? Icons.admin_panel_settings
                           : Icons.person_outline,
+                      color: _isAdminMode ? Colors.orange : null,
                     ),
-                    onPressed: () => _toggleAdminMode(provider),
+                    onSelected: (role) {
+                      provider.setRole(role);
+                      setState(() {
+                        _isAdminMode = role == UserRole.admin || role == UserRole.support;
+                      });
+                    },
+                    itemBuilder: (context) => UserRole.values.map((role) {
+                      final isSelected = provider.currentRole == role;
+                      return PopupMenuItem(
+                        value: role,
+                        child: Row(
+                          children: [
+                            Icon(
+                              _getRoleIcon(role),
+                              size: 20,
+                              color: isSelected ? Colors.blue : Colors.grey,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              role.toString().split('.').last.toUpperCase(),
+                              style: TextStyle(
+                                fontWeight: isSelected ? FontWeight.bold : null,
+                                color: isSelected ? Colors.blue : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
                   ),
                   if (_isAdminMode)
                     IconButton(
@@ -401,6 +464,11 @@ class _CommerceViewState extends State<_CommerceView> {
                         : null,
                     isAdmin: _isAdminMode,
                   ),
+                  if (showLogistics)
+                    _LogisticsTab(
+                      provider: provider,
+                      onRefresh: _refreshOrders,
+                    ),
                   _OrdersTab(
                     provider: provider,
                     onRefresh: _refreshOrders,
@@ -2586,6 +2654,86 @@ class _SectionHeader extends StatelessWidget {
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
         color: Theme.of(context).colorScheme.primary,
         letterSpacing: 0.8,
+      ),
+    );
+  }
+}
+
+class _LogisticsTab extends StatelessWidget {
+  final CommerceProvider provider;
+  final VoidCallback onRefresh;
+
+  const _LogisticsTab({required this.provider, required this.onRefresh});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final role = provider.currentRole;
+
+    // Filter orders based on role and relevant statuses
+    final logisticsOrders = provider.orders.where((order) {
+      final status = OrderStatus.fromJson(order.status);
+
+      if (role == UserRole.warehouse) {
+        return status == OrderStatus.orderConfirmed ||
+            status == OrderStatus.stockAllocated ||
+            status == OrderStatus.picking ||
+            status == OrderStatus.packed;
+      } else if (role == UserRole.carrier) {
+        return status == OrderStatus.readyToShip;
+      } else if (role == UserRole.driver) {
+        return status == OrderStatus.shipped ||
+            status == OrderStatus.partiallyShipped;
+      } else if (role == UserRole.admin || role == UserRole.support) {
+        // Admins see everything that needs attention
+        return status == OrderStatus.orderConfirmed ||
+            status == OrderStatus.stockAllocated ||
+            status == OrderStatus.picking ||
+            status == OrderStatus.packed ||
+            status == OrderStatus.readyToShip ||
+            status == OrderStatus.shipped;
+      }
+      return false;
+    }).toList();
+
+    if (provider.ordersLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (logisticsOrders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              l10n.noProductsMatch, // Or a better "No logistics tasks"
+              style: const TextStyle(color: Colors.grey),
+            ),
+            TextButton(onPressed: onRefresh, child: Text(l10n.refreshUsers)),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async => onRefresh(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: logisticsOrders.length,
+        itemBuilder: (context, index) {
+          final order = logisticsOrders[index];
+          return _OrderCard(
+            order: order,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => OrderDetailsScreen(orderId: order.id),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
