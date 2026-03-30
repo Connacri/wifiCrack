@@ -772,6 +772,45 @@ class AppLocalizationsRu extends AppLocalizations {
   String get toDeliver => 'To Deliver';
 
   @override
+  String get shippingLabel => 'Shipping Label';
+
+  @override
+  String get generateLabel => 'Generate Label';
+
+  @override
+  String get scanForPickup => 'Scan for Pickup';
+
+  @override
+  String get scanForDelivery => 'Confirm Delivery';
+
+  @override
+  String get deliveryInfo => 'Delivery Info';
+
+  @override
+  String get trackMore => 'Package Tracking';
+
+  @override
+  String get trackingNumber => 'Tracking No.';
+
+  @override
+  String get carrier => 'Carrier';
+
+  @override
+  String get orderStatusConfirmed => 'Confirmed';
+
+  @override
+  String get orderStatusPrepared => 'Prepared';
+
+  @override
+  String get orderStatusReady => 'Ready';
+
+  @override
+  String get orderStatusShipped => 'Отправлена';
+
+  @override
+  String get orderStatusDelivered => 'Доставлена';
+
+  @override
   String get clientModeTooltip => '????? ???????';
 
   @override
@@ -1381,13 +1420,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get orderStatusPartiallyShipped => 'Частично отправлена';
 
   @override
-  String get orderStatusShipped => 'Отправлена';
-
-  @override
   String get orderStatusPartiallyDelivered => 'Частично доставлена';
-
-  @override
-  String get orderStatusDelivered => 'Доставлена';
 
   @override
   String get orderStatusDeliveryFailed => 'Доставка не удалась';

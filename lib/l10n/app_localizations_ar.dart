@@ -767,6 +767,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get toDeliver => 'To Deliver';
 
   @override
+  String get shippingLabel => 'Shipping Label';
+
+  @override
+  String get generateLabel => 'Generate Label';
+
+  @override
+  String get scanForPickup => 'Scan for Pickup';
+
+  @override
+  String get scanForDelivery => 'Confirm Delivery';
+
+  @override
+  String get deliveryInfo => 'Delivery Info';
+
+  @override
+  String get trackMore => 'Package Tracking';
+
+  @override
+  String get trackingNumber => 'Tracking No.';
+
+  @override
+  String get carrier => 'Carrier';
+
+  @override
+  String get orderStatusConfirmed => 'Confirmed';
+
+  @override
+  String get orderStatusPrepared => 'Prepared';
+
+  @override
+  String get orderStatusReady => 'Ready';
+
+  @override
+  String get orderStatusShipped => 'تم الشحن';
+
+  @override
+  String get orderStatusDelivered => 'تم التسليم';
+
+  @override
   String get clientModeTooltip => '??? ??????';
 
   @override
@@ -1375,13 +1414,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get orderStatusPartiallyShipped => 'تم شحنها جزئياً';
 
   @override
-  String get orderStatusShipped => 'تم الشحن';
-
-  @override
   String get orderStatusPartiallyDelivered => 'تم التسليم جزئياً';
-
-  @override
-  String get orderStatusDelivered => 'تم التسليم';
 
   @override
   String get orderStatusDeliveryFailed => 'فشل التسليم';

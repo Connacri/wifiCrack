@@ -761,6 +761,45 @@ class AppLocalizationsJa extends AppLocalizations {
   String get toDeliver => 'To Deliver';
 
   @override
+  String get shippingLabel => 'Shipping Label';
+
+  @override
+  String get generateLabel => 'Generate Label';
+
+  @override
+  String get scanForPickup => 'Scan for Pickup';
+
+  @override
+  String get scanForDelivery => 'Confirm Delivery';
+
+  @override
+  String get deliveryInfo => 'Delivery Info';
+
+  @override
+  String get trackMore => 'Package Tracking';
+
+  @override
+  String get trackingNumber => 'Tracking No.';
+
+  @override
+  String get carrier => 'Carrier';
+
+  @override
+  String get orderStatusConfirmed => 'Confirmed';
+
+  @override
+  String get orderStatusPrepared => 'Prepared';
+
+  @override
+  String get orderStatusReady => 'Ready';
+
+  @override
+  String get orderStatusShipped => '出荷済み';
+
+  @override
+  String get orderStatusDelivered => '配送完了';
+
+  @override
   String get clientModeTooltip => '?????';
 
   @override
@@ -1366,13 +1405,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get orderStatusPartiallyShipped => '一部出荷';
 
   @override
-  String get orderStatusShipped => '出荷済み';
-
-  @override
   String get orderStatusPartiallyDelivered => '一部配送完了';
-
-  @override
-  String get orderStatusDelivered => '配送完了';
 
   @override
   String get orderStatusDeliveryFailed => '配送失敗';

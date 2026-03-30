@@ -336,6 +336,7 @@
   "scanForPickup": "Scanner pour ramassage",
   "scanForDelivery": "Confirmer la livraison",
   "deliveryInfo": "Infos de livraison",
+  "trackMore": "Suivi de colis",
   "trackingNumber": "N° de suivi",
   "carrier": "Transporteur",
   "orderStatusConfirmed": "Confirmée",

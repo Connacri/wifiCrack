@@ -336,6 +336,7 @@
   "scanForPickup": "Scan for Pickup",
   "scanForDelivery": "Confirm Delivery",
   "deliveryInfo": "Delivery Info",
+  "trackMore": "Package Tracking",
   "trackingNumber": "Tracking No.",
   "carrier": "Carrier",
   "orderStatusConfirmed": "Confirmed",

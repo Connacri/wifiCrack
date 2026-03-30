@@ -772,6 +772,45 @@ class AppLocalizationsId extends AppLocalizations {
   String get toDeliver => 'To Deliver';
 
   @override
+  String get shippingLabel => 'Shipping Label';
+
+  @override
+  String get generateLabel => 'Generate Label';
+
+  @override
+  String get scanForPickup => 'Scan for Pickup';
+
+  @override
+  String get scanForDelivery => 'Confirm Delivery';
+
+  @override
+  String get deliveryInfo => 'Delivery Info';
+
+  @override
+  String get trackMore => 'Package Tracking';
+
+  @override
+  String get trackingNumber => 'Tracking No.';
+
+  @override
+  String get carrier => 'Carrier';
+
+  @override
+  String get orderStatusConfirmed => 'Confirmed';
+
+  @override
+  String get orderStatusPrepared => 'Prepared';
+
+  @override
+  String get orderStatusReady => 'Ready';
+
+  @override
+  String get orderStatusShipped => 'Dikirim';
+
+  @override
+  String get orderStatusDelivered => 'Diterima';
+
+  @override
   String get clientModeTooltip => 'Mode pelanggan';
 
   @override
@@ -1382,13 +1421,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get orderStatusPartiallyShipped => 'Dikirim sebagian';
 
   @override
-  String get orderStatusShipped => 'Dikirim';
-
-  @override
   String get orderStatusPartiallyDelivered => 'Diterima sebagian';
-
-  @override
-  String get orderStatusDelivered => 'Diterima';
 
   @override
   String get orderStatusDeliveryFailed => 'Pengiriman gagal';

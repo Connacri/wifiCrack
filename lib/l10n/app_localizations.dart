@@ -1566,6 +1566,84 @@ abstract class AppLocalizations {
   /// **'To Deliver'**
   String get toDeliver;
 
+  /// No description provided for @shippingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping Label'**
+  String get shippingLabel;
+
+  /// No description provided for @generateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Label'**
+  String get generateLabel;
+
+  /// No description provided for @scanForPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan for Pickup'**
+  String get scanForPickup;
+
+  /// No description provided for @scanForDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Delivery'**
+  String get scanForDelivery;
+
+  /// No description provided for @deliveryInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Info'**
+  String get deliveryInfo;
+
+  /// No description provided for @trackMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Package Tracking'**
+  String get trackMore;
+
+  /// No description provided for @trackingNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking No.'**
+  String get trackingNumber;
+
+  /// No description provided for @carrier.
+  ///
+  /// In en, this message translates to:
+  /// **'Carrier'**
+  String get carrier;
+
+  /// No description provided for @orderStatusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get orderStatusConfirmed;
+
+  /// No description provided for @orderStatusPrepared.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepared'**
+  String get orderStatusPrepared;
+
+  /// No description provided for @orderStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get orderStatusReady;
+
+  /// No description provided for @orderStatusShipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipped'**
+  String get orderStatusShipped;
+
+  /// No description provided for @orderStatusDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get orderStatusDelivered;
+
   /// No description provided for @clientModeTooltip.
   ///
   /// In en, this message translates to:
@@ -2700,23 +2778,11 @@ abstract class AppLocalizations {
   /// **'Partially shipped'**
   String get orderStatusPartiallyShipped;
 
-  /// No description provided for @orderStatusShipped.
-  ///
-  /// In en, this message translates to:
-  /// **'Shipped'**
-  String get orderStatusShipped;
-
   /// No description provided for @orderStatusPartiallyDelivered.
   ///
   /// In en, this message translates to:
   /// **'Partially delivered'**
   String get orderStatusPartiallyDelivered;
-
-  /// No description provided for @orderStatusDelivered.
-  ///
-  /// In en, this message translates to:
-  /// **'Delivered'**
-  String get orderStatusDelivered;
 
   /// No description provided for @orderStatusDeliveryFailed.
   ///

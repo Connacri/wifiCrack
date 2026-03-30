@@ -768,6 +768,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toDeliver => 'To Deliver';
 
   @override
+  String get shippingLabel => 'Shipping Label';
+
+  @override
+  String get generateLabel => 'Generate Label';
+
+  @override
+  String get scanForPickup => 'Scan for Pickup';
+
+  @override
+  String get scanForDelivery => 'Confirm Delivery';
+
+  @override
+  String get deliveryInfo => 'Delivery Info';
+
+  @override
+  String get trackMore => 'Package Tracking';
+
+  @override
+  String get trackingNumber => 'Tracking No.';
+
+  @override
+  String get carrier => 'Carrier';
+
+  @override
+  String get orderStatusConfirmed => 'Confirmed';
+
+  @override
+  String get orderStatusPrepared => 'Prepared';
+
+  @override
+  String get orderStatusReady => 'Ready';
+
+  @override
+  String get orderStatusShipped => 'Shipped';
+
+  @override
+  String get orderStatusDelivered => 'Delivered';
+
+  @override
   String get clientModeTooltip => 'Client mode';
 
   @override
@@ -1377,13 +1416,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderStatusPartiallyShipped => 'Partially shipped';
 
   @override
-  String get orderStatusShipped => 'Shipped';
-
-  @override
   String get orderStatusPartiallyDelivered => 'Partially delivered';
-
-  @override
-  String get orderStatusDelivered => 'Delivered';
 
   @override
   String get orderStatusDeliveryFailed => 'Delivery failed';
