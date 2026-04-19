@@ -762,10 +762,61 @@ class AppLocalizationsDe extends AppLocalizations {
   String get productsTab => 'Produkte';
 
   @override
+  String get logisticsTab => 'Logistics';
+
+  @override
   String get ordersTab => 'Bestellungen';
 
   @override
   String get cartTab => 'Warenkorb';
+
+  @override
+  String get toPickUp => 'To Pick Up';
+
+  @override
+  String get toPrepare => 'To Prepare';
+
+  @override
+  String get toDeliver => 'To Deliver';
+
+  @override
+  String get shippingLabel => 'Shipping Label';
+
+  @override
+  String get generateLabel => 'Generate Label';
+
+  @override
+  String get scanForPickup => 'Scan for Pickup';
+
+  @override
+  String get scanForDelivery => 'Confirm Delivery';
+
+  @override
+  String get deliveryInfo => 'Delivery Info';
+
+  @override
+  String get trackMore => 'Package Tracking';
+
+  @override
+  String get trackingNumber => 'Tracking No.';
+
+  @override
+  String get carrier => 'Carrier';
+
+  @override
+  String get orderStatusConfirmed => 'Confirmed';
+
+  @override
+  String get orderStatusPrepared => 'Prepared';
+
+  @override
+  String get orderStatusReady => 'Ready';
+
+  @override
+  String get orderStatusShipped => 'Versandt';
+
+  @override
+  String get orderStatusDelivered => 'Geliefert';
 
   @override
   String get clientModeTooltip => 'Kundenmodus';
@@ -1379,13 +1430,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get orderStatusPartiallyShipped => 'Teilweise versandt';
 
   @override
-  String get orderStatusShipped => 'Versandt';
-
-  @override
   String get orderStatusPartiallyDelivered => 'Teilweise geliefert';
-
-  @override
-  String get orderStatusDelivered => 'Geliefert';
 
   @override
   String get orderStatusDeliveryFailed => 'Lieferung fehlgeschlagen';

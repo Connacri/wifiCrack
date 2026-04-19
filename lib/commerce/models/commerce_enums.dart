@@ -34,7 +34,6 @@ enum OrderStatus {
     try {
       return OrderStatus.values.firstWhere((e) => e.name == normalized);
     } catch (_) {
-      // Fallback: check if raw value matches name
       try {
         return OrderStatus.values.firstWhere((e) => e.name == value);
       } catch (_) {
@@ -276,7 +275,10 @@ enum UserRole {
   }
 }
 
-/// Helpers pour la conversion de casse
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS CASSE
+// ─────────────────────────────────────────────────────────────────────────────
+
 String _toSnakeCase(String name) {
   return name.replaceAllMapped(
     RegExp(r'([A-Z])'),
@@ -288,13 +290,14 @@ String _toCamelCase(String snake) {
   final parts = snake.split('_');
   if (parts.length == 1) return snake;
   return parts[0] +
-      parts
-          .sublist(1)
-          .map((p) => p[0].toUpperCase() + p.substring(1))
-          .join('');
+      parts.sublist(1).map((p) => p[0].toUpperCase() + p.substring(1)).join('');
 }
 
-/// Matrice des transitions autorisées par rôle.
+// ─────────────────────────────────────────────────────────────────────────────
+// MATRICE DES TRANSITIONS — SOURCE UNIQUE DE VÉRITÉ
+// Utilisée par CommerceProvider (allowedOrderTransitions / allowedShipmentTransitions)
+// ─────────────────────────────────────────────────────────────────────────────
+
 class OrderTransitionPolicy {
   OrderTransitionPolicy._();
 
@@ -327,41 +330,56 @@ class OrderTransitionPolicy {
     return allowedTransitions(role: role, current: from).contains(to);
   }
 
+  // ── Grossiste ──────────────────────────────────────────────────────────────
   static const _wholesalerTransitions = <OrderStatus, Set<OrderStatus>>{
     OrderStatus.created: {OrderStatus.orderConfirmed, OrderStatus.cancelled},
     OrderStatus.orderConfirmed: {
       OrderStatus.stockAllocated,
       OrderStatus.cancelled,
     },
+    // Le grossiste peut aussi annuler une demande d'annulation client
+    OrderStatus.cancelRequested: {OrderStatus.cancelled},
   };
 
+  // ── Entrepôt ───────────────────────────────────────────────────────────────
+  // FIX : ajout de backorder → stockAllocated (manquait — entrepôt bloqué en rupture)
   static const _warehouseTransitions = <OrderStatus, Set<OrderStatus>>{
     OrderStatus.orderConfirmed: {OrderStatus.stockAllocated},
     OrderStatus.stockAllocated: {OrderStatus.picking, OrderStatus.backorder},
+    // ↓ CRITIQUE : sans cette ligne, l'entrepôt ne pouvait plus reprendre
+    //   un article mis en rupture une fois le stock reconstitué
+    OrderStatus.backorder: {OrderStatus.stockAllocated},
     OrderStatus.picking: {OrderStatus.packed},
     OrderStatus.packed: {OrderStatus.readyToShip},
   };
 
+  // ── Transporteur ───────────────────────────────────────────────────────────
   static const _carrierTransitions = <OrderStatus, Set<OrderStatus>>{
     OrderStatus.readyToShip: {OrderStatus.shipped},
     OrderStatus.shipped: {OrderStatus.partiallyShipped},
   };
 
+  // ── Livreur ────────────────────────────────────────────────────────────────
   static const _driverTransitions = <OrderStatus, Set<OrderStatus>>{
     OrderStatus.shipped: {OrderStatus.delivered, OrderStatus.deliveryFailed},
     OrderStatus.partiallyDelivered: {
       OrderStatus.delivered,
       OrderStatus.deliveryFailed,
     },
-    OrderStatus.deliveryFailed: {OrderStatus.shipped},
+    OrderStatus.deliveryFailed: {OrderStatus.shipped}, // nouvelle tentative
   };
 
+  // ── Client ─────────────────────────────────────────────────────────────────
   static const _clientTransitions = <OrderStatus, Set<OrderStatus>>{
     OrderStatus.delivered: {OrderStatus.returnRequested},
     OrderStatus.partiallyDelivered: {OrderStatus.returnRequested},
     OrderStatus.shipped: {OrderStatus.exception},
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATRICE DES TRANSITIONS EXPÉDITION
+// ─────────────────────────────────────────────────────────────────────────────
 
 class ShipmentTransitionPolicy {
   ShipmentTransitionPolicy._();
@@ -393,6 +411,7 @@ class ShipmentTransitionPolicy {
     return allowedTransitions(role: role, current: from).contains(to);
   }
 
+  // ── Transporteur (scan à chaque hub) ──────────────────────────────────────
   static const _carrierShipmentTransitions =
       <ShipmentStatus, Set<ShipmentStatus>>{
         ShipmentStatus.labelCreated: {ShipmentStatus.pickedUp},
@@ -410,6 +429,7 @@ class ShipmentTransitionPolicy {
         ShipmentStatus.customsClearance: {ShipmentStatus.outForDelivery},
       };
 
+  // ── Livreur (scan à la livraison) ─────────────────────────────────────────
   static const _driverShipmentTransitions =
       <ShipmentStatus, Set<ShipmentStatus>>{
         ShipmentStatus.outForDelivery: {

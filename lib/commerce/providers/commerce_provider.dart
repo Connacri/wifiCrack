@@ -153,7 +153,7 @@ class CommerceProvider extends ChangeNotifier {
         note: incoming.note,
         createdAt: incoming.createdAt ?? existing.createdAt,
         items: incoming.items.isNotEmpty ? incoming.items : existing.items,
-        // ↓ CRITIQUE : on garde les shipments existants si le payload n'en a pas
+        // CRITIQUE : on garde les shipments existants si le payload n'en a pas
         shipments: incoming.shipments.isNotEmpty
             ? incoming.shipments
             : existing.shipments,
@@ -187,14 +187,13 @@ class CommerceProvider extends ChangeNotifier {
   // ─────────────────────────────────────────────────────────
   // PERMISSION HELPERS
   // ─────────────────────────────────────────────────────────
-  /// Transitions OrderStatus accessibles au rôle courant depuis [current].
+
   Set<OrderStatus> allowedOrderTransitions(OrderStatus current) =>
       OrderTransitionPolicy.allowedTransitions(
         role: _currentRole,
         current: current,
       );
 
-  /// Transitions ShipmentStatus accessibles au rôle courant depuis [current].
   Set<ShipmentStatus> allowedShipmentTransitions(ShipmentStatus current) =>
       ShipmentTransitionPolicy.allowedTransitions(
         role: _currentRole,
@@ -301,17 +300,25 @@ class CommerceProvider extends ChangeNotifier {
         status: status.toJson(),
       );
 
-      if (ok && orderId != null && orderId.trim().isNotEmpty) {
-        final corresponding = _shipmentToOrderStatus(status);
-        if (corresponding != null) {
-          await _service.updateOrderStatus(
-            orderId: orderId,
-            status: corresponding.name,
-          );
-          _syncOrderStatusLocal(orderId, corresponding.name);
+      if (ok) {
+        // BUG #2/#3 FIX : mise à jour locale immédiate du shipment en mémoire
+        // AVANT : loadOrders(reset:true) écrasait tout → race condition
+        //         si Supabase FK pas encore propagée, order.shipments redevenait []
+        // APRÈS : _syncShipmentStatusLocal met à jour le shipment en place
+        //         sans toucher aux autres données en mémoire
+        _syncShipmentStatusLocal(shipmentId, status);
+
+        if (orderId != null && orderId.trim().isNotEmpty) {
+          final corresponding = _shipmentToOrderStatus(status);
+          if (corresponding != null) {
+            await _service.updateOrderStatus(
+              orderId: orderId,
+              status: corresponding.name,
+            );
+            _syncOrderStatusLocal(orderId, corresponding.name);
+          }
           notifyListeners();
         }
-        await loadOrders(userId: _lastOrdersUserId, reset: true);
       }
       return ok;
     } catch (e) {
@@ -400,6 +407,59 @@ class CommerceProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  /// Met à jour le statut d'un shipment localement sans reset des données.
+  ///
+  /// FIX Bug #2/#3 : remplace l'ancien loadOrders(reset:true) qui causait
+  /// une race condition — si Supabase n'avait pas encore propagé la FK
+  /// shipments→orders, le reload retournait order.shipments = [] et
+  /// tous les rôles se retrouvaient avec le message "En attente de préparation".
+  void _syncShipmentStatusLocal(String shipmentId, ShipmentStatus newStatus) {
+    for (int i = 0; i < _orders.length; i++) {
+      final order = _orders[i];
+      final shipmentIndex = order.shipments.indexWhere(
+        (s) => s.id == shipmentId,
+      );
+      if (shipmentIndex == -1) continue;
+
+      final old = order.shipments[shipmentIndex];
+      final updatedShipment = Shipment(
+        id: old.id,
+        orderId: old.orderId,
+        trackingNumber: old.trackingNumber,
+        carrierName: old.carrierName,
+        status: newStatus,
+        items: old.items,
+        shippedAt: old.shippedAt,
+        estimatedDelivery: old.estimatedDelivery,
+        actualDelivery: newStatus == ShipmentStatus.delivered
+            ? DateTime.now()
+            : old.actualDelivery,
+      );
+
+      final updatedShipments = List<Shipment>.from(order.shipments);
+      updatedShipments[shipmentIndex] = updatedShipment;
+
+      _orders[i] = Order(
+        id: order.id,
+        userId: order.userId,
+        phone: order.phone,
+        address: order.address,
+        total: order.total,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        note: order.note,
+        createdAt: order.createdAt,
+        items: order.items,
+        shipments: updatedShipments,
+        returns: order.returns,
+      );
+      return; // shipmentId est unique → on sort dès qu'on l'a trouvé
+    }
+    debugPrint(
+      '[Commerce] _syncShipmentStatusLocal: shipment $shipmentId introuvable en mémoire',
+    );
   }
 
   void _syncOrderStatusLocal(

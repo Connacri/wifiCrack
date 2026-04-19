@@ -18,752 +18,410 @@ class OrderDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<CommerceProvider>();
     final l10n = AppLocalizations.of(context)!;
-    final order = provider.orders.firstWhere(
-      (o) => o.id == orderId,
-      orElse: () => throw Exception(l10n.orderNotFound),
+
+    final order = provider.orders.cast<Order?>().firstWhere(
+      (o) => o?.id == orderId,
+      orElse: () => null,
     );
 
-    final isPrivileged =
-        provider.currentRole == UserRole.admin ||
-        provider.currentRole == UserRole.support;
+    if (order == null) {
+      final safeId = orderId.length >= 8 ? orderId.substring(0, 8) : orderId;
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.orderNumber(safeId))),
+        body: Center(
+          child:
+              provider.ordersLoading
+                  ? const CircularProgressIndicator()
+                  : Text(l10n.orderNotFound),
+        ),
+      );
+    }
+
+    final theme = Theme.of(context);
+    final statusColor = _getStatusColor(order.status);
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
       appBar: AppBar(
-        title: Text(l10n.orderNumber(order.id.substring(0, 8))),
-        actions: [_RoleSelector()],
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.orderNumber(order.id.substring(0, 8).toUpperCase()),
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              order.createdAt != null
+                  ? DateFormat('dd MMM yyyy, HH:mm').format(order.createdAt!)
+                  : '',
+              style: theme.textTheme.labelSmall,
+            ),
+          ],
+        ),
+        actions: [
+          _StatusChip(status: order.status, color: statusColor),
+          PopupMenuButton<UserRole>(
+            tooltip: l10n.changeRoleTooltip,
+            icon: const Icon(Icons.person_outline),
+            onSelected: (role) => provider.setRole(role),
+            itemBuilder: (context) => UserRole.values.map((role) {
+              final isSelected = provider.currentRole == role;
+              return PopupMenuItem(
+                value: role,
+                child: Row(
+                  children: [
+                    Icon(
+                      _getRoleIcon(role),
+                      size: 20,
+                      color: isSelected ? Colors.blue : Colors.grey,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      role.toString().split('.').last.toUpperCase(),
+                      style: TextStyle(
+                        fontWeight: isSelected ? FontWeight.bold : null,
+                        color: isSelected ? Colors.blue : null,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
-      body: SafeArea(
+      body: RefreshIndicator(
+        onRefresh: () => provider.loadOrders(reset: true),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _OrderStatusCard(order: order),
+              // --- 1. TIMELINE EXPERTE (DHL STYLE) ---
+              _ExpertTimeline(order: order),
               const SizedBox(height: 16),
-              // Carte admin étendue au rôle support
-              if (isPrivileged)
-                _AdminStatusEditCard(order: order, provider: provider),
+
+              // --- 2. ACTIONS PRIORITAIRES (DYNAMIQUE) ---
+              _PriorityActionCard(order: order, provider: provider),
               const SizedBox(height: 16),
-              _OrderItemsCard(order: order),
+
+              // --- 3. INFOS LIVRAISON ---
+              _InfoSection(
+                title: l10n.deliveryInfo,
+                icon: Icons.local_shipping_outlined,
+                children: [
+                  _InfoRow(label: l10n.customerLabel, value: order.userId), // Simulation
+                  _InfoRow(label: l10n.phoneLabel, value: order.phone),
+                  _InfoRow(label: l10n.addressLabel, value: order.address, isBold: true),
+                  if (order.note != null) 
+                    _InfoRow(label: l10n.noteLabel, value: order.note!),
+                ],
+              ),
               const SizedBox(height: 16),
-              _ShipmentsCard(order: order),
+
+              // --- 4. SUIVI DES COLIS (SHIPMENTS) ---
+              if (order.shipments.isNotEmpty) ...[
+                _ShipmentsSection(shipments: order.shipments),
+                const SizedBox(height: 16),
+              ],
+
+              // --- 5. RÉSUMÉ DES ARTICLES ---
+              _InfoSection(
+                title: l10n.itemsLabel,
+                icon: Icons.inventory_2_outlined,
+                children: order.items.map((item) => _OrderItemRow(item: item)).toList(),
+              ),
               const SizedBox(height: 16),
-              _ActionPanel(order: order),
+
+              // --- 6. PAIEMENT ---
+              _InfoSection(
+                title: l10n.paymentLabel,
+                icon: Icons.payments_outlined,
+                children: [
+                  _InfoRow(
+                    label: l10n.globalStatus,
+                    value: PaymentStatus.tryParse(order.paymentStatus)?.label(l10n) ?? order.paymentStatus,
+                    valueColor: _getPaymentStatusColor(order.paymentStatus),
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(l10n.totalLabel, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        '${order.total.toStringAsFixed(2)} DZD',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-// ─────────────────────────────────────────────────────────
-// ROLE SELECTOR
-// ─────────────────────────────────────────────────────────
-
-class _RoleSelector extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<CommerceProvider>();
-    final l10n = AppLocalizations.of(context)!;
-    return PopupMenuButton<UserRole>(
-      initialValue: provider.currentRole,
-      onSelected: provider.setRole,
-      icon: const Icon(Icons.badge_outlined),
-      tooltip: l10n.changeRoleTooltip,
-      itemBuilder: (context) => UserRole.values
-          .map((r) => PopupMenuItem(value: r, child: Text(r.label(l10n))))
-          .toList(),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────
-// ORDER STATUS CARD
-// ─────────────────────────────────────────────────────────
-
-class _OrderStatusCard extends StatelessWidget {
-  final Order order;
-
-  const _OrderStatusCard({required this.order});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    final dateStr = order.createdAt != null
-        ? DateFormat('dd/MM/yyyy HH:mm').format(order.createdAt!)
-        : l10n.unknownDate;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(l10n.globalStatus, style: theme.textTheme.labelLarge),
-                _StatusBadge(status: order.status),
-              ],
-            ),
-            const Divider(height: 24),
-            _InfoRow(label: l10n.dateLabel, value: dateStr),
-            _InfoRow(label: l10n.customerLabel, value: order.userId),
-            _InfoRow(label: l10n.phoneLabel, value: order.phone),
-            _InfoRow(label: l10n.addressLabel, value: order.address),
-            _InfoRow(
-              label: l10n.paymentLabel,
-              value: PaymentStatus.fromJson(order.paymentStatus).label(l10n),
-              valueColor:
-                  order.paymentStatus == PaymentStatus.captured.name ||
-                      order.paymentStatus == 'captured'
-                  ? Colors.green
-                  : Colors.orange,
-            ),
-            const Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(l10n.totalLabel, style: theme.textTheme.titleMedium),
-                Text(
-                  l10n.amountWithCurrency(order.total.toStringAsFixed(2)),
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────
-// ORDER ITEMS CARD
-// ─────────────────────────────────────────────────────────
-
-class _OrderItemsCard extends StatelessWidget {
-  final Order order;
-
-  const _OrderItemsCard({required this.order});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.productsLabel,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: order.items.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (context, index) {
-                final item = order.items[index];
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(item.name),
-                  subtitle: Text(
-                    l10n.priceXQuantity(
-                      item.price.toStringAsFixed(2),
-                      item.quantity,
-                    ),
-                  ),
-                  trailing: Text(
-                    l10n.amountWithCurrency(item.subtotal.toStringAsFixed(2)),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────
-// SHIPMENTS CARD
-// ─────────────────────────────────────────────────────────
-
-class _ShipmentsCard extends StatelessWidget {
-  final Order order;
-
-  const _ShipmentsCard({required this.order});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    if (order.shipments.isEmpty) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(l10n.noShipmentsYet),
-        ),
-      );
+  Color _getStatusColor(String status) {
+    final s = OrderStatus.fromJson(status);
+    switch (s) {
+      case OrderStatus.delivered: return Colors.green;
+      case OrderStatus.shipped: return Colors.blue;
+      case OrderStatus.readyToShip: return Colors.orange;
+      case OrderStatus.cancelled: return Colors.red;
+      case OrderStatus.picking:
+      case OrderStatus.packed: return Colors.purple;
+      default: return Colors.grey;
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: Text(
-            l10n.shipmentsCount(order.shipments.length),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-        ...order.shipments.map((s) => _ShipmentItem(shipment: s)),
-      ],
-    );
+  }
+
+  Color _getPaymentStatusColor(String status) {
+    switch (status) {
+      case 'paid': return Colors.green;
+      case 'pending': return Colors.orange;
+      case 'failed': return Colors.red;
+      default: return Colors.grey;
+    }
+  }
+
+  IconData _getRoleIcon(UserRole role) {
+    switch (role) {
+      case UserRole.admin: return Icons.admin_panel_settings;
+      case UserRole.support: return Icons.support_agent;
+      case UserRole.warehouse: return Icons.inventory_2;
+      case UserRole.carrier: return Icons.local_shipping;
+      case UserRole.driver: return Icons.delivery_dining;
+      case UserRole.wholesaler: return Icons.business;
+      case UserRole.client: return Icons.person;
+    }
   }
 }
 
-class _ShipmentItem extends StatelessWidget {
-  final Shipment shipment;
-
-  const _ShipmentItem({required this.shipment});
+class _ExpertTimeline extends StatelessWidget {
+  final Order order;
+  const _ExpertTimeline({required this.order});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final status = OrderStatus.fromJson(order.status);
+    
+    final steps = [
+      {'label': l10n.orderStatusConfirmed, 'icon': Icons.check_circle, 'active': true},
+      {'label': l10n.orderStatusPrepared, 'icon': Icons.inventory_2, 'active': _isAtLeast(status, OrderStatus.packed)},
+      {'label': l10n.orderStatusReady, 'icon': Icons.label_important, 'active': _isAtLeast(status, OrderStatus.readyToShip)},
+      {'label': l10n.orderStatusShipped, 'icon': Icons.local_shipping, 'active': _isAtLeast(status, OrderStatus.shipped)},
+      {'label': l10n.orderStatusDelivered, 'icon': Icons.home, 'active': _isAtLeast(status, OrderStatus.delivered)},
+    ];
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
-        title: Text(l10n.packageNumber(shipment.trackingNumber)),
-        subtitle: Text(l10n.carrierLabel(shipment.carrierName)),
-        trailing: _ShipmentStatusBadge(status: shipment.status),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(steps.length, (index) {
+            final s = steps[index];
+            final isActive = s['active'] as bool;
+            final isLast = index == steps.length - 1;
+
+            return Expanded(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 3,
+                          color: index == 0 ? Colors.transparent : (isActive ? Colors.green : Colors.grey.shade200),
+                        ),
+                      ),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isActive ? Colors.green : Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: isActive ? Colors.green : Colors.grey.shade300, width: 2),
+                        ),
+                        child: Icon(
+                          s['icon'] as IconData,
+                          size: 16,
+                          color: isActive ? Colors.white : Colors.grey.shade400,
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          height: 3,
+                          color: isLast ? Colors.transparent : (_nextIsActive(steps, index) ? Colors.green : Colors.grey.shade200),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    s['label'] as String,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                      color: isActive ? Colors.black : Colors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                  ),
+                ],
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  bool _isAtLeast(OrderStatus current, OrderStatus target) {
+    const seq = [
+      OrderStatus.created,
+      OrderStatus.orderConfirmed,
+      OrderStatus.stockAllocated,
+      OrderStatus.picking,
+      OrderStatus.packed,
+      OrderStatus.readyToShip,
+      OrderStatus.shipped,
+      OrderStatus.delivered,
+    ];
+    return seq.indexOf(current) >= seq.indexOf(target);
+  }
+
+  bool _nextIsActive(List<Map<String, dynamic>> steps, int index) {
+    if (index >= steps.length - 1) return false;
+    return steps[index + 1]['active'] as bool;
+  }
+}
+
+class _PriorityActionCard extends StatelessWidget {
+  final Order order;
+  final CommerceProvider provider;
+  const _PriorityActionCard({required this.order, required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final role = provider.currentRole;
+    final status = OrderStatus.fromJson(order.status);
+    final isUpdating = provider.isUpdatingOrder(order.id);
+
+    Widget? action;
+
+    // Logique Entrepot
+    if (role == UserRole.warehouse || role == UserRole.admin) {
+      if (status == OrderStatus.orderConfirmed || status == OrderStatus.stockAllocated) {
+        action = _ActionButton(
+          label: l10n.startPickingButton,
+          icon: Icons.play_arrow,
+          onPressed: () => provider.updateOrderStatus(orderId: order.id, status: OrderStatus.picking.toJson()),
+          isLoading: isUpdating,
+        );
+      } else if (status == OrderStatus.picking) {
+        action = _ActionButton(
+          label: l10n.packingFinishedButton,
+          icon: Icons.check,
+          onPressed: () => provider.updateOrderStatus(orderId: order.id, status: OrderStatus.packed.toJson()),
+          isLoading: isUpdating,
+        );
+      } else if (status == OrderStatus.packed) {
+        action = _ActionButton(
+          label: l10n.generateLabel,
+          icon: Icons.label,
+          color: Colors.blue,
+          onPressed: () => _showShipmentDialog(context),
+        );
+      }
+    }
+
+    // Logique Transporteur (À RAMASSER)
+    if (role == UserRole.carrier || role == UserRole.admin) {
+      if (status == OrderStatus.readyToShip) {
+        action = _ActionButton(
+          label: l10n.scanForPickup,
+          icon: Icons.qr_code_scanner,
+          color: Colors.orange,
+          onPressed: () => QrScanSheet.show(context, order.id),
+          isLoading: isUpdating,
+        );
+      }
+    }
+
+    // Logique Livreur (À LIVRER)
+    if (role == UserRole.driver || role == UserRole.admin) {
+      if (status == OrderStatus.shipped) {
+        action = _ActionButton(
+          label: l10n.scanForDelivery,
+          icon: Icons.verified,
+          color: Colors.green,
+          onPressed: () => QrScanSheet.show(context, order.id),
+          isLoading: isUpdating,
+        );
+      }
+    }
+
+    if (action == null) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _InfoRow(label: l10n.packageId, value: shipment.id),
-                if (shipment.shippedAt != null)
-                  _InfoRow(
-                    label: l10n.shippedOn,
-                    value: DateFormat(
-                      'dd/MM/yyyy HH:mm',
-                    ).format(shipment.shippedAt!),
-                  ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.itemsInPackage,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                ...shipment.items.map(
-                  (i) => Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(l10n.shipmentItemLine(i.name, i.quantity)),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          Text("Action requise", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade700, fontSize: 12)),
+          const SizedBox(height: 12),
+          action,
         ],
       ),
     );
   }
-}
 
-// ─────────────────────────────────────────────────────────
-// ACTION PANEL
-// ─────────────────────────────────────────────────────────
-
-class _ActionPanel extends StatelessWidget {
-  final Order order;
-
-  const _ActionPanel({required this.order});
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<CommerceProvider>();
-    final role = provider.currentRole;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (role == UserRole.wholesaler)
-          ..._buildWholesalerActions(context, provider),
-        if (role == UserRole.warehouse)
-          ..._buildWarehouseActions(context, provider),
-        if (role == UserRole.carrier)
-          ..._buildCarrierActions(context, provider),
-        if (role == UserRole.driver) ..._buildDriverActions(context, provider),
-        if (role == UserRole.client) ..._buildClientActions(context, provider),
-        // Admin et support ont leurs actions via _AdminStatusEditCard
-        // mais on expose aussi les boutons rapides de transition ici
-        if (role == UserRole.admin || role == UserRole.support)
-          ..._buildAdminQuickActions(context, provider),
-      ],
-    );
-  }
-
-  // ── GROSSISTE ──────────────────────────────────────────
-  List<Widget> _buildWholesalerActions(
-    BuildContext context,
-    CommerceProvider provider,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final currentStatus = OrderStatus.fromJson(order.status);
-    final allowed = provider.allowedOrderTransitions(currentStatus);
-
-    if (allowed.isEmpty) return [];
-
-    return [
-      if (allowed.contains(OrderStatus.orderConfirmed))
-        _ActionButton(
-          icon: Icons.check_circle,
-          label: l10n.confirmOrderButton,
-          color: Colors.green,
-          onPressed: () => provider.updateOrderStatus(
-            orderId: order.id,
-            status: OrderStatus.orderConfirmed.name,
-          ),
-        ),
-      if (allowed.contains(OrderStatus.stockAllocated))
-        _ActionButton(
-          icon: Icons.inventory,
-          label: l10n.allocateStockButton,
-          onPressed: () => provider.updateOrderStatus(
-            orderId: order.id,
-            status: OrderStatus.stockAllocated.name,
-          ),
-        ),
-      if (allowed.contains(OrderStatus.cancelled))
-        _ActionButton(
-          icon: Icons.cancel,
-          label: 'Annuler la commande',
-          color: Colors.red,
-          outlined: true,
-          onPressed: () => provider.updateOrderStatus(
-            orderId: order.id,
-            status: OrderStatus.cancelled.name,
-          ),
-        ),
-    ];
-  }
-
-  // ── ENTREPÔT ───────────────────────────────────────────
-  // FIX : ajout de stockAllocated (depuis orderConfirmed) et backorder
-  List<Widget> _buildWarehouseActions(
-    BuildContext context,
-    CommerceProvider provider,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final currentStatus = OrderStatus.fromJson(order.status);
-    final allowed = provider.allowedOrderTransitions(currentStatus);
-
-    if (allowed.isEmpty) {
-      // L'entrepôt n'a rien à faire dans cet état → info contextuelle
-      return [
-        _InfoCard(
-          icon: Icons.hourglass_top,
-          message:
-              'En attente : statut actuel "${currentStatus.label(l10n)}" '
-              'ne requiert pas d\'action de l\'entrepôt.',
-        ),
-      ];
-    }
-
-    return [
-      // orderConfirmed → stockAllocated  (MANQUAIT)
-      if (allowed.contains(OrderStatus.stockAllocated))
-        _ActionButton(
-          icon: Icons.check_box,
-          label: l10n.allocateStockButton,
-          color: Colors.indigo,
-          onPressed: () => provider.updateOrderStatus(
-            orderId: order.id,
-            status: OrderStatus.stockAllocated.name,
-          ),
-        ),
-      // stockAllocated → backorder  (MANQUAIT)
-      if (allowed.contains(OrderStatus.backorder))
-        _ActionButton(
-          icon: Icons.pending_actions,
-          label: 'Mettre en rupture (backorder)',
-          color: Colors.orange,
-          outlined: true,
-          onPressed: () => provider.updateOrderStatus(
-            orderId: order.id,
-            status: OrderStatus.backorder.name,
-          ),
-        ),
-      // backorder → stockAllocated : récupération  (MANQUAIT)
-      if (currentStatus == OrderStatus.backorder &&
-          allowed.contains(OrderStatus.stockAllocated))
-        _ActionButton(
-          icon: Icons.refresh,
-          label: 'Stock disponible — reprendre',
-          color: Colors.green,
-          onPressed: () => provider.updateOrderStatus(
-            orderId: order.id,
-            status: OrderStatus.stockAllocated.name,
-          ),
-        ),
-      // stockAllocated → picking
-      if (allowed.contains(OrderStatus.picking))
-        _ActionButton(
-          icon: Icons.shopping_basket,
-          label: l10n.startPickingButton,
-          onPressed: () => provider.updateOrderStatus(
-            orderId: order.id,
-            status: OrderStatus.picking.name,
-          ),
-        ),
-      // picking → packed
-      if (allowed.contains(OrderStatus.packed))
-        _ActionButton(
-          icon: Icons.inventory_2,
-          label: l10n.packingFinishedButton,
-          onPressed: () => provider.updateOrderStatus(
-            orderId: order.id,
-            status: OrderStatus.packed.name,
-          ),
-        ),
-      // packed → readyToShip : ouvre le dialog de création d'expédition
-      if (allowed.contains(OrderStatus.readyToShip))
-        _ActionButton(
-          icon: Icons.local_shipping,
-          label: l10n.shipButton,
-          color: Colors.teal,
-          onPressed: () => _showCreateShipmentDialog(context, provider),
-        ),
-    ];
-  }
-
-  // ── TRANSPORTEUR ──────────────────────────────────────
-  // FIX : cast supprimé (s.status est déjà ShipmentStatus)
-  // FIX : message d'attente quand allowed.isEmpty au lieu de liste vide silencieuse
-  List<Widget> _buildCarrierActions(
-    BuildContext context,
-    CommerceProvider provider,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-
-    if (order.shipments.isEmpty) {
-      return [
-        _InfoCard(
-          icon: Icons.info_outline,
-          message: 'En attente de préparation par l\'entrepôt.',
-        ),
-      ];
-    }
-
-    final widgets = <Widget>[];
-
-    for (final s in order.shipments) {
-      // s.status est déjà un ShipmentStatus — plus de cast dangereux
-      final currentShipmentStatus = s.status;
-      final allowed = provider.allowedShipmentTransitions(
-        currentShipmentStatus,
-      );
-
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 4, top: 8),
-          child: Text(
-            '${l10n.packageNumber(s.trackingNumber)} — '
-            '${currentShipmentStatus.label(l10n)}',
-            style: Theme.of(context).textTheme.labelMedium,
-          ),
-        ),
-      );
-
-      if (allowed.isEmpty) {
-        // Expédition existe mais le transporteur n'a pas encore la main
-        // (ex : outForDelivery → déjà passée au livreur)
-        widgets.add(
-          _InfoCard(
-            icon: Icons.hourglass_top,
-            message:
-                'Ce colis est au statut "${currentShipmentStatus.label(l10n)}"'
-                ' — aucune action transporteur disponible à ce stade.',
-          ),
-        );
-        continue;
-      }
-
-      widgets.add(
-        OutlinedButton.icon(
-          onPressed: () => QrScanSheet.show(context, order.id),
-          icon: const Icon(Icons.qr_code_scanner),
-          label: const Text('Scanner le colis'),
-        ),
-      );
-      widgets.add(const SizedBox(height: 4));
-
-      for (final target in allowed) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: OutlinedButton.icon(
-              onPressed: () => provider.updateShipmentStatus(
-                shipmentId: s.id,
-                status: target,
-                orderId: order.id,
-                fromStatus: currentShipmentStatus,
-              ),
-              icon: const Icon(Icons.route),
-              label: Text(target.label(l10n)),
-            ),
-          ),
-        );
-      }
-
-      widgets.add(const SizedBox(height: 8));
-    }
-
-    return widgets;
-  }
-
-  // ── LIVREUR ──────────────────────────────────────────
-  // FIX : cast supprimé (s.status est déjà ShipmentStatus)
-  List<Widget> _buildDriverActions(
-    BuildContext context,
-    CommerceProvider provider,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-
-    if (order.shipments.isEmpty) return [];
-
-    final activeShipments = order.shipments
-        .where((s) => s.status != ShipmentStatus.delivered)
-        .toList();
-
-    if (activeShipments.isEmpty) return [];
-
-    final widgets = <Widget>[];
-
-    for (final s in activeShipments) {
-      // s.status est déjà un ShipmentStatus — plus de cast dangereux
-      final currentShipmentStatus = s.status;
-      final allowed = provider.allowedShipmentTransitions(
-        currentShipmentStatus,
-      );
-
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 4, top: 8),
-          child: Text(
-            '${l10n.packageNumber(s.trackingNumber)} — '
-            '${currentShipmentStatus.label(l10n)}',
-            style: Theme.of(context).textTheme.labelMedium,
-          ),
-        ),
-      );
-
-      if (allowed.isEmpty) {
-        // Statut pas encore outForDelivery → livreur attend le transporteur
-        widgets.add(
-          _InfoCard(
-            icon: Icons.hourglass_top,
-            message:
-                '${l10n.packageNumber(s.trackingNumber)} — '
-                'En attente de prise en charge '
-                '(${currentShipmentStatus.label(l10n)})',
-          ),
-        );
-        continue;
-      }
-
-      widgets.add(
-        OutlinedButton.icon(
-          onPressed: () => QrScanSheet.show(context, order.id),
-          icon: const Icon(Icons.qr_code_scanner),
-          label: const Text('Scanner à la livraison'),
-        ),
-      );
-      widgets.add(const SizedBox(height: 4));
-
-      for (final target in allowed) {
-        final isDelivered = target == ShipmentStatus.delivered;
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: isDelivered
-                ? FilledButton.icon(
-                    onPressed: () => provider.updateShipmentStatus(
-                      shipmentId: s.id,
-                      status: target,
-                      orderId: order.id,
-                      fromStatus: currentShipmentStatus,
-                    ),
-                    icon: const Icon(Icons.done_all),
-                    label: Text(target.label(l10n)),
-                  )
-                : OutlinedButton.icon(
-                    onPressed: () => provider.updateShipmentStatus(
-                      shipmentId: s.id,
-                      status: target,
-                      orderId: order.id,
-                      fromStatus: currentShipmentStatus,
-                    ),
-                    icon: const Icon(Icons.error_outline),
-                    label: Text(target.label(l10n)),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-          ),
-        );
-      }
-
-      widgets.add(const SizedBox(height: 8));
-    }
-
-    return widgets;
-  }
-
-  // ── CLIENT ────────────────────────────────────────────
-  List<Widget> _buildClientActions(
-    BuildContext context,
-    CommerceProvider provider,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final currentStatus = OrderStatus.fromJson(order.status);
-    final allowedOrderActions = provider.allowedOrderTransitions(currentStatus);
-
-    final canCancel = {
-      OrderStatus.created,
-      OrderStatus.pendingPayment,
-      OrderStatus.paid,
-      OrderStatus.orderConfirmed,
-    }.contains(currentStatus);
-
-    if (!canCancel && allowedOrderActions.isEmpty) return [];
-
-    return [
-      if (canCancel)
-        _ActionButton(
-          icon: Icons.cancel_outlined,
-          label: 'Demander l\'annulation',
-          color: Theme.of(context).colorScheme.error,
-          outlined: true,
-          onPressed: () => provider.updateOrderStatus(
-            orderId: order.id,
-            status: OrderStatus.cancelRequested.name,
-          ),
-        ),
-      ...allowedOrderActions.map(
-        (target) => Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: TextButton.icon(
-            onPressed: () => provider.updateOrderStatus(
-              orderId: order.id,
-              status: target.name,
-            ),
-            icon: const Icon(Icons.keyboard_return),
-            label: Text(target.label(l10n)),
-          ),
-        ),
-      ),
-    ];
-  }
-
-  // ── ADMIN / SUPPORT — boutons rapides ─────────────────
-  // FIX : support n'avait aucun panneau d'action
-  List<Widget> _buildAdminQuickActions(
-    BuildContext context,
-    CommerceProvider provider,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final currentStatus = OrderStatus.fromJson(order.status);
-
-    // Toutes les transitions possibles sauf le statut courant
-    final all = OrderStatus.values.where((s) => s != currentStatus).toList();
-
-    return [
-      Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 4),
-        child: Text(
-          'Actions rapides (${provider.currentRole.name})',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-      ),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: all.map((target) {
-          return ActionChip(
-            label: Text(
-              target.label(l10n),
-              style: const TextStyle(fontSize: 11),
-            ),
-            onPressed: () => provider.updateOrderStatus(
-              orderId: order.id,
-              status: target.name,
-            ),
-          );
-        }).toList(),
-      ),
-      const SizedBox(height: 12),
-    ];
-  }
-
-  // ── DIALOG CRÉATION EXPÉDITION ─────────────────────────
-  void _showCreateShipmentDialog(
-    BuildContext context,
-    CommerceProvider provider,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final trackingCtrl = TextEditingController(
-      text: 'TRK-${DateTime.now().millisecondsSinceEpoch}',
-    );
-    final carrierCtrl = TextEditingController(text: 'DHL');
-
+  void _showShipmentDialog(BuildContext context) {
+    final carrierCtrl = TextEditingController(text: 'DHL Express');
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.newShipmentTitle),
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.newShipmentTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: carrierCtrl,
-              decoration: InputDecoration(labelText: l10n.carrierLabel('')),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.carrier, border: const OutlineInputBorder()),
             ),
-            TextField(
-              controller: trackingCtrl,
-              decoration: InputDecoration(labelText: l10n.trackingNumberLabel),
-            ),
-            const SizedBox(height: 12),
-            Text(l10n.allItemIncludedNote),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
           FilledButton(
-            onPressed: () {
-              provider.createShipment(
+            onPressed: () async {
+              final carrier = carrierCtrl.text.trim();
+              if (carrier.isEmpty) return;
+              Navigator.pop(ctx);
+              await provider.createShipment(
                 orderId: order.id,
-                trackingNumber: trackingCtrl.text,
-                carrierName: carrierCtrl.text,
+                carrierName: carrier,
+                trackingNumber: 'AWB-${DateTime.now().millisecondsSinceEpoch}',
                 items: order.items,
               );
-              Navigator.pop(context);
             },
-            child: Text(l10n.save),
+            child: Text(AppLocalizations.of(context)!.confirm),
           ),
         ],
       ),
@@ -771,47 +429,19 @@ class _ActionPanel extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// ADMIN STATUS EDIT CARD (admin + support)
-// ─────────────────────────────────────────────────────────
+class _InfoSection extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final List<Widget> children;
 
-class _AdminStatusEditCard extends StatefulWidget {
-  final Order order;
-  final CommerceProvider provider;
-
-  const _AdminStatusEditCard({required this.order, required this.provider});
-
-  @override
-  State<_AdminStatusEditCard> createState() => _AdminStatusEditCardState();
-}
-
-class _AdminStatusEditCardState extends State<_AdminStatusEditCard> {
-  late final TextEditingController _statusCtrl;
-  late final TextEditingController _paymentStatusCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _statusCtrl = TextEditingController(text: widget.order.status);
-    _paymentStatusCtrl = TextEditingController(
-      text: widget.order.paymentStatus,
-    );
-  }
-
-  @override
-  void dispose() {
-    _statusCtrl.dispose();
-    _paymentStatusCtrl.dispose();
-    super.dispose();
-  }
+  const _InfoSection({required this.title, required this.icon, required this.children});
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final isSupport = widget.provider.currentRole == UserRole.support;
-
+    final theme = Theme.of(context);
     return Card(
-      color: isSupport ? Colors.orange.shade50 : Colors.blue.shade50,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -819,252 +449,17 @@ class _AdminStatusEditCardState extends State<_AdminStatusEditCard> {
           children: [
             Row(
               children: [
-                Icon(
-                  isSupport ? Icons.support_agent : Icons.admin_panel_settings,
-                  color: isSupport ? Colors.orange : Colors.blue,
-                ),
+                Icon(icon, size: 18, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
-                Text(
-                  isSupport
-                      ? 'Panneau support — forçage statut'
-                      : l10n.adminStatusTitle,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+                Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _statusCtrl,
-              decoration: InputDecoration(
-                labelText: l10n.globalStatus,
-                filled: true,
-                fillColor: Colors.white,
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.save),
-                  onPressed: () => widget.provider.updateOrderStatus(
-                    orderId: widget.order.id,
-                    status: _statusCtrl.text.trim(),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _paymentStatusCtrl,
-              decoration: InputDecoration(
-                labelText: l10n.paymentLabel,
-                filled: true,
-                fillColor: Colors.white,
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.save),
-                  onPressed: () => widget.provider.updatePaymentStatus(
-                    orderId: widget.order.id,
-                    paymentStatus: _paymentStatusCtrl.text.trim(),
-                  ),
-                ),
-              ),
-            ),
+            ...children,
           ],
         ),
       ),
     );
-  }
-}
-
-// ─────────────────────────────────────────────────────────
-// WIDGETS RÉUTILISABLES
-// ─────────────────────────────────────────────────────────
-
-/// Bouton d'action standardisé (filled ou outlined selon [outlined]).
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-  final Color? color;
-  final bool outlined;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    this.color,
-    this.outlined = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final effectiveColor = color ?? Theme.of(context).colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: SizedBox(
-        width: double.infinity,
-        child: outlined
-            ? OutlinedButton.icon(
-                onPressed: onPressed,
-                icon: Icon(icon),
-                label: Text(label),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: effectiveColor,
-                  side: BorderSide(color: effectiveColor),
-                ),
-              )
-            : ElevatedButton.icon(
-                onPressed: onPressed,
-                icon: Icon(icon),
-                label: Text(label),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: effectiveColor,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-/// Carte informative contextuelle pour les états d'attente.
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String message;
-
-  const _InfoCard({required this.icon, required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String status;
-
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final s = OrderStatus.tryParse(status);
-    final label = s != null ? s.label(l10n) : status;
-    final color = s != null ? _getColorForStatus(s) : Colors.grey;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-
-  Color _getColorForStatus(OrderStatus s) {
-    switch (s) {
-      case OrderStatus.created:
-        return Colors.blue;
-      case OrderStatus.paid:
-      case OrderStatus.orderConfirmed:
-      case OrderStatus.stockAllocated:
-        return Colors.indigo;
-      case OrderStatus.picking:
-      case OrderStatus.packed:
-      case OrderStatus.readyToShip:
-        return Colors.teal;
-      case OrderStatus.shipped:
-      case OrderStatus.partiallyShipped:
-        return Colors.purple;
-      case OrderStatus.delivered:
-      case OrderStatus.refunded:
-        return Colors.green;
-      case OrderStatus.cancelled:
-      case OrderStatus.paymentFailed:
-      case OrderStatus.deliveryFailed:
-        return Colors.red;
-      case OrderStatus.backorder:
-        return Colors.orange;
-      case OrderStatus.returnRequested:
-      case OrderStatus.returnInTransit:
-      case OrderStatus.returnReceived:
-      case OrderStatus.refundPending:
-        return Colors.deepOrange;
-      default:
-        return Colors.grey;
-    }
-  }
-}
-
-class _ShipmentStatusBadge extends StatelessWidget {
-  final ShipmentStatus status;
-
-  const _ShipmentStatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final color = _getColorForShipmentStatus(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Text(
-        status.label(l10n),
-        style: TextStyle(color: color, fontSize: 11),
-      ),
-    );
-  }
-
-  Color _getColorForShipmentStatus(ShipmentStatus s) {
-    switch (s) {
-      case ShipmentStatus.delivered:
-        return Colors.green;
-      case ShipmentStatus.deliveryFailed:
-      case ShipmentStatus.lost:
-      case ShipmentStatus.damaged:
-        return Colors.red;
-      case ShipmentStatus.outForDelivery:
-        return Colors.teal;
-      case ShipmentStatus.inTransit:
-      case ShipmentStatus.arrivedAtHub:
-      case ShipmentStatus.customsClearance:
-        return Colors.purple;
-      case ShipmentStatus.returnToSender:
-        return Colors.orange;
-      default:
-        return Colors.blue;
-    }
   }
 }
 
@@ -1072,25 +467,166 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
   final Color? valueColor;
+  final bool isBold;
 
-  const _InfoRow({required this.label, required this.value, this.valueColor});
+  const _InfoRow({required this.label, required this.value, this.valueColor, this.isBold = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(flex: 2, child: Text(label, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey))),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                color: valueColor,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderItemRow extends StatelessWidget {
+  final OrderItem item;
+  const _OrderItemRow({required this.item});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: valueColor,
-              fontWeight: valueColor != null ? FontWeight.bold : null,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+            child: const Icon(Icons.inventory_2, size: 16, color: Colors.grey),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text('Qté: ${item.quantity}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
             ),
           ),
+          Text('${item.subtotal.toStringAsFixed(2)} DZD', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
         ],
+      ),
+    );
+  }
+}
+
+class _ShipmentsSection extends StatelessWidget {
+  final List<Shipment> shipments;
+  const _ShipmentsSection({required this.shipments});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return _InfoSection(
+      title: l10n.trackMore, // Or generic tracking title
+      icon: Icons.track_changes,
+      children: shipments.map((s) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(s.carrierName.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blue)),
+                _StatusBadge(status: s.status.toJson(), color: Colors.blue),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.qr_code, size: 14, color: Colors.grey),
+                const SizedBox(width: 6),
+                Text(s.trackingNumber, style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+                const Spacer(),
+                const Icon(Icons.copy, size: 14, color: Colors.blue),
+              ],
+            ),
+          ],
+        ),
+      )).toList(),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final String status;
+  final Color color;
+  const _StatusChip({required this.status, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: color.withOpacity(0.2))),
+      child: Text(status.toUpperCase(), style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  final Color color;
+  const _StatusBadge({required this.status, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+      child: Text(status.toUpperCase(), style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final Color? color;
+  final bool isLoading;
+
+  const _ActionButton({required this.label, required this.icon, required this.onPressed, this.color, this.isLoading = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: FilledButton.icon(
+        onPressed: isLoading ? null : onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: color,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 0,
+        ),
+        icon: isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Icon(icon, size: 20),
+        label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }

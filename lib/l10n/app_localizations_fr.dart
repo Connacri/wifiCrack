@@ -760,10 +760,61 @@ class AppLocalizationsFr extends AppLocalizations {
   String get productsTab => 'Produits';
 
   @override
+  String get logisticsTab => 'Logistique';
+
+  @override
   String get ordersTab => 'Commandes';
 
   @override
   String get cartTab => 'Panier';
+
+  @override
+  String get toPickUp => 'À ramasser';
+
+  @override
+  String get toPrepare => 'À préparer';
+
+  @override
+  String get toDeliver => 'À livrer';
+
+  @override
+  String get shippingLabel => 'Étiquette d\'expédition';
+
+  @override
+  String get generateLabel => 'Générer l\'étiquette';
+
+  @override
+  String get scanForPickup => 'Scanner pour ramassage';
+
+  @override
+  String get scanForDelivery => 'Confirmer la livraison';
+
+  @override
+  String get deliveryInfo => 'Infos de livraison';
+
+  @override
+  String get trackMore => 'Suivi de colis';
+
+  @override
+  String get trackingNumber => 'N° de suivi';
+
+  @override
+  String get carrier => 'Transporteur';
+
+  @override
+  String get orderStatusConfirmed => 'Confirmée';
+
+  @override
+  String get orderStatusPrepared => 'Préparée';
+
+  @override
+  String get orderStatusReady => 'Prête';
+
+  @override
+  String get orderStatusShipped => 'Expédiée';
+
+  @override
+  String get orderStatusDelivered => 'Livrée';
 
   @override
   String get clientModeTooltip => 'Mode Client';
@@ -1376,13 +1427,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get orderStatusPartiallyShipped => 'Partiellement expédiée';
 
   @override
-  String get orderStatusShipped => 'Expédiée';
-
-  @override
   String get orderStatusPartiallyDelivered => 'Partiellement livrée';
-
-  @override
-  String get orderStatusDelivered => 'Livrée';
 
   @override
   String get orderStatusDeliveryFailed => 'Échec de livraison';
