@@ -58,7 +58,8 @@ class WiFiNetworkCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
-          onTap: () => _copyToClipboard(context, network.calculatedKey, l10n),
+          onTap: () => onConnect?.call(network),
+          onLongPress: () => _copyToClipboard(context, network.calculatedKey, l10n),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(

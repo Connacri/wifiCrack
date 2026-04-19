@@ -201,12 +201,20 @@ class WiFiService {
   Future<bool> _connectMobile(String ssid, String key, bool isSecure) async {
     try {
       await WiFiForIoTPlugin.disconnect();
-      return await WiFiForIoTPlugin.connect(
+      final success = await WiFiForIoTPlugin.connect(
         ssid,
         password: key,
         security: isSecure ? NetworkSecurity.WPA : NetworkSecurity.NONE,
-        joinOnce: true,
+        joinOnce: false,
       );
+
+      if (success) {
+        // Force le trafic de données via le WiFi pour éviter les problèmes d'accès internet
+        // sur les réseaux sans internet détecté par l'OS ou en cas de double connexion.
+        await WiFiForIoTPlugin.forceWifiUsage(true);
+      }
+
+      return success;
     } catch (e) {
       debugPrint("❌ WiFi Connect Error: $e");
       return false;
