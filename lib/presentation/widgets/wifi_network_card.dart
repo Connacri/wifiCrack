@@ -59,7 +59,14 @@ class WiFiNetworkCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
           onTap: () => onConnect?.call(network),
-          onLongPress: () => _copyToClipboard(context, network.calculatedKey, l10n),
+          onLongPress: () async {
+            if (network.calculatedKey.isNotEmpty) {
+              await HapticFeedback.mediumImpact();
+              if (context.mounted) {
+                _copyToClipboard(context, network.calculatedKey, l10n);
+              }
+            }
+          },
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -71,14 +78,29 @@ class WiFiNetworkCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        network.ssid,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: isConnected ? theme.colorScheme.primary : null,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              network.ssid,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: isConnected ? theme.colorScheme.primary : null,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (network.calculatedKey.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Icon(
+                                Icons.copy_rounded,
+                                size: 14,
+                                color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Row(

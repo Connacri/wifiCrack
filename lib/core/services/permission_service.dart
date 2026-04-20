@@ -14,14 +14,17 @@ class PermissionService {
     Permission.notification,
     Permission.bluetoothScan,
     Permission.bluetoothConnect,
+    Permission.appTrackingTransparency,
   ];
 
   /// Vérifie si toutes les permissions sont accordées.
   static Future<bool> areAllPermissionsGranted() async {
     if (Platform.isWindows) return true; // Bypass Windows
     for (var permission in requiredPermissions) {
-      if (Platform.isAndroid && permission == Permission.nearbyWifiDevices) {
-        // nearbyWifiDevices est pour Android 13+
+      if (Platform.isAndroid && permission == Permission.appTrackingTransparency) {
+        continue;
+      }
+      if (Platform.isIOS && permission == Permission.nearbyWifiDevices) {
         continue;
       }
       if (!await permission.isGranted) return false;

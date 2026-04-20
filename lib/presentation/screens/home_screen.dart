@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
@@ -599,16 +600,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAdBanner(BuildContext context) {
-    final adService = context.read<AdService>();
-    final banner = adService.getBannerAd();
-    if (banner == null) return const SizedBox.shrink();
-
-    return Container(
-      alignment: Alignment.center,
-      width: banner.size.width.toDouble(),
-      height: banner.size.height.toDouble(),
-      child: AdWidget(ad: banner),
-    );
+    return const _BannerAdWidget();
   }
 
   Widget _buildStatusHeader(
@@ -712,6 +704,79 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+class _BannerAdWidget extends StatefulWidget {
+  const _BannerAdWidget();
+
+  @override
+  State<_BannerAdWidget> createState() => _BannerAdWidgetState();
+}
+
+class _BannerAdWidgetState extends State<_BannerAdWidget> {
+  BannerAd? _bannerAd;
+  bool _isLoaded = false;
+  AdSize? _adSize;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_bannerAd == null) {
+      _loadBanner();
+    }
+  }
+
+  Future<void> _loadBanner() async {
+    if (!AdService.isSupportedPlatform) return;
+
+    // Calcul de la taille adaptative
+    final screenWidth = MediaQuery.of(context).size.width.truncate();
+    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(screenWidth);
+
+    if (size == null) {
+      debugPrint('Unable to get adaptive banner size');
+      return;
+    }
+
+    setState(() {
+      _adSize = size;
+    });
+
+    _bannerAd = BannerAd(
+      adUnitId: AdService.bannerId,
+      size: size,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) setState(() => _isLoaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          debugPrint('Banner failed to load: $error');
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isLoaded || _bannerAd == null || _adSize == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      alignment: Alignment.center,
+      width: _adSize!.width.toDouble(),
+      height: _adSize!.height.toDouble(),
+      child: AdWidget(ad: _bannerAd!),
+    );
+  }
+}
+
 class _NativeAdItem extends StatefulWidget {
   @override
   State<_NativeAdItem> createState() => _NativeAdItemState();
@@ -761,11 +826,16 @@ class _NetworkTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wifi = context.read<WiFiProvider>();
+    final l10n = AppLocalizations.of(context)!;
     final isConnecting = wifi.connectingSSID == network.ssid;
     final isConnected = wifi.connectedSSID == network.ssid;
 
     return Card(
       child: ListTile(
+        onTap: () => isConnected
+            ? wifi.disconnect(l10n)
+            : wifi.connect(network, l10n),
+        onLongPress: () => _copyKey(context, l10n),
         leading: Icon(
           Icons.wifi,
           color: network.signalStrength > -60
@@ -801,13 +871,21 @@ class _NetworkTile extends StatelessWidget {
               )
             : IconButton(
                 icon: Icon(
-                  isConnected ? Icons.check_circle : Icons.link,
+                  isConnected ? Icons.link_off : Icons.link,
                   color: isConnected ? Colors.green : null,
                 ),
-                onPressed: () =>
-                    wifi.connect(network, AppLocalizations.of(context)!),
+                onPressed: () => isConnected
+                    ? wifi.disconnect(l10n)
+                    : wifi.connect(network, l10n),
               ),
       ),
+    );
+  }
+
+  void _copyKey(BuildContext context, AppLocalizations l10n) {
+    Clipboard.setData(ClipboardData(text: network.calculatedKey));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.copiedToClipboard(network.calculatedKey))),
     );
   }
 }

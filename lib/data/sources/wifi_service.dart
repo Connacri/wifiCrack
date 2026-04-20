@@ -200,7 +200,15 @@ class WiFiService {
 
   Future<bool> _connectMobile(String ssid, String key, bool isSecure) async {
     try {
+      debugPrint("🚀 Tentative de connexion à $ssid...");
+      
+      // On s'assure de ne pas être déjà en mode forcé pour éviter les conflits
+      await WiFiForIoTPlugin.forceWifiUsage(false);
       await WiFiForIoTPlugin.disconnect();
+      
+      // Attente d'un court instant après la déconnexion
+      await Future.delayed(const Duration(milliseconds: 500));
+
       final success = await WiFiForIoTPlugin.connect(
         ssid,
         password: key,
@@ -209,9 +217,30 @@ class WiFiService {
       );
 
       if (success) {
-        // Force le trafic de données via le WiFi pour éviter les problèmes d'accès internet
-        // sur les réseaux sans internet détecté par l'OS ou en cas de double connexion.
-        await WiFiForIoTPlugin.forceWifiUsage(true);
+        debugPrint("✅ Commande de connexion acceptée pour $ssid. Attente de l'établissement...");
+        
+        // Attente active de la connexion réelle (jusqu'à 10 secondes)
+        bool connected = false;
+        for (int i = 0; i < 10; i++) {
+          await Future.delayed(const Duration(seconds: 1));
+          final currentSSID = await WiFiForIoTPlugin.getSSID();
+          if (currentSSID == ssid || currentSSID == "\"$ssid\"") {
+            connected = true;
+            break;
+          }
+        }
+
+        if (connected) {
+          debugPrint("🌐 Connecté à $ssid. Forçage du trafic WiFi pour l'accès internet...");
+          // On force l'usage du WiFi pour toutes les requêtes de l'application
+          await WiFiForIoTPlugin.forceWifiUsage(true);
+          return true;
+        } else {
+          debugPrint("⚠️ Timeout : Connecté mais SSID non confirmé.");
+          // On tente quand même de forcer au cas où l'OS cache le SSID
+          await WiFiForIoTPlugin.forceWifiUsage(true);
+          return true;
+        }
       }
 
       return success;
@@ -278,6 +307,7 @@ class WiFiService {
         final result = await Process.run('netsh', ['wlan', 'disconnect']);
         return result.exitCode == 0;
       }
+      await WiFiForIoTPlugin.forceWifiUsage(false);
       return await WiFiForIoTPlugin.disconnect();
     } catch (e) {
       return false;

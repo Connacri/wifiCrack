@@ -218,6 +218,38 @@ class WiFiProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> disconnect(AppLocalizations l10n) async {
+    if (_connectionStatus == ConnectionStatus.connecting) return;
+
+    final ssid = _connectedSSID;
+    if (ssid == null) return;
+
+    _connectionStatus = ConnectionStatus.connecting;
+    _connectingSSID = ssid;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final success = await _wifiService.disconnect();
+      await updateLocalData();
+
+      if (success) {
+        _connectedSSID = null;
+        _connectionStatus = ConnectionStatus.disconnected;
+      } else {
+        _connectionStatus = ConnectionStatus.failed;
+        _errorMessage = l10n.failed;
+      }
+    } catch (e) {
+      debugPrint("âŒ Disconnect Error: $e");
+      _errorMessage = "${l10n.error}: $e";
+      _connectionStatus = ConnectionStatus.failed;
+    } finally {
+      _connectingSSID = null;
+      notifyListeners();
+    }
+  }
+
   Map<String, int> getStats() {
     final successful = _historyNetworks
         .where((n) => n.lastConnectionSuccess == true)
