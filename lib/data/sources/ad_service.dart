@@ -36,7 +36,7 @@ class AdService with WidgetsBindingObserver {
 
   static Future<void> initialize() async {
     if (!isSupportedPlatform) {
-      debugPrint('AdMob unsupported on this platform.');
+      debugPrint('AdMob: Unsupported platform.');
       return;
     }
 
@@ -46,52 +46,63 @@ class AdService with WidgetsBindingObserver {
     }
 
     _initializationCompleter = Completer<void>();
-    final params = ConsentRequestParameters();
+    debugPrint('AdMob: Starting initialization flow...');
 
     try {
+      final params = ConsentRequestParameters();
       ConsentInformation.instance.requestConsentInfoUpdate(
         params,
-        _handleConsentInfoUpdated,
+        () async {
+          debugPrint('AdMob: Consent info updated, handling consent form...');
+          await _loadAndShowConsentForm();
+        },
         (FormError error) {
-          debugPrint('Consent info error: ${error.message}');
+          debugPrint('AdMob: Consent info update error: ${error.errorCode} - ${error.message}');
           _finishInitialization();
         },
       );
     } catch (e) {
-      debugPrint('UMP initialization error: $e');
-      _completeInitialization();
+      debugPrint('AdMob: UMP exception: $e');
+      _finishInitialization();
     }
 
-    return _initializationCompleter!.future;
-  }
+    // Timeout de sécurité : si après 10s rien ne se passe, on libère le démarrage de l'app
+    Future.delayed(const Duration(seconds: 10), () {
+      if (!_initializationCompleter!.isCompleted) {
+        debugPrint('AdMob: Initialization timeout, forcing completion.');
+        _completeInitialization();
+      }
+    });
 
-  static void _handleConsentInfoUpdated() {
-    _loadAndShowConsentForm();
+    return _initializationCompleter!.future;
   }
 
   static Future<void> _loadAndShowConsentForm() async {
     try {
       await ConsentForm.loadAndShowConsentFormIfRequired((FormError? formError) {
         if (formError != null) {
-          debugPrint('Consent form error: ${formError.message}');
+          debugPrint('AdMob: Consent form error: ${formError.message}');
+        } else {
+          debugPrint('AdMob: Consent form handled successfully.');
         }
         _finishInitialization();
       });
     } catch (e) {
-      debugPrint('Consent form flow error: $e');
+      debugPrint('AdMob: Exception in consent form flow: $e');
       _finishInitialization();
     }
   }
 
   static Future<void> _finishInitialization() async {
     try {
-      if (await ConsentInformation.instance.canRequestAds()) {
-        await _initializeAds();
-      } else {
-        debugPrint('Ads cannot be requested yet.');
-      }
+      final canRequest = await ConsentInformation.instance.canRequestAds();
+      final status = await ConsentInformation.instance.getConsentStatus();
+      debugPrint('AdMob: Consent Status: $status, Can request ads: $canRequest');
+
+      // On tente l'initialisation dans tous les cas pour que le SDK soit prêt
+      await _initializeAds();
     } catch (e) {
-      debugPrint('AdMob finalization error: $e');
+      debugPrint('AdMob: Error in finalization: $e');
     } finally {
       _completeInitialization();
     }
@@ -108,22 +119,25 @@ class AdService with WidgetsBindingObserver {
     if (_instance._isInitialized) return;
 
     try {
-      MobileAds.instance.updateRequestConfiguration(
+      await MobileAds.instance.initialize();
+      
+      await MobileAds.instance.updateRequestConfiguration(
         RequestConfiguration(
           tagForChildDirectedTreatment: TagForChildDirectedTreatment.unspecified,
-          testDeviceIds: const [],
+          testDeviceIds: [], 
         ),
       );
 
-      await MobileAds.instance.initialize();
       _instance._isInitialized = true;
       _instance.startListeningToLifecycle();
+      
       _instance.loadAppOpenAd();
       _instance.loadInterstitialAd();
       _instance.loadRewardedAd();
-      debugPrint('AdMob initialized successfully.');
+      
+      debugPrint('AdMob: SDK Initialized successfully.');
     } catch (e) {
-      debugPrint('AdMob init error: $e');
+      debugPrint('AdMob: SDK Initialization exception: $e');
     }
   }
 
