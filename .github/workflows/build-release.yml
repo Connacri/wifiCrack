@@ -1,0 +1,113 @@
+name: Build Android & Release
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'index.html'
+      - 'README.md'
+      - 'release.json'
+
+permissions:
+  contents: write
+
+jobs:
+  extract-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version_name: ${{ steps.ver.outputs.version_name }}
+      version_full: ${{ steps.ver.outputs.version_full }}
+      tag:          ${{ steps.ver.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extraire VERSION_NAME depuis pubspec.yaml
+        id: ver
+        run: |
+          VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f1 | tr -d '[:space:]')
+          VERSION_FULL="${VERSION_NAME}.${{ github.run_number }}"
+          TAG="v${VERSION_FULL}"
+          echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version_full=${VERSION_FULL}"  >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}"                    >> "$GITHUB_OUTPUT"
+
+  build-android:
+    needs: extract-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Patcher pubspec.yaml
+        run: |
+          sed -i "s/^version: .*/version: ${{ needs.extract-version.outputs.version_name }}+${{ github.run_number }}/" pubspec.yaml
+      - name: Build APK
+        run: |
+          flutter pub get
+          flutter build apk --release --build-name="${{ needs.extract-version.outputs.version_name }}" --build-number="${{ github.run_number }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  release-and-update:
+    needs: [extract-version, build-android]
+    runs-on: ubuntu-latest
+    env:
+      VERSION_FULL: ${{ needs.extract-version.outputs.version_full }}
+      TAG: ${{ needs.extract-version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Télécharger l'APK
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release
+          path: dist/
+
+      - name: Créer la Release GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: "Release ${{ env.VERSION_FULL }}"
+          files: dist/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Mettre à jour les fichiers (JSON, HTML, README)
+        run: |
+          APK_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/app-release.apk"
+          UPDATE_URL="https://raw.githubusercontent.com/${{ github.repository }}/main/release.json"
+
+          # release.json
+          cat > release.json << EOF
+          {
+            "version": "${VERSION_FULL}",
+            "url": "${APK_URL}",
+            "date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+          # index.html
+          sed -i "s|data-platform=\"android\" href=\"[^\"]*\"|data-platform=\"android\" href=\"${APK_URL}\"|g" index.html
+          sed -i "s|data-platform=\"update\" href=\"[^\"]*\"|data-platform=\"update\" href=\"${UPDATE_URL}\"|g" index.html
+          sed -i "s|data-version=\"[^\"]*\"|data-version=\"${VERSION_FULL}\"|g" index.html
+          # Update visible version in badge
+          sed -i "s|⚡ v[0-9.]*|⚡ v${VERSION_FULL}|g" index.html
+
+          # README.md
+          echo "# 📡 WiFi DZ Fiber Hack" > README.md
+          echo "### Version ${VERSION_FULL}" >> README.md
+          echo "[Télécharger l'APK](${APK_URL})" >> README.md
+
+      - name: Commit & push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml release.json index.html README.md
+          git commit -m "chore: release ${VERSION_FULL} [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:main
