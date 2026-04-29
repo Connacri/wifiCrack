@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -5,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdService with WidgetsBindingObserver {
-  // Vos IDs configurés (PRODUCTION)
   static const String bannerId = 'ca-app-pub-2282149611905342/2104770491';
   static const String interstitialId = 'ca-app-pub-2282149611905342/8821058363';
   static const String rewardedInterstitialId = 'ca-app-pub-2282149611905342/7507976697';
@@ -13,9 +13,10 @@ class AdService with WidgetsBindingObserver {
   static const String appOpenId = 'ca-app-pub-2282149611905342/5445608497';
   static const String rewardedId = 'ca-app-pub-2282149611905342/3805699127';
 
-  // Singleton pattern via static instance
   static final AdService _instance = AdService.internal();
   static AdService get instance => _instance;
+  static Completer<void>? _initializationCompleter;
+
   AdService.internal();
   factory AdService() => _instance;
 
@@ -33,63 +34,84 @@ class AdService with WidgetsBindingObserver {
 
   bool _isInitialized = false;
 
-  /// Initialise le SDK Google Ads avec gestion du consentement (UMP)
   static Future<void> initialize() async {
     if (!isSupportedPlatform) {
-      debugPrint("ℹ️ AdMob non supporté sur cette plateforme.");
+      debugPrint('AdMob unsupported on this platform.');
       return;
     }
 
+    if (_instance._isInitialized) return;
+    if (_initializationCompleter != null) {
+      return _initializationCompleter!.future;
+    }
+
+    _initializationCompleter = Completer<void>();
     final params = ConsentRequestParameters();
 
-    ConsentInformation.instance.requestConsentInfoUpdate(
-      params,
-      () async {
-        if (await ConsentInformation.instance.canRequestAds()) {
-          _initializeAds();
-        }
-        
-        // Même si on peut déjà demander des pubs, on vérifie si un formulaire est dispo (RGPD)
-        if (await ConsentInformation.instance.isConsentFormAvailable()) {
-          _loadConsentForm();
-        }
-      },
-      (FormError error) {
-        debugPrint("⚠️ Consent Info Error: ${error.message}");
-        _initializeAds(); // On tente quand même l'initialisation
-      },
-    );
+    try {
+      ConsentInformation.instance.requestConsentInfoUpdate(
+        params,
+        _handleConsentInfoUpdated,
+        (FormError error) {
+          debugPrint('Consent info error: ${error.message}');
+          _finishInitialization();
+        },
+      );
+    } catch (e) {
+      debugPrint('UMP initialization error: $e');
+      _completeInitialization();
+    }
+
+    return _initializationCompleter!.future;
   }
 
-  static void _loadConsentForm() {
-    ConsentForm.loadConsentForm(
-      (ConsentForm consentForm) {
-        consentForm.show((FormError? formError) {
-          if (formError != null) {
-            debugPrint("⚠️ Consent Form Show Error: ${formError.message}");
-          }
-          // Si le statut a changé et qu'on peut maintenant diffuser, on init
-          ConsentInformation.instance.canRequestAds().then((canRequest) {
-            if (canRequest) _initializeAds();
-          });
-        });
-      },
-      (FormError formError) {
-        debugPrint("⚠️ Consent Form Load Error: ${formError.message}");
-        _initializeAds();
-      },
-    );
+  static void _handleConsentInfoUpdated() {
+    _loadAndShowConsentForm();
   }
 
-  static void _initializeAds() async {
+  static Future<void> _loadAndShowConsentForm() async {
+    try {
+      await ConsentForm.loadAndShowConsentFormIfRequired((FormError? formError) {
+        if (formError != null) {
+          debugPrint('Consent form error: ${formError.message}');
+        }
+        _finishInitialization();
+      });
+    } catch (e) {
+      debugPrint('Consent form flow error: $e');
+      _finishInitialization();
+    }
+  }
+
+  static Future<void> _finishInitialization() async {
+    try {
+      if (await ConsentInformation.instance.canRequestAds()) {
+        await _initializeAds();
+      } else {
+        debugPrint('Ads cannot be requested yet.');
+      }
+    } catch (e) {
+      debugPrint('AdMob finalization error: $e');
+    } finally {
+      _completeInitialization();
+    }
+  }
+
+  static void _completeInitialization() {
+    final completer = _initializationCompleter;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
+    }
+  }
+
+  static Future<void> _initializeAds() async {
     if (_instance._isInitialized) return;
 
     try {
-      // Configuration pour respecter la vie privée et les politiques Google
       MobileAds.instance.updateRequestConfiguration(
         RequestConfiguration(
           tagForChildDirectedTreatment: TagForChildDirectedTreatment.unspecified,
-          testDeviceIds: [], // Liste vide pour la prod, à remplir en dev si besoin
+          testDeviceIds: const [],
         ),
       );
 
@@ -99,9 +121,9 @@ class AdService with WidgetsBindingObserver {
       _instance.loadAppOpenAd();
       _instance.loadInterstitialAd();
       _instance.loadRewardedAd();
-      debugPrint("✅ AdMob Initialisé avec succès (UMP inclus).");
+      debugPrint('AdMob initialized successfully.');
     } catch (e) {
-      debugPrint("❌ Erreur AdMob Init: $e");
+      debugPrint('AdMob init error: $e');
     }
   }
 
@@ -120,7 +142,6 @@ class AdService with WidgetsBindingObserver {
     }
   }
 
-  /// --- APP OPEN AD ---
   void loadAppOpenAd({bool showImmediately = false}) {
     if (!_isInitialized) return;
     AppOpenAd.load(
@@ -130,13 +151,13 @@ class AdService with WidgetsBindingObserver {
         onAdLoaded: (ad) {
           _appOpenAd = ad;
           _appOpenLoadTime = DateTime.now();
-          debugPrint("✅ AppOpenAd chargée.");
+          debugPrint('AppOpenAd loaded.');
           if (showImmediately) {
             showAppOpenAdIfAvailable();
           }
         },
         onAdFailedToLoad: (error) {
-          debugPrint('❌ AppOpen failed to load: $error');
+          debugPrint('AppOpen failed to load: $error');
           Future.delayed(const Duration(seconds: 30), () => loadAppOpenAd());
         },
       ),
@@ -148,7 +169,7 @@ class AdService with WidgetsBindingObserver {
       loadAppOpenAd();
       return;
     }
-    
+
     if (_isShowingOpenAd) return;
 
     if (DateTime.now().difference(_appOpenLoadTime!) > const Duration(hours: 4)) {
@@ -176,12 +197,11 @@ class AdService with WidgetsBindingObserver {
     _appOpenAd!.show();
   }
 
-  /// --- INTERSTITIAL AD ---
   void loadInterstitialAd() {
     if (!isSupportedPlatform || !_isInitialized) return;
     if (_isInterstitialLoading || _interstitialAd != null) return;
     _isInterstitialLoading = true;
-    
+
     InterstitialAd.load(
       adUnitId: interstitialId,
       request: const AdRequest(),
@@ -197,7 +217,10 @@ class AdService with WidgetsBindingObserver {
           _interstitialAd = null;
           _interstitialRetryAttempt++;
           if (_interstitialRetryAttempt < 5) {
-            Future.delayed(Duration(seconds: _interstitialRetryAttempt * 15), () => loadInterstitialAd());
+            Future.delayed(
+              Duration(seconds: _interstitialRetryAttempt * 15),
+              () => loadInterstitialAd(),
+            );
           }
         },
       ),
@@ -227,7 +250,6 @@ class AdService with WidgetsBindingObserver {
     _interstitialAd = null;
   }
 
-  /// --- REWARDED AD ---
   void loadRewardedAd() {
     if (!isSupportedPlatform || !_isInitialized) return;
     if (_isRewardedLoading || _rewardedAd != null) return;
@@ -248,7 +270,10 @@ class AdService with WidgetsBindingObserver {
           _rewardedAd = null;
           _rewardedRetryAttempt++;
           if (_rewardedRetryAttempt < 5) {
-            Future.delayed(Duration(seconds: _rewardedRetryAttempt * 15), () => loadRewardedAd());
+            Future.delayed(
+              Duration(seconds: _rewardedRetryAttempt * 15),
+              () => loadRewardedAd(),
+            );
           }
         },
       ),
@@ -287,7 +312,6 @@ class AdService with WidgetsBindingObserver {
     _rewardedAd = null;
   }
 
-  /// --- BANNER AD ---
   BannerAd? getBannerAd() {
     if (!isSupportedPlatform || !_isInitialized) return null;
     return BannerAd(
@@ -303,7 +327,6 @@ class AdService with WidgetsBindingObserver {
     )..load();
   }
 
-  /// --- REWARDED INTERSTITIAL ---
   void showRewardedInterstitialAd(Function onRewardEarned) {
     if (!isSupportedPlatform || !_isInitialized) {
       onRewardEarned();
@@ -328,9 +351,8 @@ class AdService with WidgetsBindingObserver {
     );
   }
 
-  /// --- NATIVE AD ---
   NativeAd? getNativeAd(VoidCallback onLoaded) {
-    if (!isSupportedPlatform || !_isInitialized) return null;
+    if (!Platform.isAndroid || !_isInitialized) return null;
     return NativeAd(
       adUnitId: nativeId,
       factoryId: 'adFactoryExample',
