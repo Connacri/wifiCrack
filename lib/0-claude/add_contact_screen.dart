@@ -106,6 +106,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
                       label: l10n.pseudo,
                       value: provider.pseudo ?? l10n.notAvailable,
                     ),
+                    //
                     const Divider(height: 24),
                     _InfoRow(
                       icon: Icons.fingerprint,
